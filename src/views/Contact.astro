@@ -1,0 +1,66 @@
+---
+/* Figma: 9 CONTACT — UI. */
+import Icon from "../components/Icon.astro";
+import Layout from "../layouts/Layout.astro";
+import { href, otherLang, t, type Lang } from "../i18n";
+import { getContact, getSettings } from "../lib/content";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+const [page, settings] = await Promise.all([getContact(lang), getSettings(lang)]);
+---
+
+<Layout
+  lang={lang}
+  title={page.title ?? s.contact}
+  seo={page.seo}
+  alternate={href(otherLang(lang), "contact")}
+>
+  <div class="px-5 lg:px-10">
+    <header class="pt-5 lg:pt-10">
+      <h1 class="display text-mega tracking-[-0.02em]">{page.title ?? s.contact}</h1>
+      {page.subtitle && (
+        <p class="mt-2.5 font-display text-2xl font-extrabold leading-[0.95] tracking-[-0.02em] lg:text-intro">
+          {page.subtitle}
+        </p>
+      )}
+    </header>
+
+    <div class="flex flex-col items-center py-16 text-center lg:py-24">
+      <button
+        type="button"
+        data-voice-open
+        class="press grid size-[111px] place-items-center rounded-full bg-ink text-paper hover:scale-105 lg:size-40"
+        aria-label={s.vnOpen}
+      >
+        <Icon name="mic" class="h-[30px] w-[29px] lg:h-11 lg:w-10" />
+      </button>
+      <p class="label mt-24 text-xs">{s.writeDirectly}</p>
+      <a
+        href={`mailto:${settings.email}`}
+        class="display mt-4 text-[2.25rem] leading-[0.95] tracking-[-0.01em] lg:text-section"
+      >
+        {settings.email}
+      </a>
+    </div>
+
+    {page.links.length > 0 && (
+      <ul class="grid grid-cols-2 gap-5 pb-16 lg:grid-cols-4 lg:pb-24">
+        {page.links.map((l) => (
+          <li>
+            {l.prompt && <p class="text-xs font-medium leading-[1.35] lg:text-sm">{l.prompt}</p>}
+            {l.cta?.url && (
+              <a href={l.cta.url} class="label mt-1 inline-flex items-center gap-1 text-sm">
+                {l.cta.label}
+                <Icon name="arrow-ne" class="nudge-ne size-2" />
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</Layout>

@@ -1,0 +1,977 @@
+---
+/* Top bar + the full-screen yellow menu (Figma: MOBILE MENU BAR, MENU,
+   HOMEPAGE — DESKTOP). The bar is fixed and, from `lg`, shrinks once the page
+   scrolls. Phones and tablets get the hamburger; from `lg` the bar carries the
+   primary nav inline, with Articles and Media opening a yellow panel that
+   wipes down behind the bar (motion after the Energy Club navbar).
+
+   Tones: `light` (paper bar), `dark` (ink bar, videos), `overlay`
+   (transparent over a `[data-header-hero]`, turning light once the hero has
+   scrolled under the bar). */
+import Icon from "./Icon.astro";
+import Logo from "./Logo.astro";
+import Socials from "./Socials.astro";
+import Spray from "./Spray.astro";
+import { href, langs, otherLang, t, type Lang } from "../i18n";
+import type { Settings } from "../lib/types";
+
+interface Props {
+  lang: Lang;
+  settings: Settings;
+  alternate: string;
+  tone?: "light" | "dark" | "overlay";
+  /** Keep the bar compact at the top of the page too (the video feed). */
+  compact?: boolean;
+}
+const { lang, settings, alternate, tone = "light", compact = false } = Astro.props;
+const s = t(lang);
+const other = otherLang(lang);
+const donate = settings.donateUrl ?? `${href(lang, "getInvolved")}#donate`;
+
+/* Articles is also a link to search: hover opens its panel, a click goes
+   straight to the full list. Media has no page of its own, so it stays a
+   button. */
+const drops: { id: string; label: string; url?: string }[] = [
+  { id: "articles", label: s.articles, url: href(lang, "search") },
+  { id: "media", label: s.media },
+];
+
+const primary = [
+  { label: s.laReleve, url: href(lang, "laReleve") },
+  { label: s.about, url: href(lang, "about") },
+  { label: s.getInvolved, url: href(lang, "getInvolved") },
+  { label: s.contact, url: href(lang, "contact") },
+];
+
+const actionLinks = [
+  { label: s.getInvolved, url: href(lang, "getInvolved") },
+  {
+    label: lang === "en" ? "Give your voice" : "Donnez votre voix",
+    url: href(lang, "giveYourVoice"),
+  },
+  { label: s.podcasts, url: href(lang, "podcasts") },
+];
+
+const media = [
+  { label: s.podcasts, url: href(lang, "podcasts") },
+  { label: s.videos, url: href(lang, "videos") },
+];
+---
+
+<site-header class="contents">
+  <header
+    data-hdr
+    data-tone={tone}
+    data-compact={compact ? "always" : undefined}
+    class="group/hdr fixed inset-x-0 top-0 z-40"
+  >
+    <div
+      data-hdr-scrim
+      aria-hidden="true"
+      class="pointer-events-none absolute inset-x-0 top-0 h-[160%] bg-linear-to-b from-ink/45 to-transparent"
+    ></div>
+
+    <div
+      data-hdr-bar
+      class="relative z-10 flex items-center justify-between gap-6 px-5 py-5 transition-[padding] duration-500 ease-power3-out lg:px-10 lg:py-10 lg:group-data-compact/hdr:py-5"
+    >
+      <a href={href(lang, "home")} class="block shrink-0" aria-label="La Converse — accueil">
+        <Logo class="h-[18px] w-auto" />
+      </a>
+
+      <div class="gap-10 justify-end flex">
+        <nav aria-label={s.menu} class="hidden lg:block">
+          <ul class="label flex gap-5 text-md pt-2 font-black tracking-[-0.01em]">
+            {drops.map(({ id, label, url }) => {
+              const Tag = url ? "a" : "button";
+              return (
+                <li>
+                  <Tag
+                    href={url}
+                    type={url ? undefined : "button"}
+                    data-drop={id}
+                    aria-expanded="false"
+                    aria-controls="nav-drop"
+                    class="link-line decoration-2 uppercase aria-expanded:decoration-current aria-expanded:underline-offset-[0.12em]"
+                  >
+                    {label}
+                  </Tag>
+                </li>
+              );
+            })}
+            {primary.map(({ label, url }) => (
+              <li>
+                <a href={url} class="link-line decoration-2" data-drop-away>
+                  {label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div class="flex items-center gap-[17px] lg:gap-5">
+          <!-- Language: the current one as plain text, the other a link to
+               this page in that language. -->
+          <p
+            class="label hidden items-center gap-1 pt-0.5 text-sm font-black lg:flex"
+            aria-label={s.language}
+            data-drop-away
+          >
+            {langs.map((l, i) => (
+              <>
+                {i > 0 && (
+                  <span aria-hidden="true" class="opacity-40">
+                    /
+                  </span>
+                )}
+                {l === lang ? (
+                  <span aria-current="true">{l.toUpperCase()}</span>
+                ) : (
+                  <a
+                    href={alternate}
+                    hreflang={l}
+                    lang={l}
+                    class="link-line decoration-2 opacity-55 transition-opacity hover:opacity-100"
+                  >
+                    {l.toUpperCase()}
+                  </a>
+                )}
+              </>
+            ))}
+          </p>
+          <a
+            href={alternate}
+            hreflang={other}
+            lang={other}
+            aria-label={s.language}
+            class="label text-sm font-black lg:hidden"
+          >
+            {other.toUpperCase()}
+          </a>
+          <!-- Search:the round pill grows leftwards into a field, pushing
+                 the nav along ahead of it. -->
+          <div class="hidden lg:block" data-drop-away>
+            <form
+              role="search"
+              action={href(lang, "search")}
+              method="get"
+              data-hdr-search
+              class="hdr-pill hdr-search flex h-[30px] items-center overflow-hidden rounded-full"
+            >
+              <label for="hdr-q" class="sr-only">
+                {s.search}
+              </label>
+              <input
+                id="hdr-q"
+                name="q"
+                type="search"
+                autocomplete="off"
+                enterkeyhint="search"
+                placeholder={s.searchPlaceholder}
+                tabindex="-1"
+                data-hdr-search-input
+                class="label min-w-0 flex-1 bg-transparent text-base outline-none [&::-webkit-search-cancel-button]:hidden"
+              />
+              <button
+                type="button"
+                data-hdr-search-toggle
+                aria-expanded="false"
+                aria-controls="hdr-q"
+                aria-label={s.search}
+                class="grid size-[30px] shrink-0 place-items-center rounded-full"
+              >
+                <span data-hdr-search-icon class="grid place-items-center">
+                  <Icon name="search" class="size-2.5" />
+                </span>
+              </button>
+            </form>
+          </div>
+          <a
+            href={donate}
+            aria-label={s.favourites}
+            class="press block hover:scale-110"
+            data-drop-away
+          >
+            <Icon name="heart" class="h-4 w-[18px]" />
+          </a>
+          <button
+            type="button"
+            data-menu-toggle
+            aria-expanded="false"
+            aria-controls="site-menu"
+            class="group grid h-4 w-7 place-items-center lg:hidden"
+            aria-label={s.menu}
+          >
+            <span class="flex w-7 flex-col items-end gap-[5px]" aria-hidden="true">
+              <span class="h-px w-full bg-current"></span>
+              <span class="h-px w-full bg-current transition-[width] duration-300 ease-out group-hover:w-2/3"></span>
+              <span class="h-px w-full bg-current transition-[width] duration-300 ease-out group-hover:w-1/3"></span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- The yellow dropdown. It starts at the very top, under the bar, so the
+         bar reads as part of it once it's open. Closed, it is clipped away and
+         `inert` (not `visibility`, which the reduced-motion transition rule
+         would delay, keeping focus out for a beat). -->
+    <div
+      id="nav-drop"
+      data-drop-panel
+      inert
+      class="absolute inset-x-0 top-0 hidden max-h-svh overflow-y-auto overflow-x-hidden bg-yellow text-ink lg:block"
+      style="clip-path: inset(0% 0% 100% 0%)"
+    >
+      <Spray class="left-[35%] top-[-10%] w-[80%] -rotate-[18deg] opacity-70" seed={17} />
+      <div class="relative px-10 pb-14 pt-[calc(var(--header-h)+1.5rem)]">
+        <div data-drop-group="articles" data-menu-nav class="grid grid-cols-12 gap-x-5" hidden>
+          <div class="col-span-3 flex flex-col items-start gap-4">
+            <p class="label text-sm" data-drop-item>
+              {s.articles}
+            </p>
+            <a
+              href={href(lang, "search")}
+              class="label group inline-flex items-center gap-1.5 text-xl"
+              data-drop-item
+            >
+              {s.seeAllStories}
+              <span class="nudge-x" aria-hidden="true">
+                →
+              </span>
+            </a>
+          </div>
+          <ul class="display col-span-9 columns-3 gap-x-5 text-[clamp(2rem,2.9vw,3.25rem)]">
+            {settings.menuCategories.map((c) => (
+              <li class="break-inside-avoid pb-2" data-drop-item>
+                <a
+                  href={href(lang, "category", c.slug)}
+                  class="link-line decoration-2"
+                  data-menu-line
+                >
+                  {c.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div data-drop-group="media" data-menu-nav class="grid grid-cols-12 gap-x-5" hidden>
+          <ul class="display col-span-12 justify-center flex gap-x-16 text-[clamp(3.5rem,6vw,6.5rem)] leading-[0.95]">
+            {media.map(({ label, url }) => (
+              <li data-drop-item>
+                <a href={url} class="link-line decoration-4" data-menu-line>
+                  {label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div
+    id="site-menu"
+    class="fixed inset-0 z-50 flex flex-col overflow-y-auto overflow-x-hidden bg-yellow"
+    role="dialog"
+    aria-modal="true"
+    aria-label={s.menu}
+    hidden
+  >
+    <Spray class="left-[-40%] top-[52%] w-[180%] -rotate-[28deg] md:left-[10%] md:top-[30%] md:w-[110%]" />
+
+    <div class="relative flex items-center justify-between px-5 py-4" data-menu-fade>
+      <a href={href(lang, "home")} aria-label="La Converse">
+        <Logo class="h-[18px] w-auto" />
+      </a>
+      <div class="flex items-center gap-[17px]">
+        <a
+          href={href(lang, "search")}
+          class="grid size-[30px] place-items-center rounded-full bg-ink text-paper"
+          aria-label={s.search}
+        >
+          <Icon name="search" class="size-2.5" />
+        </a>
+        <a href={donate} aria-label={s.favourites}>
+          <Icon name="heart" class="h-[19px] w-[21px]" />
+        </a>
+        <button
+          type="button"
+          data-menu-close
+          class="grid size-7 place-items-center"
+          aria-label={s.close}
+        >
+          <Icon
+            name="close"
+            class="size-7 transition-transform duration-300 ease-out hover:rotate-90"
+          />
+        </button>
+      </div>
+    </div>
+
+    <nav class="relative flex-1 px-5 pt-0" aria-label={s.menu} data-menu-nav>
+      <ul class="display text-[2rem] leading-[1.1] tracking-[-0.015em] md:text-5xl">
+        <li class="border-b border-ink py-2.5">
+          <ul>
+            {settings.menuCategories.map((c) => (
+              <li>
+                <a
+                  href={href(lang, "category", c.slug)}
+                  class="block link-line decoration-2"
+                  data-menu-line
+                >
+                  {c.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </li>
+        <li class="pt-2.5">
+          <a href={href(lang, "laReleve")} class="block link-line decoration-2" data-menu-line>
+            {s.laReleve}
+          </a>
+        </li>
+        <li>
+          <button
+            type="button"
+            data-submenu
+            aria-expanded="false"
+            aria-controls="menu-action"
+            class="display flex w-full items-center justify-between text-left"
+            data-menu-line
+          >
+            <span>{lang === "en" ? "Take action" : "Prends action"}</span>
+            <Icon
+              name="chevron"
+              class="h-2.5 w-5 transition-transform duration-300 ease-out [[aria-expanded=true]>&]:rotate-180"
+            />
+          </button>
+          <ul id="menu-action" class="pb-1 pl-4 text-2xl md:text-3xl" hidden>
+            {actionLinks.map(({ label, url }) => (
+              <li>
+                <a href={url} class="block link-line decoration-2" data-menu-line>
+                  {label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </li>
+        <li>
+          <a href={href(lang, "videos")} class="block link-line decoration-2" data-menu-line>
+            {s.videos}
+          </a>
+        </li>
+        <li>
+          <a href={href(lang, "podcasts")} class="block link-line decoration-2" data-menu-line>
+            {s.podcasts}
+          </a>
+        </li>
+        <li class="pt-5">
+          <a href={href(lang, "about")} class="block link-line decoration-2" data-menu-line>
+            {s.about}
+          </a>
+        </li>
+        <li>
+          <a href={href(lang, "contact")} class="block link-line decoration-2" data-menu-line>
+            {s.contact}
+          </a>
+        </li>
+        <li>
+          <a href={donate} class="block link-line decoration-2" data-menu-line>
+            {s.donate}
+          </a>
+        </li>
+        <li class="pt-5 text-lg">
+          <a
+            href={alternate}
+            hreflang={lang === "en" ? "fr" : "en"}
+            class="label inline-block underline underline-offset-4"
+            data-menu-line
+          >
+            {s.language}
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div
+      class="relative mx-5 mt-8 flex flex-col items-center gap-4 border-y border-ink py-4 text-center"
+      data-menu-fade
+    >
+      <p class="display max-w-[22rem] text-lg leading-[0.95]">
+        {settings.voicePrompt ?? s.vnTitle}
+      </p>
+      <button
+        type="button"
+        data-voice-open
+        class="press grid size-[84px] place-items-center rounded-full bg-ink text-paper hover:scale-105"
+        aria-label={s.vnOpen}
+      >
+        <Icon name="mic" class="h-[23px] w-[22px]" />
+      </button>
+      <button
+        type="button"
+        data-voice-open="write"
+        class="label text-xs underline underline-offset-2"
+      >
+        {s.vnWrite}
+      </button>
+    </div>
+
+    <div class="relative flex items-center justify-between px-5 py-5" data-menu-fade>
+      <Socials
+        socials={settings.socials.filter((x) =>
+          ["whatsapp", "linkedin", "instagram"].includes(x.platform),
+        )}
+        variant="plain"
+      />
+      <a href={`mailto:${settings.email}`} class="display text-2xl leading-none">
+        {settings.email}
+      </a>
+    </div>
+  </div>
+</site-header>
+
+<style>
+  /* Bar tones. `--fg`/`--bg` are the bar's text and fill; the round search
+     pill is drawn in the text colour with the fill as its icon, so it always
+     inverts with the bar. */
+  [data-hdr] {
+    --fg: var(--color-ink);
+    --bg: var(--color-paper);
+    color: var(--fg);
+    background-color: var(--bg);
+    transition:
+      color 400ms var(--ease-power3-out),
+      background-color 400ms var(--ease-power3-out);
+  }
+  [data-hdr][data-tone="dark"] {
+    --fg: var(--color-paper);
+    --bg: var(--color-ink);
+  }
+  [data-hdr][data-tone="overlay"]:not([data-scrolled]) {
+    --fg: var(--color-paper);
+    --bg: transparent;
+  }
+  /* The yellow panel shows through behind the bar while it's open. */
+  [data-hdr][data-drop-open] {
+    --fg: var(--color-ink);
+    --bg: var(--color-yellow);
+  }
+  [data-hdr-scrim] {
+    opacity: 0;
+    transition: opacity 400ms var(--ease-power3-out);
+  }
+  [data-hdr][data-tone="overlay"]:not([data-scrolled], [data-drop-open]) [data-hdr-scrim] {
+    opacity: 1;
+  }
+  .hdr-pill {
+    background-color: var(--fg);
+    color: var(--bg);
+    transition:
+      color 400ms var(--ease-power3-out),
+      background-color 400ms var(--ease-power3-out),
+      scale 160ms ease-out;
+  }
+  [data-hdr][data-tone="overlay"]:not([data-scrolled], [data-drop-open]) .hdr-pill {
+    color: var(--color-ink);
+  }
+
+  /* Header search. Closed it's the 30px pill; open, it stretches leftwards
+     with a long expo tail, shoving the nav along in front of it, and the text
+     slides in a beat behind the edge. Closing draws it back a little quicker. */
+  .hdr-search {
+    width: 30px;
+    transition:
+      width 450ms cubic-bezier(0.65, 0, 0.35, 1),
+      color 400ms var(--ease-power3-out),
+      background-color 400ms var(--ease-power3-out),
+      scale 160ms ease-out;
+  }
+  [data-hdr]:not([data-search-open]) .hdr-search:hover {
+    scale: 1.1;
+  }
+  [data-hdr][data-search-open] .hdr-search {
+    width: clamp(12rem, 20vw, 20rem);
+    transition-duration: 650ms, 400ms, 400ms, 160ms;
+    transition-timing-function:
+      cubic-bezier(0.16, 1, 0.3, 1), var(--ease-power3-out), var(--ease-power3-out), ease-out;
+  }
+  [data-hdr-search-input] {
+    padding-left: 0;
+    opacity: 0;
+    translate: 0.75rem 0;
+    transition:
+      opacity 150ms ease-in,
+      translate 200ms ease-in;
+  }
+  [data-hdr-search-input]::placeholder {
+    color: currentColor;
+    opacity: 0.55;
+  }
+  [data-hdr][data-search-open] [data-hdr-search-input] {
+    padding-left: 1rem;
+    opacity: 1;
+    translate: 0 0;
+    transition:
+      opacity 300ms ease-out 180ms,
+      translate 500ms cubic-bezier(0.16, 1, 0.3, 1) 180ms;
+  }
+  /* The magnifier tips a quarter-turn as the field opens, like it's been
+     picked up. */
+  [data-hdr-search-icon] {
+    transition: rotate 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  [data-hdr][data-search-open] [data-hdr-search-icon] {
+    rotate: 90deg;
+  }
+
+  /* Menu hover: the row under the pointer steps right a touch and the others
+     recede, so the eye lands on one line. Uses `translate` (not `transform`)
+     so it never fights the GSAP entrance. Restates link-line's transitions
+     because this rule outranks the utility layer. */
+  [data-menu-line] {
+    transition:
+      opacity 250ms ease-out,
+      translate 300ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      text-decoration-color 200ms ease-out,
+      text-underline-offset 260ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  @media (hover: hover) {
+    a[data-menu-line]:hover {
+      translate: 0.15em 0;
+    }
+    [data-menu-nav]:has([data-menu-line]:hover) [data-menu-line]:not(:hover) {
+      opacity: 0.45;
+    }
+  }
+</style>
+
+<script>
+  import { collapse, d, expand, gsap } from "../lib/motion";
+
+  const FOCUSABLE = "a[href], button:not([disabled]), input, [tabindex]:not([tabindex='-1'])";
+  const canHover = matchMedia("(hover: hover) and (pointer: fine)");
+
+  /** Scroll state for the fixed bar: compacts it past the first few pixels
+      and, over a full-bleed hero, flips it to the light tone once the hero
+      has slid under the bar. */
+  function watchScroll(header: HTMLElement) {
+    const bar = header.querySelector<HTMLElement>("[data-hdr-bar]")!;
+    const hero =
+      header.dataset.tone === "overlay"
+        ? document.querySelector<HTMLElement>("[data-header-hero]")
+        : null;
+    const always = header.dataset.compact === "always";
+    let queued = false;
+    const update = () => {
+      queued = false;
+      if (!always) header.toggleAttribute("data-compact", scrollY > 24);
+      if (hero)
+        header.toggleAttribute(
+          "data-scrolled",
+          hero.getBoundingClientRect().bottom <= bar.offsetHeight,
+        );
+    };
+    update();
+    addEventListener(
+      "scroll",
+      () => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(update);
+      },
+      { passive: true },
+    );
+  }
+
+  /** Articles / Media: one yellow panel that wipes down behind the bar, with
+      the chosen group's links rising in just behind the wipe (after the
+      Energy Club navbar). Hover opens it with a mouse; taps and keys toggle. */
+  class NavDrop {
+    #header: HTMLElement;
+    #panel: HTMLElement;
+    #triggers: HTMLElement[];
+    #group: string | null = null;
+    #open = false;
+
+    constructor(header: HTMLElement) {
+      this.#header = header;
+      this.#panel = header.querySelector<HTMLElement>("[data-drop-panel]")!;
+      this.#triggers = [...header.querySelectorAll<HTMLElement>("[data-drop]")];
+
+      for (const b of this.#triggers) {
+        b.addEventListener("pointerenter", () => canHover.matches && this.open(b.dataset.drop!));
+        // A trigger that is a link just navigates when clicked.
+        if (b instanceof HTMLAnchorElement) continue;
+        // A mouse click keeps it open (hovering already opened it); a tap or
+        // a keypress toggles it.
+        b.addEventListener("click", (e) => {
+          const same = this.#open && this.#group === b.dataset.drop;
+          if (canHover.matches && e.detail > 0) this.open(b.dataset.drop!);
+          else if (same) this.close();
+          else {
+            this.open(b.dataset.drop!);
+            // From the keyboard, carry focus into the panel.
+            if (e.detail === 0)
+              this.#panel
+                .querySelector<HTMLElement>(`[data-drop-group="${b.dataset.drop}"] a`)
+                ?.focus();
+          }
+        });
+      }
+      // Heading for any other nav item closes it.
+      header
+        .querySelectorAll("[data-drop-away]")
+        .forEach((el) => el.addEventListener("pointerenter", () => this.close()));
+      header.addEventListener("pointerleave", () => canHover.matches && this.close());
+      header.addEventListener("focusout", (e) => {
+        if (!header.contains(e.relatedTarget as Node)) this.close();
+      });
+      this.#panel.addEventListener("click", (e) => {
+        if ((e.target as Element).closest("a")) this.close();
+      });
+      document.addEventListener("click", (e) => {
+        if (this.#open && !header.contains(e.target as Node)) this.close();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape" || !this.#open) return;
+        const trigger = this.#triggers.find((b) => b.dataset.drop === this.#group);
+        this.close();
+        trigger?.focus();
+      });
+    }
+
+    #items(group: string) {
+      return [
+        ...this.#panel.querySelectorAll<HTMLElement>(
+          `[data-drop-group="${group}"] [data-drop-item]`,
+        ),
+      ];
+    }
+
+    #show(group: string) {
+      this.#panel
+        .querySelectorAll<HTMLElement>("[data-drop-group]")
+        .forEach((g) => (g.hidden = g.dataset.dropGroup !== group));
+    }
+
+    #mark(group: string | null) {
+      this.#group = group;
+      this.#triggers.forEach((b) =>
+        b.setAttribute("aria-expanded", String(b.dataset.drop === group)),
+      );
+    }
+
+    /** Opacity only (no visibility), so keyboard focus can land on a link
+        while it is still rising in. */
+    #rise(group: string, delay: number) {
+      gsap.fromTo(
+        this.#items(group),
+        { y: 16, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: d(0.6),
+          stagger: d(0.06),
+          ease: "power3.out",
+          delay: d(delay),
+          clearProps: "transform,opacity",
+        },
+      );
+    }
+
+    open(group: string) {
+      if (this.#open && group === this.#group) return;
+      const all = this.#panel.querySelectorAll("[data-drop-item]");
+      gsap.killTweensOf(all);
+
+      // Already open on the other group: swap the links, don't re-wipe.
+      if (this.#open) {
+        this.#mark(group);
+        const shown = this.#panel.querySelector<HTMLElement>("[data-drop-group]:not([hidden])")!
+          .dataset.dropGroup!;
+        if (shown === group) return this.#rise(group, 0);
+        gsap.to(this.#items(shown), {
+          y: -8,
+          opacity: 0,
+          duration: d(0.2),
+          ease: "power2.in",
+          onComplete: () => {
+            gsap.set(all, { clearProps: "transform,opacity" });
+            this.#show(group);
+            this.#rise(group, 0);
+          },
+        });
+        return;
+      }
+
+      this.#open = true;
+      this.#mark(group);
+      this.#show(group);
+      this.#header.setAttribute("data-drop-open", "");
+      gsap.killTweensOf(this.#panel);
+      this.#panel.inert = false;
+      gsap.to(this.#panel, { clipPath: "inset(0% 0% 0% 0%)", duration: d(0.7), ease: "expo.out" });
+      this.#rise(group, 0.15);
+    }
+
+    close() {
+      if (!this.#open) return;
+      this.#open = false;
+      this.#header.removeAttribute("data-drop-open");
+      const items = [
+        ...this.#panel.querySelectorAll<HTMLElement>(
+          "[data-drop-group]:not([hidden]) [data-drop-item]",
+        ),
+      ];
+      this.#mark(null);
+      gsap.killTweensOf(this.#panel.querySelectorAll("[data-drop-item]"));
+      gsap.killTweensOf(this.#panel);
+      gsap.to(items, {
+        y: 16,
+        opacity: 0,
+        duration: d(0.3),
+        stagger: { each: d(0.03), from: "end" },
+        ease: "power3.in",
+      });
+      gsap.to(this.#panel, {
+        clipPath: "inset(0% 0% 100% 0%)",
+        duration: d(0.45),
+        ease: "expo.in",
+        onComplete: () => {
+          this.#panel.inert = true;
+          gsap.set(items, { clearProps: "transform,opacity" });
+        },
+      });
+    }
+  }
+
+  /** The pill that grows into a search field. First click opens it; with
+      text in it, the pill (or Enter) submits to the search page, which reads
+      `?q=`. Empty, the pill closes it again, as do Escape and clicking away. */
+  class HeaderSearch {
+    #header: HTMLElement;
+    #form: HTMLFormElement;
+    #input: HTMLInputElement;
+    #toggle: HTMLButtonElement;
+    #leaving = false;
+
+    constructor(header: HTMLElement) {
+      this.#header = header;
+      this.#form = header.querySelector<HTMLFormElement>("[data-hdr-search]")!;
+      this.#input = this.#form.querySelector<HTMLInputElement>("[data-hdr-search-input]")!;
+      this.#toggle = this.#form.querySelector<HTMLButtonElement>("[data-hdr-search-toggle]")!;
+
+      this.#toggle.addEventListener("click", (e) => {
+        if (!this.#isOpen) {
+          e.preventDefault();
+          this.open();
+        } else if (!this.#input.value.trim()) {
+          e.preventDefault();
+          this.close();
+        }
+      });
+      this.#form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (this.#input.value.trim()) this.#submit();
+      });
+      this.#form.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape" || !this.#isOpen) return;
+        e.stopPropagation();
+        this.close();
+        this.#toggle.focus();
+      });
+      this.#form.addEventListener("focusout", (e) => {
+        if (!this.#form.contains(e.relatedTarget as Node) && !this.#input.value.trim())
+          this.close();
+      });
+      document.addEventListener("pointerdown", (e) => {
+        if (this.#isOpen && !this.#form.contains(e.target as Node)) this.close();
+      });
+      // Coming back from the results via the back/forward cache: undo the
+      // send-off so the pill is closed and whole again.
+      addEventListener("pageshow", (e) => {
+        if (!e.persisted) return;
+        this.#leaving = false;
+        gsap.set([this.#form, this.#input, this.#form.querySelector("[data-hdr-search-icon]")], {
+          clearProps: "transform,opacity",
+        });
+        this.close();
+      });
+    }
+
+    get #isOpen() {
+      return this.#header.hasAttribute("data-search-open");
+    }
+
+    open() {
+      this.#header.setAttribute("data-search-open", "");
+      this.#toggle.type = "submit";
+      this.#toggle.setAttribute("aria-expanded", "true");
+      this.#input.tabIndex = 0;
+      this.#input.focus({ preventScroll: true });
+    }
+
+    close() {
+      if (!this.#isOpen || this.#leaving) return;
+      this.#header.removeAttribute("data-search-open");
+      this.#toggle.type = "button";
+      this.#toggle.setAttribute("aria-expanded", "false");
+      this.#input.tabIndex = -1;
+      this.#input.value = "";
+    }
+
+    /** A short send-off before navigating: the pill gives a squeeze, the
+        query slips left out of the field and the magnifier darts right,
+        as if carrying it off to the results. */
+    #submit() {
+      if (this.#leaving) return;
+      this.#leaving = true;
+      const url = new URL(this.#form.action);
+      url.searchParams.set("q", this.#input.value.trim());
+      const go = () => location.assign(url);
+      if (!d(1)) return go();
+      const icon = this.#form.querySelector("[data-hdr-search-icon]");
+      gsap
+        .timeline({ onComplete: go })
+        .to(this.#form, { scale: 0.96, duration: 0.1, ease: "power2.out" })
+        .to(this.#form, { scale: 1, duration: 0.35, ease: "back.out(3)" })
+        .to(this.#input, { x: -16, opacity: 0, duration: 0.25, ease: "power2.in" }, 0.05)
+        .to(icon, { x: 18, opacity: 0, duration: 0.22, ease: "power3.in" }, 0.08);
+    }
+  }
+
+  class SiteHeader extends HTMLElement {
+    #menu!: HTMLElement;
+    #opener: HTMLElement | null = null;
+    #tl: gsap.core.Timeline | null = null;
+
+    connectedCallback() {
+      const header = this.querySelector<HTMLElement>("[data-hdr]")!;
+      watchScroll(header);
+      new NavDrop(header);
+      new HeaderSearch(header);
+
+      this.#menu = this.querySelector<HTMLElement>("#site-menu")!;
+      this.querySelectorAll<HTMLElement>("[data-menu-toggle]").forEach((b) =>
+        b.addEventListener("click", () => this.open(b)),
+      );
+      this.querySelector("[data-menu-close]")?.addEventListener("click", () => this.close());
+      this.querySelectorAll<HTMLButtonElement>("[data-submenu]").forEach((b) =>
+        b.addEventListener("click", () => {
+          const open = b.getAttribute("aria-expanded") !== "true";
+          b.setAttribute("aria-expanded", String(open));
+          const list = document.getElementById(b.getAttribute("aria-controls")!)!;
+          open ? expand(list) : collapse(list);
+        }),
+      );
+      // Anything inside the menu that opens the voice note closes the menu first.
+      this.#menu
+        .querySelectorAll("[data-voice-open]")
+        .forEach((b) => b.addEventListener("click", () => this.close(false)));
+      this.#menu.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") this.close();
+        if (e.key === "Tab") this.#trap(e);
+      });
+    }
+
+    /** Keep Tab cycling inside the open menu (it's a modal dialog). */
+    #trap(e: KeyboardEvent) {
+      const items = [...this.#menu.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+        (el) => el.getClientRects().length,
+      );
+      const first = items[0];
+      const last = items.at(-1);
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last?.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first?.focus();
+      }
+    }
+
+    open(opener: HTMLElement) {
+      this.#opener = opener;
+      this.#menu.hidden = false;
+      opener.setAttribute("aria-expanded", "true");
+      document.documentElement.style.overflow = "hidden";
+      this.#menu.querySelector<HTMLElement>("[data-menu-close]")?.focus();
+
+      // The yellow drops in like a curtain, then each nav line rises out of
+      // its own mask (the clip shrinks at the same rate the line climbs, so it
+      // reads as text sliding up from behind a baseline). The spray and the
+      // top/bottom bars fade in around it.
+      const lines = [...this.#menu.querySelectorAll<HTMLElement>("[data-menu-line]")].filter(
+        (el) => el.getClientRects().length,
+      );
+      const fades = this.#menu.querySelectorAll("[data-menu-fade]");
+      const spray = this.#menu.querySelector(":scope > svg");
+      this.#tl?.kill();
+      this.#tl = gsap
+        .timeline()
+        .fromTo(
+          this.#menu,
+          { clipPath: "inset(0% 0% 100% 0%)" },
+          {
+            clipPath: "inset(0% 0% 0% 0%)",
+            duration: d(0.55),
+            ease: "power3.inOut",
+            clearProps: "clipPath",
+          },
+        )
+        .fromTo(
+          lines,
+          { yPercent: 100, clipPath: "inset(0% 0% 100% 0%)" },
+          {
+            yPercent: 0,
+            clipPath: "inset(0% 0% 0% 0%)",
+            duration: d(0.7),
+            ease: "expo.out",
+            stagger: d(0.035),
+            clearProps: "transform,clipPath",
+          },
+          d(0.3),
+        )
+        .fromTo(
+          fades,
+          { opacity: 0, y: 8 },
+          { opacity: 1, y: 0, duration: d(0.5), stagger: d(0.08), clearProps: "transform,opacity" },
+          d(0.4),
+        )
+        .fromTo(
+          spray,
+          { opacity: 0, xPercent: -6 },
+          {
+            opacity: 1,
+            xPercent: 0,
+            duration: d(1.2),
+            ease: "power2.out",
+            clearProps: "transform,opacity",
+          },
+          d(0.25),
+        );
+    }
+
+    close(restoreFocus = true) {
+      this.#opener?.setAttribute("aria-expanded", "false");
+      if (restoreFocus) this.#opener?.focus();
+      this.#tl?.kill();
+      gsap.set(this.#menu.querySelectorAll("[data-menu-line], [data-menu-fade], :scope > svg"), {
+        clearProps: "transform,opacity,clipPath",
+      });
+      this.#tl = gsap.timeline().to(this.#menu, {
+        clipPath: "inset(0% 0% 100% 0%)",
+        duration: d(0.4),
+        ease: "power3.inOut",
+        onComplete: () => {
+          this.#menu.hidden = true;
+          gsap.set(this.#menu, { clearProps: "clipPath" });
+          document.documentElement.style.overflow = "";
+        },
+      });
+    }
+  }
+  customElements.define("site-header", SiteHeader);
+</script>

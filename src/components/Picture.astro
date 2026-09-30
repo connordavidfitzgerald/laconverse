@@ -1,0 +1,54 @@
+---
+/* A Sanity image in a fixed-ratio frame, cropped by its hotspot. With no image
+   (fixtures, or an article imported without one) the frame keeps its size and
+   shows a flat tone so the layout never collapses. */
+import { imageUrl, srcset } from "../lib/sanity";
+import type { Img } from "../lib/types";
+
+interface Props {
+  img?: Img | null;
+  /** width / height, e.g. 4/3. Omit to use the image's own proportions. */
+  ratio?: number;
+  sizes?: string;
+  widths?: number[];
+  class?: string;
+  imgClass?: string;
+  eager?: boolean;
+  alt?: string;
+}
+
+const {
+  img,
+  ratio,
+  sizes = "100vw",
+  widths = [400, 640, 960, 1280, 1920],
+  class: className,
+  imgClass,
+  eager = false,
+  alt,
+} = Astro.props;
+const dims = img?.asset?.metadata?.dimensions;
+const r = ratio ?? (dims ? dims.width / dims.height : 4 / 3);
+const src = imageUrl(img, 1280, ratio ? Math.round(1280 / ratio) : undefined);
+const set = srcset(img, widths, ratio);
+const lqip = img?.asset?.metadata?.lqip;
+---
+
+<div
+  class:list={["relative overflow-hidden bg-neutral-200", className]}
+  style={`aspect-ratio: ${r}`}
+>
+  {src && (
+    <img
+      src={src}
+      srcset={set}
+      sizes={set ? sizes : undefined}
+      alt={alt ?? img?.alt ?? ""}
+      loading={eager ? "eager" : "lazy"}
+      fetchpriority={eager ? "high" : undefined}
+      decoding="async"
+      class:list={["absolute inset-0 size-full object-cover", imgClass]}
+      style={lqip ? `background: url(${lqip}) center / cover` : undefined}
+    />
+  )}
+</div>

@@ -1,0 +1,12 @@
+---
+interface Props {
+  href: string;
+  label: string;
+  class?: string;
+}
+const { href, label, class: className } = Astro.props;
+---
+
+<a href={href} class:list={["label inline-block text-md", className]}>
+  <span class="nudge-back">←</span> {label}
+</a>

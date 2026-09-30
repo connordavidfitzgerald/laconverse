@@ -1,0 +1,204 @@
+---
+/* Figma: 6D BALADOS DETAIL — UI. One <audio> for the page; each episode's
+   play pill loads into it, and the lilac bar at the top plays the newest. */
+import BackLink from "../components/BackLink.astro";
+import Icon from "../components/Icon.astro";
+import Picture from "../components/Picture.astro";
+import PodcastCard from "../components/PodcastCard.astro";
+import Layout from "../layouts/Layout.astro";
+import { formatDuration, href, otherLang, t, type Lang } from "../i18n";
+import { getPodcasts } from "../lib/content";
+import type { Podcast } from "../lib/types";
+
+interface Props {
+  lang: Lang;
+  podcast: Podcast;
+}
+const { lang, podcast } = Astro.props;
+const s = t(lang);
+const others = (await getPodcasts(lang)).filter((p) => p.slug !== podcast.slug);
+const other = otherLang(lang);
+const translation = podcast.translations.find((x) => x.language === other);
+const latest = podcast.episodes.at(-1);
+const pad = (n: number) => `E${String(n).padStart(2, "0")}`;
+/* Episodes hosted on Spotify play in Spotify's own player. */
+const spotify = (src?: string | null) =>
+  src?.match(/open\.spotify\.com\/episode\/([A-Za-z0-9]+)/)?.[1];
+const player = (id: string, title: string) =>
+  `https://open.spotify.com/embed/episode/${id}?utm_source=generator&title=${encodeURIComponent(title)}`;
+const latestSpotify = spotify(latest?.src);
+---
+
+<Layout
+  lang={lang}
+  title={podcast.title}
+  description={podcast.description}
+  image={podcast.cover}
+  seo={podcast.seo}
+  alternate={translation ? href(other, "podcast", translation.slug) : href(other, "podcasts")}
+>
+  <podcast-player class="block px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10">
+    <audio preload="none"></audio>
+    <div class="lg:col-span-8 lg:col-start-3">
+      <div class="w-full flex justify-center lg:pb-20 pt-20">
+        <BackLink href={href(lang, "podcasts")} label={s.podcasts} />
+      </div>
+
+      <h1 class="display mt-5 text-mega tracking-[-0.02em] text-center">{podcast.title}</h1>
+      <div class="flex flex-col p-40">
+        <Picture
+          img={podcast.image ?? podcast.cover}
+          ratio={353 / 290}
+          class="mt-5"
+          eager
+          sizes="(min-width: 1024px) 66vw, 100vw"
+        />
+      </div>
+
+      {latestSpotify ? (
+        <iframe
+          src={player(latestSpotify, latest!.title)}
+          title={latest!.title}
+          class="mt-2.5 h-[152px] w-full rounded-[12px]"
+          loading="lazy"
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        ></iframe>
+      ) : (
+        latest?.src && (
+          <button
+            type="button"
+            data-episode={latest.src}
+            data-title={latest.title}
+            class="group mt-2.5 flex w-full items-center gap-4 rounded-[20px] bg-lilac px-5 py-5 text-left"
+          >
+            <span class="grid size-11 shrink-0 place-items-center rounded-full bg-ink text-paper transition-transform duration-200 ease-out group-hover:scale-105 group-active:scale-95">
+              <Icon name="play" class="h-3 w-3 group-aria-pressed:hidden" />
+              <Icon name="pause" class="hidden h-3 w-3 group-aria-pressed:block" />
+            </span>
+            <span>
+              <span class="label block text-[0.625rem]">{s.latestEpisode}</span>
+              <span class="display block text-2xl leading-[0.95]">{latest.title}</span>
+            </span>
+          </button>
+        )
+      )}
+
+      {podcast.intro && (
+        <p class="mt-16 font-display text-intro font-extrabold leading-[0.95] tracking-[-0.02em]">
+          {podcast.intro}
+        </p>
+      )}
+
+      {podcast.episodes.length > 0 && (
+        <section class="mt-16" aria-labelledby="episodes">
+          <h2 id="episodes" class="label mb-5 text-xs">
+            {s.episodesHeading}
+          </h2>
+          <ol>
+            {podcast.episodes.map((e, i) => (
+              <li
+                class="grid grid-cols-[44px_1fr] gap-x-2 border-t border-ink py-4 lg:grid-cols-[80px_1fr]"
+                data-reveal
+              >
+                <span class="display text-2xl leading-[0.95] lg:text-4xl">{pad(i + 1)}</span>
+                <div class="flex flex-col gap-2.5">
+                  <h3 class="display text-2xl leading-[0.95] lg:text-4xl">{e.title}</h3>
+                  {e.description && (
+                    <p class="font-display text-base font-extrabold leading-[0.95] opacity-70 lg:text-lg">
+                      {e.description}
+                    </p>
+                  )}
+                  {spotify(e.src) ? (
+                    <iframe
+                      src={player(spotify(e.src)!, e.title)}
+                      title={e.title}
+                      class="h-[152px] w-full rounded-[12px]"
+                      loading="lazy"
+                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    ></iframe>
+                  ) : e.src ? (
+                    <button
+                      type="button"
+                      data-episode={e.src}
+                      data-title={e.title}
+                      class="press group label inline-flex w-max items-center gap-2 rounded-full bg-ink px-3 py-1.5 text-xs text-paper hover:bg-ink/80"
+                    >
+                      <Icon name="play" class="h-2 w-2 group-aria-pressed:hidden" />
+                      <Icon name="pause" class="hidden h-2 w-2 group-aria-pressed:block" />
+                      {formatDuration(e.duration)}
+                    </button>
+                  ) : e.duration ? (
+                    <span class="label inline-flex w-max items-center gap-2 rounded-full bg-ink px-3 py-1.5 text-xs text-paper">
+                      <Icon name="play" class="h-2 w-2" />
+                      {formatDuration(e.duration)}
+                    </span>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      {podcast.credits.length > 0 && (
+        <section class="mt-16" aria-labelledby="credits">
+          <h2 id="credits" class="label mb-5 text-xs">
+            {s.credits}
+          </h2>
+          <dl class="grid gap-4 md:grid-cols-2">
+            {podcast.credits.map((c) => (
+              <div>
+                <dt class="font-display text-sm font-medium opacity-60">{c.role}</dt>
+                <dd class="font-display text-sm font-extrabold">{c.names}</dd>
+              </div>
+            ))}
+          </dl>
+          {podcast.note && <p class="mt-6 font-display text-sm font-extrabold">{podcast.note}</p>}
+        </section>
+      )}
+    </div>
+  </podcast-player>
+
+  {others.length > 0 && (
+    <section class="overflow-hidden px-5 py-16 lg:px-10 lg:py-24" aria-labelledby="others">
+      <h2 id="others" class="display text-section">
+        {s.otherPodcasts}
+      </h2>
+      <ul class="rail -mr-5 mt-5 gap-2.5 pr-5 lg:-mr-10 lg:gap-5 lg:pr-10">
+        {others.map((p) => (
+          <li class="w-[207px] lg:w-[351px]">
+            <PodcastCard podcast={p} lang={lang} />
+          </li>
+        ))}
+      </ul>
+      <a
+        href={href(lang, "podcasts")}
+        class="label mt-8 inline-block bg-lilac px-5 py-3 text-xs hover:bg-ink hover:text-lilac lg:text-base"
+      >
+        {s.allPodcasts}
+      </a>
+    </section>
+  )}
+</Layout>
+
+<script>
+  class PodcastPlayer extends HTMLElement {
+    connectedCallback() {
+      const audio = this.querySelector("audio")!;
+      let current: HTMLButtonElement | null = null;
+      this.querySelectorAll<HTMLButtonElement>("[data-episode]").forEach((b) =>
+        b.addEventListener("click", () => {
+          if (current === b && !audio.paused) return audio.pause();
+          if (audio.src !== b.dataset.episode) audio.src = b.dataset.episode!;
+          current?.removeAttribute("aria-pressed");
+          current = b;
+          b.setAttribute("aria-pressed", "true");
+          audio.play();
+        }),
+      );
+      audio.addEventListener("pause", () => current?.setAttribute("aria-pressed", "false"));
+      audio.addEventListener("play", () => current?.setAttribute("aria-pressed", "true"));
+    }
+  }
+  customElements.define("podcast-player", PodcastPlayer);
+</script>

@@ -1,0 +1,145 @@
+---
+/* The search page's category filter + story grid, filtering the full index
+   client-side. An optional search form goes in the default slot (it needs an
+   input with id "q"); without one only the categories filter. The index is
+   fetched on first use, so the server-rendered cards stand until then. */
+import ArticleGrid from "./ArticleGrid.astro";
+import CategoryFilter from "./CategoryFilter.astro";
+import { t, type Lang } from "../i18n";
+import type { ArticleCard } from "../lib/types";
+
+interface Props {
+  lang: Lang;
+  categories: { title: string; slug: string; count: number }[];
+  articles: ArticleCard[];
+  total: number;
+  /** Mirror the query and category in the URL (?q=, ?c=). */
+  syncUrl?: boolean;
+  /** Cards per page; `articles` should be the first page. */
+  pageSize?: number;
+  class?: string;
+}
+const { lang, categories, articles, total, syncUrl = false, pageSize = 12, class: className } = Astro.props;
+const s = t(lang);
+const hasForm = Astro.slots.has("default");
+---
+
+<article-search
+  class:list={["block", className]}
+  data-lang={lang}
+  data-results={s.results}
+  data-none={s.noResults}
+  data-total={total}
+  data-page={pageSize}
+  data-sync={syncUrl ? "" : undefined}
+>
+  <slot />
+  <div class:list={["pb-[60px]", hasForm ? "pt-[60px] lg:pt-20" : "pt-10"]}>
+    <CategoryFilter lang={lang} categories={categories} total={total} asFilter />
+  </div>
+  <ArticleGrid lang={lang} articles={articles} total={total} managed />
+</article-search>
+
+<script>
+  import { enter } from "../lib/motion";
+  import { cardLinks, fold, loadIndex, type Entry } from "../lib/searchClient";
+
+  const articles = (el: HTMLElement) => el.querySelector("[data-list]")!.childElementCount;
+
+  class ArticleSearch extends HTMLElement {
+    entries: Entry[] | null = null;
+    results: Entry[] = [];
+    shown = 0;
+    query = "";
+    category = "";
+    page = 12;
+
+    connectedCallback() {
+      this.page = Number(this.dataset.page);
+      const input = this.querySelector<HTMLInputElement>("#q");
+      if (this.hasAttribute("data-sync")) {
+        const params = new URLSearchParams(location.search);
+        this.query = params.get("q") ?? "";
+        this.category = params.get("c") ?? "";
+        if (input) input.value = this.query;
+      }
+
+      this.querySelector("form")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        this.update();
+      });
+      let timer = 0;
+      input?.addEventListener("input", () => {
+        clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          this.query = input.value;
+          this.update();
+        }, 150);
+      });
+      this.querySelectorAll<HTMLAnchorElement>("[data-filter]").forEach((a) =>
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
+          this.category = a.dataset.filter ?? "";
+          this.update();
+        }),
+      );
+      const more = this.querySelector<HTMLButtonElement>("[data-more]")!;
+      more.onclick = async () => {
+        // Still showing the server-rendered cards: filter first, then page on.
+        if (!this.entries) await this.update(false);
+        this.more();
+      };
+      if (this.query || this.category) this.update(false);
+      else more.closest("p")!.hidden = articles(this) >= Number(this.dataset.total);
+    }
+
+    /** `animate` is off for the first render, which replaces the server-rendered
+        cards in place and shouldn't flicker. */
+    async update(animate = true) {
+      this.entries ??= await loadIndex(this.dataset.lang!);
+      const q = fold(this.query.trim());
+      this.results = this.entries.filter(
+        (e) =>
+          (!this.category || e.c.some((c) => c.slug === this.category)) &&
+          (!q ||
+            fold(
+              `${e.t} ${e.d ?? ""} ${e.a.map((a) => a.name).join(" ")} ${e.c.map((c) => c.title).join(" ")}`,
+            ).includes(q)),
+      );
+      this.querySelectorAll<HTMLAnchorElement>("[data-filter]").forEach((a) =>
+        a.setAttribute("aria-current", String((a.dataset.filter ?? "") === this.category)),
+      );
+      if (this.hasAttribute("data-sync")) {
+        const url = new URL(location.href);
+        this.query ? url.searchParams.set("q", this.query) : url.searchParams.delete("q");
+        this.category ? url.searchParams.set("c", this.category) : url.searchParams.delete("c");
+        history.replaceState(null, "", url);
+      }
+
+      const list = this.querySelector("[data-list]")!;
+      list.replaceChildren();
+      this.shown = 0;
+      this.more(animate);
+      const count = this.querySelector("[data-count]")!;
+      count.textContent = this.results.length
+        ? `${this.results.length} ${this.dataset.results}`
+        : this.dataset.none!;
+    }
+
+    more(animate = true) {
+      const tpl = this.querySelector<HTMLTemplateElement>("[data-card]")!;
+      const list = this.querySelector("[data-list]")!;
+      const added: Element[] = [];
+      for (const e of this.results.slice(this.shown, this.shown + this.page)) {
+        const node = tpl.content.cloneNode(true) as DocumentFragment;
+        cardLinks(node, e, this.dataset.lang!);
+        added.push(...node.children);
+        list.append(node);
+      }
+      if (animate) enter(added, { y: 8, stagger: 0.03 });
+      this.shown = Math.min(this.results.length, this.shown + this.page);
+      this.querySelector("[data-more]")!.closest("p")!.hidden = this.shown >= this.results.length;
+    }
+  }
+  customElements.define("article-search", ArticleSearch);
+</script>

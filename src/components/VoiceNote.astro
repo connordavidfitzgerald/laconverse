@@ -1,0 +1,847 @@
+---
+/* “Got a story to tell?” — record a voice note (or write) and send it to the
+   newsroom (Figma: 3A–3E). Opened from any `[data-voice-open]` button; a value
+   of "write" opens straight into the written form. Recording uses
+   MediaRecorder; the file is posted to /api/voice, which stores it in Sanity.
+
+   A mic button waits in the bottom-right corner (ducking out of the way while
+   the page scrolls down or the footer is in view). Whatever opened it, the
+   dialog grows out of that button: a full-screen sheet on phones, a box
+   anchored bottom-right from `md`. */
+import Icon from "./Icon.astro";
+import Socials from "./Socials.astro";
+import Spray from "./Spray.astro";
+import { t, type Lang } from "../i18n";
+import type { Settings } from "../lib/types";
+
+interface Props {
+  lang: Lang;
+  settings: Settings;
+  /** Show the corner mic button. */
+  launcher?: boolean;
+}
+const { lang, settings, launcher = true } = Astro.props;
+const s = t(lang);
+const BARS = 32;
+
+const field =
+  "display w-full border-b border-ink bg-transparent pb-2 text-2xl leading-none tracking-[-0.01em] placeholder:text-ink/40 outline-none focus:border-b-2";
+---
+
+<voice-note
+  data-lang={lang}
+  data-play={s.vnPlay}
+  data-pause={s.vnPause}
+  data-sent={s.sent}
+  data-error={s.error}
+>
+  {launcher && (
+    <button
+      type="button"
+      data-voice-open
+      data-voice-fab
+      aria-label={s.vnOpen}
+      class="group fixed bottom-4 right-4 z-30 rounded-full outline-offset-4 md:bottom-6 md:right-6"
+    >
+      <span
+        aria-hidden="true"
+        class="label pointer-events-none absolute right-full top-1/2 mr-2.5 hidden -translate-y-1/2 translate-x-2 whitespace-nowrap rounded-full bg-ink px-3 py-1.5 text-xs text-paper opacity-0 transition-[opacity,translate] duration-300 ease-power3-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 md:block"
+      >
+        {s.vnFab}
+      </span>
+      <span
+        data-fab-disc
+        class="grid size-[52px] place-items-center rounded-full bg-ink text-paper shadow-[0_8px_24px_-8px_rgb(0_0_0/0.5)] transition-transform duration-200 ease-out group-hover:scale-105 group-active:scale-95"
+      >
+        <Icon name="mic" class="h-[18px] w-[17px]" />
+      </span>
+    </button>
+  )}
+
+  <dialog
+    class="m-0 h-dvh max-h-none w-full max-w-none overflow-hidden bg-yellow p-0 text-ink backdrop:bg-ink/40 md:top-auto md:left-auto md:right-6 md:bottom-6 md:h-[min(44rem,calc(100dvh-3rem))] md:w-[26rem] md:rounded-2xl md:shadow-[0_24px_60px_-20px_rgb(0_0_0/0.45)] md:backdrop:bg-ink/20"
+    aria-labelledby="vn-title"
+  >
+    <!-- The ink disc the box grows out of (and shrinks back into). -->
+    <div
+      data-morph
+      aria-hidden="true"
+      class="pointer-events-none absolute inset-0 z-10 bg-ink text-paper opacity-0"
+    >
+      <span
+        data-morph-bloom
+        class="absolute size-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow"
+      ></span>
+      <span data-morph-icon class="absolute -translate-x-1/2 -translate-y-1/2">
+        <Icon name="mic" class="h-[18px] w-[17px]" />
+      </span>
+    </div>
+
+    <div data-scroll class="h-full overflow-y-auto overflow-x-hidden overscroll-contain">
+      <div class="relative flex min-h-full flex-col">
+        <Spray class="left-[-60%] top-[18%] w-[220%] -rotate-[32deg]" seed={11} />
+
+        <div class="relative mx-auto flex w-full max-w-[26rem] flex-1 flex-col items-center px-5 pt-5 text-center md:pt-8">
+          <button
+            type="button"
+            data-close
+            class="press label rounded-full bg-ink px-3 py-1.5 text-xs text-paper hover:bg-ink/80"
+          >
+            ← {s.vnEsc}
+          </button>
+
+          <h2
+            id="vn-title"
+            class="display mt-12 text-[2rem] leading-[0.95] tracking-[-0.01em] text-balance md:mt-10 md:text-4xl"
+          >
+            {s.vnTitle}
+          </h2>
+
+          <!-- Mode switch -->
+          <button
+            type="button"
+            data-mode="write"
+            class="label mt-5 text-xs underline underline-offset-2"
+          >
+            {s.vnWrite}
+          </button>
+          <button
+            type="button"
+            data-mode="record"
+            class="label mt-5 inline-flex items-center gap-2 text-xs underline underline-offset-2"
+            hidden
+          >
+            <span class="grid size-6 place-items-center rounded-full bg-ink text-paper">
+              <Icon name="mic" class="h-3 w-3" />
+            </span>
+            {s.vnRecord}
+          </button>
+
+          <!-- RECORD FLOW ------------------------------------------------------>
+          <form data-panel="record" class="mt-10 flex w-full flex-col items-center" novalidate>
+            <!-- start -->
+            <div data-step="start" class="flex flex-col items-center gap-4">
+              <button
+                type="button"
+                data-start
+                class="press grid size-[84px] place-items-center rounded-full bg-ink text-paper hover:scale-105"
+                aria-label={s.vnTap}
+              >
+                <Icon name="mic" class="h-[23px] w-[22px]" />
+              </button>
+              <p class="label text-xs">{s.vnTap}</p>
+              <p data-mic-error class="max-w-xs text-sm font-medium" hidden>
+                {s.vnNoMic}
+              </p>
+            </div>
+
+            <!-- player (recording / finished / details) -->
+            <div data-step="player" class="flex w-full flex-col items-center" hidden>
+              <div class="flex h-[69px] w-full items-center gap-4 rounded-full bg-ink px-5 text-paper">
+                <span data-rec-dot class="size-2.5 shrink-0 rounded-full bg-[#ff3b30]"></span>
+                <button
+                  type="button"
+                  data-play
+                  class="grid size-5 shrink-0 place-items-center text-paper"
+                  hidden
+                  aria-label={s.vnPlay}
+                >
+                  <span data-icon-play>
+                    <Icon name="play" class="h-3 w-2.5" />
+                  </span>
+                  <span data-icon-pause class="hidden">
+                    <Icon name="pause" class="h-3 w-2.5" />
+                  </span>
+                </button>
+                <div
+                  data-bars
+                  class="flex h-8 flex-1 items-center justify-center gap-[3px]"
+                  aria-hidden="true"
+                >
+                  {Array.from({ length: BARS }, () => (
+                    <span
+                      class="w-[3px] rounded-full bg-yellow transition-opacity duration-200"
+                      style="height: 12%"
+                    ></span>
+                  ))}
+                </div>
+                <span data-time class="label w-10 shrink-0 text-right text-sm" aria-live="off">
+                  0:00
+                </span>
+              </div>
+
+              <div data-recording class="mt-5 flex flex-col items-center gap-4">
+                <button
+                  type="button"
+                  data-stop
+                  class="press grid size-[60px] place-items-center rounded-full bg-ink text-paper hover:scale-105"
+                  aria-label={s.vnRecording}
+                >
+                  <Icon name="stop" class="size-4" />
+                </button>
+                <p class="label text-xs" aria-live="polite">
+                  {s.vnRecording}
+                </p>
+              </div>
+
+              <div data-finished class="mt-5 grid w-full grid-cols-2 gap-2.5" hidden>
+                <button
+                  type="button"
+                  data-redo
+                  class="press label flex h-[46px] items-center justify-center gap-2 rounded-[10px] border border-ink text-lg hover:bg-ink hover:text-yellow"
+                >
+                  <Icon name="redo" class="size-4" />
+                  {s.vnRedo}
+                </button>
+                <button
+                  type="button"
+                  data-next
+                  class="press label flex h-[46px] items-center justify-center gap-2 rounded-[10px] bg-ink text-lg text-paper"
+                >
+                  {s.vnSubmit}
+                  <Icon name="arrow" class="nudge-x h-3 w-4" />
+                </button>
+              </div>
+
+              <div data-details class="mt-4 w-full" hidden>
+                <button
+                  type="button"
+                  data-redo
+                  class="label mx-auto flex items-center gap-1.5 text-sm underline underline-offset-2"
+                >
+                  <Icon name="redo" class="size-3.5" />
+                  {s.vnRedo}
+                </button>
+                <p class="label mt-5 text-sm">{s.vnReach}</p>
+                <div class="mt-4 flex flex-col gap-6 text-left">
+                  <label>
+                    <span class="sr-only">{s.email}</span>
+                    <input
+                      name="email"
+                      type="email"
+                      autocomplete="email"
+                      placeholder={s.email}
+                      class={field}
+                    />
+                  </label>
+                  <label>
+                    <span class="sr-only">{s.phone}</span>
+                    <input
+                      name="phone"
+                      type="tel"
+                      autocomplete="tel"
+                      placeholder={s.phone}
+                      class={field}
+                    />
+                  </label>
+                  <label>
+                    <span class="sr-only">{s.name}</span>
+                    <input name="name" autocomplete="name" placeholder={s.name} class={field} />
+                  </label>
+                </div>
+                <button
+                  type="submit"
+                  class="press label mt-8 h-[46px] w-full rounded-[10px] bg-ink text-lg text-paper disabled:opacity-60"
+                >
+                  {s.vnSend}
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- WRITE FLOW ------------------------------------------------------->
+          <form data-panel="write" class="mt-8 w-full" hidden novalidate>
+            <label>
+              <span class="sr-only">{s.vnMessage}</span>
+              <textarea
+                name="message"
+                required
+                rows="6"
+                placeholder={s.vnMessage}
+                class="display w-full resize-none rounded-[10px] border border-ink bg-transparent p-4 text-2xl leading-none placeholder:text-ink/40 outline-none focus:border-2"
+              ></textarea>
+            </label>
+            <p class="label mt-5 text-sm">{s.vnReach}</p>
+            <div class="mt-4 flex flex-col gap-6 text-left">
+              <label>
+                <span class="sr-only">{s.email}</span>
+                <input
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  placeholder={s.email}
+                  class={field}
+                />
+              </label>
+              <label>
+                <span class="sr-only">{s.name}</span>
+                <input name="name" autocomplete="name" placeholder={s.name} class={field} />
+              </label>
+            </div>
+            <button
+              type="submit"
+              class="press label mt-8 h-[46px] w-full rounded-[10px] bg-ink text-lg text-paper disabled:opacity-60"
+            >
+              {s.vnSend}
+            </button>
+          </form>
+
+          <p data-done class="display mt-10 text-3xl leading-[0.95]" role="status" hidden></p>
+
+          <p class="mt-auto max-w-[19rem] py-8 text-[0.625rem] font-medium leading-[1.35] md:max-w-sm md:text-xs">
+            {s.vnPrivacy}
+          </p>
+        </div>
+
+        <div class="relative flex items-center justify-between px-5 pb-5">
+          <Socials
+            socials={settings.socials.filter((x) =>
+              ["whatsapp", "linkedin", "instagram"].includes(x.platform),
+            )}
+            variant="plain"
+          />
+          <a href={`mailto:${settings.email}`} class="display text-lg leading-none">
+            {settings.email}
+          </a>
+        </div>
+      </div>
+    </div>
+  </dialog>
+</voice-note>
+
+<style>
+  /* The corner button ducks down out of the way (it stays reachable by
+     keyboard: focusing it brings it back). */
+  [data-voice-fab] {
+    transition:
+      translate 450ms var(--ease-power3-out),
+      opacity 300ms ease-out;
+  }
+  [data-voice-fab][data-away]:not(:focus-visible) {
+    translate: 0 calc(100% + 2rem);
+    opacity: 0;
+    pointer-events: none;
+  }
+  voice-note dialog::backdrop {
+    transition: opacity 300ms ease-out;
+  }
+  @starting-style {
+    voice-note dialog[open]::backdrop {
+      opacity: 0;
+    }
+  }
+  voice-note dialog[data-leaving]::backdrop {
+    opacity: 0;
+  }
+</style>
+
+<script>
+  import { appear, d, gsap } from "../lib/motion";
+
+  const MAX_SECONDS = 300;
+  const fmt = (sec: number) =>
+    `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, "0")}`;
+
+  const boxed = matchMedia("(min-width: 48rem)");
+
+  /** On screen and not tucked away. */
+  function showing(el: HTMLElement | null | undefined): el is HTMLElement {
+    if (!el || el.closest("[data-away], [hidden]")) return false;
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.bottom > 0 && r.right > 0 && r.top < innerHeight && r.left < innerWidth;
+  }
+
+  function pickMime() {
+    const types = ["audio/webm;codecs=opus", "audio/mp4", "audio/ogg;codecs=opus", "audio/webm"];
+    return (
+      types.find((t) => typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(t)) ??
+      ""
+    );
+  }
+
+  class VoiceNote extends HTMLElement {
+    dialog!: HTMLDialogElement;
+    recorder: MediaRecorder | null = null;
+    stream: MediaStream | null = null;
+    audioCtx: AudioContext | null = null;
+    chunks: Blob[] = [];
+    blob: Blob | null = null;
+    levels: number[] = [];
+    duration = 0;
+    started = 0;
+    raf = 0;
+    audio = new Audio();
+    discard = false;
+    pulse: gsap.core.Tween | null = null;
+    fab: HTMLElement | null = null;
+    /** The button the dialog grew out of, to shrink back into. */
+    origin: HTMLElement | null = null;
+    morph: gsap.core.Timeline | null = null;
+    leaving = false;
+
+    $<T extends HTMLElement = HTMLElement>(sel: string) {
+      return this.querySelector<T>(sel)!;
+    }
+    $$<T extends HTMLElement = HTMLElement>(sel: string) {
+      return [...this.querySelectorAll<T>(sel)];
+    }
+
+    connectedCallback() {
+      this.dialog = this.$<HTMLDialogElement>("dialog");
+      this.fab = this.querySelector("[data-voice-fab]");
+      this.watchFab();
+
+      document.addEventListener("click", (e) => {
+        const opener = (e.target as Element).closest<HTMLElement>("[data-voice-open]");
+        if (!opener) return;
+        e.preventDefault();
+        this.open(
+          opener.dataset.voiceOpen === "write" ? "write" : "record",
+          opener === this.fab ? opener.querySelector<HTMLElement>("[data-fab-disc]") : opener,
+        );
+      });
+      // A click on the backdrop (only reachable around the `md` box).
+      this.dialog.addEventListener("click", (e) => e.target === this.dialog && this.hide());
+      // Deep link: /contact#voice or ?voice=write
+      if (location.hash === "#voice") this.open("record");
+
+      this.$("[data-close]").addEventListener("click", () => this.hide());
+      // Escape fades out like the close button instead of vanishing.
+      this.dialog.addEventListener("cancel", (e) => {
+        e.preventDefault();
+        this.hide();
+      });
+      this.dialog.addEventListener("close", () => this.reset());
+      this.$$("[data-mode]").forEach((b) =>
+        b.addEventListener("click", () => this.mode(b.dataset.mode as "write" | "record")),
+      );
+
+      this.$("[data-start]").addEventListener("click", () => this.start());
+      this.$("[data-stop]").addEventListener("click", () => this.stop());
+      this.$$("[data-redo]").forEach((b) =>
+        b.addEventListener("click", () => {
+          this.reset();
+          this.start();
+        }),
+      );
+      this.$("[data-next]").addEventListener("click", () => this.step("details"));
+      this.$("[data-play]").addEventListener("click", () =>
+        this.audio.paused ? this.audio.play() : this.audio.pause(),
+      );
+
+      this.audio.addEventListener("play", () => this.playing(true));
+      this.audio.addEventListener("pause", () => this.playing(false));
+      this.audio.addEventListener("ended", () => {
+        this.playing(false);
+        this.paint(1);
+        this.time(this.duration);
+      });
+      this.audio.addEventListener("timeupdate", () => {
+        this.time(this.audio.currentTime);
+        this.paint(this.duration ? this.audio.currentTime / this.duration : 0);
+      });
+
+      this.$<HTMLFormElement>('[data-panel="record"]').addEventListener("submit", (e) => {
+        e.preventDefault();
+        this.send("voice");
+      });
+      this.$<HTMLFormElement>('[data-panel="write"]').addEventListener("submit", (e) => {
+        e.preventDefault();
+        this.send("text");
+      });
+    }
+
+    /** The corner button: out of the way while the page scrolls down or the
+        footer is showing, back on scrolling up or after a short pause. */
+    watchFab() {
+      const fab = this.fab;
+      if (!fab) return;
+      let down = false;
+      let footer = false;
+      let last = scrollY;
+      let queued = false;
+      let idle = 0;
+      const update = () => fab.toggleAttribute("data-away", down || footer);
+      addEventListener(
+        "scroll",
+        () => {
+          if (queued) return;
+          queued = true;
+          requestAnimationFrame(() => {
+            queued = false;
+            const dy = scrollY - last;
+            last = scrollY;
+            if (Math.abs(dy) > 4) down = dy > 0 && scrollY > 120;
+            update();
+            clearTimeout(idle);
+            idle = window.setTimeout(() => {
+              down = false;
+              update();
+            }, 1200);
+          });
+        },
+        { passive: true },
+      );
+      const foot = document.querySelector("body > footer");
+      if (foot)
+        new IntersectionObserver(([entry]) => {
+          footer = entry.isIntersecting;
+          update();
+        }).observe(foot);
+    }
+
+    /** `el`'s shape as a clip on the dialog, plus the shift that carries the
+        clip onto it when it lies outside the dialog (the `md` box). */
+    shape(el: HTMLElement) {
+      gsap.set(this.dialog, { x: 0, y: 0 });
+      const r = this.dialog.getBoundingClientRect();
+      const o = el.getBoundingClientRect();
+      const w = Math.min(o.width, r.width);
+      const h = Math.min(o.height, r.height);
+      const left = Math.min(Math.max(o.left, r.left), r.right - w);
+      const top = Math.min(Math.max(o.top, r.top), r.bottom - h);
+      const cx = left - r.left + w / 2;
+      const cy = top - r.top + h / 2;
+      return {
+        centre: { left: cx, top: cy },
+        /** Scale at which the 16px bloom covers the whole box from the centre. */
+        bloom: (2 * Math.hypot(Math.max(cx, r.width - cx), Math.max(cy, r.height - cy))) / 16 + 1,
+        clipPath: `inset(${top - r.top}px ${r.right - left - w}px ${r.bottom - top - h}px ${left - r.left}px round ${Math.min(w, h) / 2}px)`,
+        x: o.left - left,
+        y: o.top - top,
+      };
+    }
+
+    get full() {
+      return `inset(0px 0px 0px 0px round ${boxed.matches ? 16 : 0}px)`;
+    }
+
+    get content() {
+      return [...this.$("[data-scroll] > div").children];
+    }
+
+    open(mode: "record" | "write", from?: HTMLElement | null) {
+      if (!this.dialog.open) {
+        this.origin =
+          [from, this.fab?.querySelector<HTMLElement>("[data-fab-disc]")].find(showing) ?? null;
+        this.leaving = false;
+        this.dialog.removeAttribute("data-leaving");
+        this.dialog.showModal();
+        this.$("[data-scroll]").scrollTop = 0;
+
+        const morph = this.$("[data-morph]");
+        const icon = this.$("[data-morph-icon]");
+        const bloom = this.$("[data-morph-bloom]");
+        this.morph?.kill();
+        if (this.fab) gsap.to(this.fab, { scale: 0.8, opacity: 0, duration: d(0.2) });
+
+        // The button swells into the box: its ink disc stretches out to the
+        // box's corners while yellow blooms out from where the mic was, then
+        // the content rises in.
+        const tl = (this.morph = gsap.timeline());
+        if (this.origin) {
+          const from = this.shape(this.origin);
+          gsap.set([icon, bloom], from.centre);
+          gsap.set(icon, { opacity: 1, scale: 1 });
+          tl.set(morph, { opacity: 1 })
+            .fromTo(
+              bloom,
+              { scale: 0 },
+              { scale: from.bloom, duration: d(0.5), ease: "power2.inOut" },
+              d(0.08),
+            )
+            .fromTo(
+              this.dialog,
+              { clipPath: from.clipPath, x: from.x, y: from.y },
+              {
+                clipPath: this.full,
+                x: 0,
+                y: 0,
+                duration: d(0.65),
+                ease: "expo.out",
+                clearProps: "clipPath,transform",
+              },
+              0,
+            )
+            .to(icon, { scale: 0.5, opacity: 0, duration: d(0.18), ease: "power2.in" }, 0)
+            .set(morph, { opacity: 0 }, d(0.58));
+        } else {
+          tl.fromTo(
+            this.dialog,
+            { opacity: 0 },
+            { opacity: 1, duration: d(0.3), clearProps: "opacity" },
+          );
+        }
+        tl.fromTo(
+          this.content,
+          { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, duration: d(0.5), stagger: d(0.06), clearProps: "opacity,transform" },
+          // Once the bloom has filled the box.
+          d(this.origin ? 0.5 : 0.2),
+        );
+      }
+      this.mode(mode);
+    }
+
+    hide() {
+      if (!this.dialog.open || this.leaving) return;
+      this.leaving = true;
+      this.dialog.setAttribute("data-leaving", "");
+      const morph = this.$("[data-morph]");
+      const icon = this.$("[data-morph-icon]");
+      const bloom = this.$("[data-morph-bloom]");
+      const fabDisc = this.fab?.querySelector<HTMLElement>("[data-fab-disc]");
+      const target = [this.origin, fabDisc].find(showing);
+
+      const done = () => {
+        this.dialog.close();
+        gsap.set(this.dialog, { clearProps: "clipPath,transform,opacity" });
+        gsap.set([morph, icon, bloom, ...this.content], {
+          clearProps: "opacity,transform,left,top",
+        });
+        this.dialog.removeAttribute("data-leaving");
+        this.leaving = false;
+        if (!this.fab) return;
+        // Landing on the corner button hands straight over to it, with a
+        // little bounce; from anywhere else it just fades back.
+        if (target === fabDisc)
+          gsap.fromTo(
+            this.fab,
+            { scale: 0.92, opacity: 1 },
+            { scale: 1, duration: d(0.4), ease: "back.out(3)", clearProps: "transform,opacity" },
+          );
+        else
+          gsap.to(this.fab, {
+            scale: 1,
+            opacity: 1,
+            duration: d(0.3),
+            clearProps: "transform,opacity",
+          });
+      };
+
+      this.morph?.kill();
+      const tl = (this.morph = gsap.timeline({ onComplete: done }));
+      tl.to(this.content, { opacity: 0, duration: d(0.15), ease: "power1.in" });
+      if (!target) return void tl.to(this.dialog, { opacity: 0, duration: d(0.2) }, 0);
+
+      // The reverse: the ink closes in on the mic as the box shrinks onto it.
+      const to = this.shape(target);
+      gsap.set([icon, bloom], to.centre);
+      gsap.set(icon, { opacity: 0, scale: 0.5 });
+      gsap.set(bloom, { scale: to.bloom });
+      tl.set(morph, { opacity: 1 }, d(0.1))
+        .to(bloom, { scale: 0, duration: d(0.45), ease: "power2.inOut" }, d(0.1))
+        .fromTo(
+          this.dialog,
+          { clipPath: this.full },
+          { clipPath: to.clipPath, x: to.x, y: to.y, duration: d(0.45), ease: "power3.inOut" },
+          d(0.1),
+        )
+        .to(icon, { opacity: 1, scale: 1, duration: d(0.2), ease: "power2.out" }, d(0.35));
+    }
+
+    /** Show `el` if `on`, fading it in when it wasn't already visible. */
+    toggle(el: HTMLElement, on: boolean) {
+      if (on && el.hidden) appear(el);
+      else el.hidden = !on;
+    }
+
+    mode(mode: "record" | "write") {
+      this.toggle(this.$('[data-panel="record"]'), mode === "record");
+      this.toggle(this.$('[data-panel="write"]'), mode === "write");
+      this.$('[data-mode="write"]').hidden = mode === "write";
+      this.$('[data-mode="record"]').hidden = mode === "record";
+      this.$("[data-done]").hidden = true;
+      if (mode === "write") this.$<HTMLTextAreaElement>("textarea").focus();
+    }
+
+    step(name: "start" | "recording" | "finished" | "details") {
+      this.toggle(this.$('[data-step="start"]'), name === "start");
+      this.toggle(this.$('[data-step="player"]'), name !== "start");
+      this.toggle(this.$("[data-recording]"), name === "recording");
+      this.toggle(this.$("[data-finished]"), name === "finished");
+      this.toggle(this.$("[data-details]"), name === "details");
+      this.$("[data-rec-dot]").hidden = name !== "recording";
+      this.$("[data-play]").hidden = name === "recording";
+
+      // The red dot breathes while recording.
+      this.pulse?.kill();
+      const dot = this.$("[data-rec-dot]");
+      gsap.set(dot, { clearProps: "opacity" });
+      if (name === "recording" && d(1))
+        this.pulse = gsap.to(dot, {
+          opacity: 0.3,
+          duration: 0.8,
+          ease: "sine.inOut",
+          repeat: -1,
+          yoyo: true,
+        });
+      if (name === "details") this.$<HTMLInputElement>("[data-details] input").focus();
+    }
+
+    async start() {
+      this.$("[data-mic-error]").hidden = true;
+      try {
+        this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch {
+        this.$("[data-mic-error]").hidden = false;
+        return;
+      }
+      const mimeType = pickMime();
+      this.recorder = new MediaRecorder(this.stream, mimeType ? { mimeType } : undefined);
+      this.chunks = [];
+      this.levels = [];
+      this.recorder.addEventListener(
+        "dataavailable",
+        (e) => e.data.size && this.chunks.push(e.data),
+      );
+      this.recorder.addEventListener("stop", () => this.finish());
+
+      // Live level meter for the bars.
+      this.audioCtx = new AudioContext();
+      const analyser = this.audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      this.audioCtx.createMediaStreamSource(this.stream).connect(analyser);
+      const data = new Uint8Array(analyser.fftSize);
+      const bars = this.$$("[data-bars] > span");
+      gsap.killTweensOf(bars);
+
+      this.recorder.start(250);
+      this.started = performance.now();
+      this.step("recording");
+
+      const tick = () => {
+        analyser.getByteTimeDomainData(data);
+        let peak = 0;
+        for (const v of data) peak = Math.max(peak, Math.abs(v - 128) / 128);
+        this.levels.push(peak);
+        // Scroll the most recent levels across the bars.
+        const recent = this.levels.slice(-bars.length);
+        bars.forEach((bar, i) => {
+          const v = recent[i - (bars.length - recent.length)] ?? 0;
+          bar.style.height = `${Math.max(12, Math.min(100, v * 260))}%`;
+          bar.style.opacity = "1";
+        });
+        const elapsed = (performance.now() - this.started) / 1000;
+        this.time(elapsed);
+        if (elapsed >= MAX_SECONDS) return this.stop();
+        this.raf = requestAnimationFrame(tick);
+      };
+      tick();
+    }
+
+    stop() {
+      cancelAnimationFrame(this.raf);
+      if (this.recorder?.state === "recording") this.recorder.stop();
+    }
+
+    finish() {
+      if (this.discard) return void (this.discard = false);
+      this.duration = (performance.now() - this.started) / 1000;
+      this.stream?.getTracks().forEach((t) => t.stop());
+      this.audioCtx?.close();
+      this.blob = new Blob(this.chunks, { type: this.recorder?.mimeType || "audio/webm" });
+      this.audio.src = URL.createObjectURL(this.blob);
+
+      // Freeze the waveform: bucket every sampled level into the bars, and let
+      // the live meter settle into that shape left to right.
+      const bars = this.$$("[data-bars] > span");
+      const per = Math.max(1, Math.floor(this.levels.length / bars.length));
+      bars.forEach((bar, i) => {
+        const slice = this.levels.slice(i * per, (i + 1) * per);
+        const v = slice.length ? Math.max(...slice) : 0;
+        gsap.to(bar, {
+          height: `${Math.max(12, Math.min(100, v * 260))}%`,
+          duration: d(0.5),
+          delay: d(i * 0.012),
+          ease: "power3.out",
+        });
+      });
+      this.paint(1);
+      this.time(this.duration);
+      this.step("finished");
+    }
+
+    paint(progress: number) {
+      const bars = this.$$("[data-bars] > span");
+      bars.forEach(
+        (bar, i) =>
+          (bar.style.opacity = progress >= 1 || i / bars.length < progress ? "1" : "0.35"),
+      );
+    }
+
+    time(sec: number) {
+      this.$("[data-time]").textContent = fmt(sec);
+    }
+
+    playing(on: boolean) {
+      const b = this.$("[data-play]");
+      b.setAttribute("aria-label", on ? this.dataset.pause! : this.dataset.play!);
+      this.$("[data-icon-play]").classList.toggle("hidden", on);
+      this.$("[data-icon-pause]").classList.toggle("hidden", !on);
+    }
+
+    async send(kind: "voice" | "text") {
+      const form = this.$<HTMLFormElement>(
+        `[data-panel="${kind === "voice" ? "record" : "write"}"]`,
+      );
+      if (kind === "text" && !form.querySelector("textarea")!.value.trim()) {
+        form.querySelector("textarea")!.focus();
+        return;
+      }
+      const body = new FormData(form);
+      body.set("kind", kind);
+      body.set("language", this.dataset.lang!);
+      body.set("page", location.pathname);
+      if (kind === "voice" && this.blob) {
+        const ext = this.blob.type.includes("mp4")
+          ? "m4a"
+          : this.blob.type.includes("ogg")
+            ? "ogg"
+            : "webm";
+        body.set("audio", this.blob, `voice-note.${ext}`);
+        body.set("duration", String(Math.round(this.duration)));
+      }
+      const submit = form.querySelector<HTMLButtonElement>("[type=submit]")!;
+      submit.disabled = true;
+      const done = this.$("[data-done]");
+      try {
+        const res = await fetch("/api/voice", { method: "POST", body });
+        if (!res.ok) throw new Error(String(res.status));
+        form.hidden = true;
+        this.$$("[data-mode]").forEach((b) => (b.hidden = true));
+        done.textContent = this.dataset.sent!;
+      } catch {
+        done.textContent = this.dataset.error!;
+      } finally {
+        appear(done, { y: 10 });
+        submit.disabled = false;
+      }
+    }
+
+    reset() {
+      cancelAnimationFrame(this.raf);
+      if (this.recorder?.state === "recording") {
+        this.discard = true;
+        this.recorder.stop();
+      }
+      this.stream?.getTracks().forEach((t) => t.stop());
+      if (this.audioCtx && this.audioCtx.state !== "closed") this.audioCtx.close();
+      this.audio.pause();
+      if (this.audio.src) URL.revokeObjectURL(this.audio.src);
+      this.audio.removeAttribute("src");
+      this.blob = null;
+      this.levels = [];
+      const bars = this.$$("[data-bars] > span");
+      gsap.killTweensOf(bars);
+      bars.forEach((bar) => {
+        bar.style.height = "12%";
+        bar.style.opacity = "1";
+      });
+      this.time(0);
+      this.$$<HTMLFormElement>("form").forEach((f) => f.reset());
+      this.step("start");
+    }
+  }
+  customElements.define("voice-note", VoiceNote);
+</script>

@@ -1,0 +1,65 @@
+---
+/* Posts a form to one of our /api routes without leaving the page, then swaps
+   in a thank-you line. An external `action` (a mailing-list provider) is left
+   to submit normally. Honeypot field included. */
+import { t, type Lang } from "../i18n";
+
+interface Props {
+  action: string;
+  lang: Lang;
+  external?: boolean;
+  class?: string;
+  multipart?: boolean;
+}
+const { action, lang, external = false, class: className, multipart = false } = Astro.props;
+const s = t(lang);
+---
+
+<ajax-form data-external={external ? "" : undefined} data-sent={s.sent} data-error={s.error}>
+  <form
+    action={action}
+    method="post"
+    enctype={multipart ? "multipart/form-data" : undefined}
+    class={className}
+  >
+    <input type="hidden" name="language" value={lang} />
+    <div aria-hidden="true" class="absolute -left-[9999px]">
+      <label>
+        Website <input name="website" tabindex="-1" autocomplete="off" />
+      </label>
+    </div>
+    <slot />
+    <p data-status role="status" class="label mt-4 text-sm empty:hidden"></p>
+  </form>
+</ajax-form>
+
+<script>
+  import { appear } from "../lib/motion";
+
+  class AjaxForm extends HTMLElement {
+    connectedCallback() {
+      if (this.hasAttribute("data-external")) return;
+      const form = this.querySelector("form")!;
+      const status = form.querySelector<HTMLElement>("[data-status]")!;
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const button = form.querySelector<HTMLButtonElement>("[type=submit]");
+        button?.setAttribute("disabled", "");
+        status.hidden = true;
+        status.textContent = "";
+        try {
+          const res = await fetch(form.action, { method: "POST", body: new FormData(form) });
+          if (!res.ok) throw new Error(String(res.status));
+          form.reset();
+          status.textContent = this.dataset.sent ?? "";
+        } catch {
+          status.textContent = this.dataset.error ?? "";
+        } finally {
+          button?.removeAttribute("disabled");
+          appear(status);
+        }
+      });
+    }
+  }
+  customElements.define("ajax-form", AjaxForm);
+</script>

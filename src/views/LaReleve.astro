@@ -1,0 +1,70 @@
+---
+/* Figma: LA RELEVE. */
+import Picture from "../components/Picture.astro";
+import Layout from "../layouts/Layout.astro";
+import { href, otherLang, t, type Lang } from "../i18n";
+import { getLaReleve } from "../lib/content";
+import { renderRichText } from "../lib/portableText";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+const page = await getLaReleve(lang);
+const programUrl = (p: { slug: string; linkTo?: string | null }) =>
+  p.linkTo === "podcasts" ? href(lang, "podcasts") : href(lang, "program", p.slug);
+---
+
+<Layout
+  lang={lang}
+  title={page.title ?? s.laReleve}
+  seo={page.seo}
+  alternate={href(otherLang(lang), "laReleve")}
+>
+  <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10">
+    <div class="lg:col-span-8 lg:col-start-3">
+      <h1 class="display pt-10 pb-12 text-center text-mega tracking-[-0.02em] lg:pt-16 lg:pb-20">
+        {page.title ?? s.laReleve}
+      </h1>
+      <div
+        class="prose-intro mx-auto max-w-[31rem] lg:max-w-3xl"
+        set:html={renderRichText(page.intro)}
+      />
+      {page.cta?.url && (
+        <p class="py-16 text-center">
+          <a
+            href={page.cta.url}
+            class="label inline-block bg-yellow px-5 py-3 text-xs hover:bg-ink hover:text-yellow lg:text-base"
+          >
+            {page.cta.label ?? s.applyCohort}
+          </a>
+        </p>
+      )}
+    </div>
+  </div>
+
+  <section class="px-2.5 pb-10 lg:px-10 lg:pb-20" aria-labelledby="programs">
+    <h2 id="programs" class="label px-0 pb-2.5 text-md lg:px-0">
+      {s.ourPrograms}
+    </h2>
+    <ul class="grid gap-2.5 md:grid-cols-2 lg:gap-5">
+      {page.programs.map((p) => (
+        <li>
+          <a href={programUrl(p)} class="group relative block">
+            <Picture
+              img={p.image}
+              ratio={373 / 504}
+              sizes="(min-width: 768px) 50vw, 100vw"
+              class="media-inset"
+              imgClass="group-hover:brightness-75"
+            />
+            <span class="display absolute inset-0 grid place-items-center p-5 text-center text-[3rem] leading-[0.95] tracking-[-0.02em] text-paper [text-shadow:0_0_40px_rgb(0_0_0/0.35)] lg:text-7xl">
+              {p.title}
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</Layout>

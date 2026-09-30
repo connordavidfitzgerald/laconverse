@@ -1,0 +1,15 @@
+---
+import View from "../../views/Program.astro";
+import { getProgram, getProgramSlugs } from "../../lib/content";
+
+export async function getStaticPaths() {
+  const slugs: string[] = await getProgramSlugs("fr");
+  return slugs.map((slug) => ({ params: { slug } }));
+}
+
+const slug = Astro.params.slug!;
+const program = await getProgram("fr", slug);
+if (!program) return new Response(null, { status: 404 });
+---
+
+<View lang="fr" program={program} />

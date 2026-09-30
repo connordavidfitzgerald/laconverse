@@ -1,0 +1,59 @@
+---
+/* Prev/next buttons and a position counter for a horizontal `.rail`, found by
+   id. Steps one card at a time, dims each button at its end, and hides itself
+   when every card already fits. */
+import { t, type Lang } from "../i18n";
+
+interface Props {
+  rail: string;
+  count: number;
+  lang: Lang;
+  class?: string;
+}
+const { rail, count, lang, class: className } = Astro.props;
+const s = t(lang);
+const pad = (n: number) => String(n).padStart(2, "0");
+const button =
+  "press label grid size-14 place-items-center border-2 border-ink text-2xl hover:bg-ink hover:text-paper disabled:pointer-events-none disabled:opacity-25";
+---
+
+<rail-controls data-rail={rail} class:list={["flex items-center gap-5", className]}>
+  <span class="label text-lg tabular-nums" aria-hidden="true">
+    <span data-pos>01</span> / {pad(count)}
+  </span>
+  <span class="flex">
+    <button type="button" data-step="-1" aria-label={s.previous} aria-controls={rail} class={button}>←</button>
+    <button type="button" data-step="1" aria-label={s.next} aria-controls={rail} class:list={[button, "-ml-0.5"]}>→</button>
+  </span>
+</rail-controls>
+
+<script>
+  class RailControls extends HTMLElement {
+    connectedCallback() {
+      const rail = document.getElementById(this.dataset.rail ?? "");
+      if (!rail) return;
+      const items = [...rail.children] as HTMLElement[];
+      const pos = this.querySelector("[data-pos]")!;
+      const buttons = [...this.querySelectorAll("button")];
+      const [prev, next] = buttons;
+      const step = () => (items[1] ? items[1].offsetLeft - items[0].offsetLeft : rail.clientWidth);
+      const update = () => {
+        const end = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 1;
+        const i = end ? items.length : Math.round(rail.scrollLeft / step()) + 1;
+        pos.textContent = String(i).padStart(2, "0");
+        prev.disabled = rail.scrollLeft <= 1;
+        next.disabled = end;
+        this.style.visibility = rail.scrollWidth > rail.clientWidth + 1 ? "" : "hidden";
+      };
+      const smooth = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+      for (const b of buttons)
+        b.addEventListener("click", () =>
+          rail.scrollBy({ left: Number(b.dataset.step) * step(), behavior: smooth ? "smooth" : "auto" }),
+        );
+      rail.addEventListener("scroll", update, { passive: true });
+      addEventListener("resize", update);
+      update();
+    }
+  }
+  customElements.define("rail-controls", RailControls);
+</script>

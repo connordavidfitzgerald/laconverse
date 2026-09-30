@@ -1,0 +1,46 @@
+---
+import Picture from "./Picture.astro";
+import { formatDate, type Lang } from "../i18n";
+import type { PartnerStory } from "../lib/types";
+import { imageUrl } from "../lib/sanity";
+
+interface Props {
+  story: PartnerStory;
+  lang: Lang;
+  class?: string;
+}
+const { story, lang, class: className } = Astro.props;
+const logo = imageUrl(story.partnerLogo, 80);
+---
+
+<article class:list={["group relative flex flex-col", className]} data-reveal>
+  <Picture
+    img={story.image}
+    ratio={247 / 265}
+    sizes="(min-width: 1024px) 20vw, 63vw"
+    class="media-inset"
+  />
+  <div class="flex flex-col gap-2.5 py-2.5">
+    <div class="flex items-center justify-between gap-2">
+      <span class="label flex items-center gap-[5px] text-xs">
+        {logo ? (
+          <img src={logo} alt="" class="size-5 rounded-full object-cover" />
+        ) : (
+          <span class="size-5 rounded-full bg-ink"></span>
+        )}
+        {story.partner}
+      </span>
+      <time class="label text-sm opacity-50">{formatDate(lang, story.publishedAt)}</time>
+    </div>
+    <h3 class="display text-card-sm">
+      <a
+        href={story.url}
+        target="_blank"
+        rel="noopener"
+        class="title-line after:absolute after:inset-0"
+      >
+        {story.title}
+      </a>
+    </h3>
+  </div>
+</article>

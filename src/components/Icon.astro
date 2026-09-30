@@ -1,0 +1,210 @@
+---
+/* Glyphs from the Figma file, drawn in `currentColor`. */
+type Name =
+  | "heart"
+  | "search"
+  | "mic"
+  | "chevron"
+  | "arrow"
+  | "arrow-ne"
+  | "play"
+  | "pause"
+  | "stop"
+  | "redo"
+  | "close"
+  | "share"
+  | "plus"
+  | "mail"
+  | "instagram"
+  | "tiktok"
+  | "whatsapp"
+  | "linkedin"
+  | "facebook"
+  | "youtube"
+  | "x";
+interface Props {
+  name: Name | string;
+  class?: string;
+  label?: string;
+}
+const { name, class: className, label } = Astro.props;
+const a11y: Record<string, string> = label
+  ? { role: "img", "aria-label": label }
+  : { "aria-hidden": "true" };
+---
+
+{name === "heart" && (
+  <svg class={className} viewBox="0 0 19 17" fill="currentColor" {...a11y}>
+    <path
+      stroke="currentColor"
+      d="M9.32 16.216c-2.014-1.598-3.657-3.009-4.93-4.232C3.134 10.748 2.167 9.56 1.491 8.42.83 7.281.5 6.155.5 5.044c0-.89.193-1.675.58-2.356A3.94 3.94 0 0 1 2.723 1.084C3.432.695 4.245.5 5.164.5c.934 0 1.772.208 2.513.625.757.417 1.313.994 1.667 1.73.354-.736.902-1.313 1.643-1.73.757-.417 1.603-.625 2.537-.625.918 0 1.732.195 2.44.584a3.94 3.94 0 0 1 1.644 1.604c.387.681.58 1.466.58 2.356 0 1.125-.33 2.258-.99 3.397-.661 1.126-1.636 2.314-2.924 3.564-1.273 1.237-2.924 2.64-4.954 4.21Z"
+    />
+  </svg>
+)}
+{name === "search" && (
+  <svg class={className} viewBox="0 0 10 10" fill="currentColor" {...a11y}>
+    <path d="M9.222 10 5.722 6.5a3.47 3.47 0 0 1-2.111.722c-1.01 0-1.863-.35-2.562-1.049C.349 5.475 0 4.62 0 3.611S.35 1.748 1.049 1.049C1.748.349 2.602 0 3.61 0S5.475.35 6.174 1.049c.699.699 1.048 1.553 1.048 2.562A3.47 3.47 0 0 1 6.5 5.722L10 9.222 9.222 10ZM3.611 6.111c.695 0 1.285-.243 1.771-.73.486-.485.73-1.075.73-1.77s-.244-1.285-.73-1.771a2.41 2.41 0 0 0-1.771-.73c-.694 0-1.285.244-1.771.73a2.41 2.41 0 0 0-.73 1.771c0 .695.244 1.285.73 1.771.486.486 1.077.73 1.771.73Z" />
+  </svg>
+)}
+{name === "mic" && (
+  <svg
+    class={className}
+    viewBox="0 0 22 23"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    {...a11y}
+  >
+    <path d="M4.5 9.6v1.9c0 1.8.7 3.5 1.9 4.7a6.1 6.1 0 0 0 9.2 0c1.2-1.2 1.9-2.9 1.9-4.7V9.6M11 18.2V22M7.4 22h7.2" />
+    <rect x="7.8" y=".75" width="6.2" height="13.5" rx="3.1" fill="currentColor" stroke="none" />
+  </svg>
+)}
+{name === "chevron" && (
+  <svg class={className} viewBox="0 0 20 11" fill="currentColor" {...a11y}>
+    <path d="M.146.146a.5.5 0 0 1 .707 0l9.09 9.089L19.018.16a.5.5 0 0 1 .707.707l-9.402 9.402a.5.5 0 0 1-.48.127.5.5 0 0 1-.295-.14L.146.854a.5.5 0 0 1 0-.708Z" />
+  </svg>
+)}
+{name === "arrow" && (
+  <svg
+    class={className}
+    viewBox="0 0 16 12"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.6"
+    {...a11y}
+  >
+    <path d="M0 6h14M9 1l5 5-5 5" />
+  </svg>
+)}
+{name === "arrow-ne" && (
+  <svg
+    class={className}
+    viewBox="0 0 12 12"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.6"
+    {...a11y}
+  >
+    <path d="M1.5 10.5l9-9M3 1.5h7.5V9" />
+  </svg>
+)}
+{name === "play" && (
+  <svg class={className} viewBox="0 0 10 12" fill="currentColor" {...a11y}>
+    <path d="M0 0v12l10-6z" />
+  </svg>
+)}
+{name === "pause" && (
+  <svg class={className} viewBox="0 0 10 12" fill="currentColor" {...a11y}>
+    <path d="M0 0h3.5v12H0zM6.5 0H10v12H6.5z" />
+  </svg>
+)}
+{name === "stop" && (
+  <svg class={className} viewBox="0 0 12 12" fill="currentColor" {...a11y}>
+    <rect width="12" height="12" rx="1.5" />
+  </svg>
+)}
+{name === "redo" && (
+  <svg
+    class={className}
+    viewBox="0 0 16 16"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.6"
+    stroke-linecap="round"
+    {...a11y}
+  >
+    <path d="M2.5 8a5.5 5.5 0 1 0 1.8-4.1" />
+    <path d="M2 1.5v3.4h3.4" />
+  </svg>
+)}
+{name === "close" && (
+  <svg class={className} viewBox="0 0 28 28" fill="none" stroke="currentColor" {...a11y}>
+    <path d="M4 4l20 20M24 4 4 24" />
+  </svg>
+)}
+{name === "share" && (
+  <svg
+    class={className}
+    viewBox="0 0 12 14"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.3"
+    {...a11y}
+  >
+    <path d="M6 9V1M2.5 4.5 6 1l3.5 3.5M1 7v6h10V7" />
+  </svg>
+)}
+{name === "plus" && (
+  <svg
+    class={className}
+    viewBox="0 0 12 12"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.6"
+    {...a11y}
+  >
+    <path d="M6 0v12M0 6h12" />
+  </svg>
+)}
+{name === "mail" && (
+  <svg
+    class={className}
+    viewBox="0 0 16 12"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.3"
+    {...a11y}
+  >
+    <rect x=".65" y=".65" width="14.7" height="10.7" rx="1" />
+    <path d="m1 1 7 6 7-6" />
+  </svg>
+)}
+{name === "instagram" && (
+  <svg
+    class={className}
+    viewBox="17 17 19 19"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.85"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    {...a11y}
+  >
+    <path d="M31.547 21.373h.01M21.836 17.211h9.249a4.625 4.625 0 0 1 4.624 4.625v9.249a4.625 4.625 0 0 1-4.624 4.624h-9.25a4.625 4.625 0 0 1-4.624-4.624v-9.25a4.625 4.625 0 0 1 4.625-4.624Zm8.324 8.666a3.7 3.7 0 1 1-7.32 1.086 3.7 3.7 0 0 1 7.32-1.086Z" />
+  </svg>
+)}
+{name === "tiktok" && (
+  <svg class={className} viewBox="18 17.5 17 18" fill="currentColor" {...a11y}>
+    <path
+      fill-rule="evenodd"
+      d="M26.826 18.022c.924-.014 1.84-.007 2.756-.014.056 1.078.444 2.177 1.233 2.939.789.782 1.903 1.141 2.988 1.261v2.84c-1.015-.035-2.037-.247-2.96-.684-.402-.183-.775-.415-1.142-.655-.007 2.058.007 4.116-.014 6.166a5.39 5.39 0 0 1-.951 2.777c-.923 1.353-2.523 2.234-4.165 2.262a5.12 5.12 0 0 1-2.875-.726c-1.424-.839-2.424-2.375-2.572-4.024a14.8 14.8 0 0 1-.007-1.05c.127-1.339.79-2.622 1.818-3.495 1.17-1.015 2.805-1.502 4.334-1.213.014 1.043-.028 2.086-.028 3.129-.698-.226-1.515-.162-2.128.26-.444.29-.782.734-.958 1.234-.148.36-.106.754-.1 1.135.17 1.155 1.283 2.128 2.467 2.022.79-.007 1.544-.465 1.952-1.135.134-.232.282-.472.29-.747.07-1.261.042-2.515.049-3.777.007-2.84-.007-5.673.014-8.506Z"
+    />
+  </svg>
+)}
+{name === "whatsapp" && (
+  <svg class={className} viewBox="16.4 16.3 20.2 20.3" fill="currentColor" {...a11y}>
+    <path d="M33.602 19.281a10.03 10.03 0 0 0-15.755 12.144l-.026-.047-1.423 5.196 5.315-1.394a9.96 9.96 0 0 0 4.791 1.22h.004c5.538-.002 10.026-4.492 10.026-10.03 0-2.768-1.121-5.273-2.934-7.088h.002Zm-7.093 15.425h-.004a8.3 8.3 0 0 1-4.279-1.182l.038.02-.304-.18-3.154.828.841-3.075-.198-.315a8.33 8.33 0 0 1-1.275-4.43 8.334 8.334 0 1 1 8.335 8.334Zm4.571-6.241c-.25-.126-1.482-.73-1.711-.815-.23-.084-.398-.125-.565.126-.166.25-.646.815-.793.982-.145.168-.292.188-.543.063a6.8 6.8 0 0 1-2.022-1.25l.007.007a7.7 7.7 0 0 1-1.374-1.7l-.019-.036c-.146-.25-.016-.386.11-.51.112-.113.25-.294.375-.44.099-.12.183-.258.247-.407l.004-.011a.46.46 0 0 0-.022-.44c-.063-.126-.564-1.36-.772-1.861-.204-.489-.411-.422-.564-.43-.146-.007-.313-.008-.48-.008a.93.93 0 0 0-.667.313 2.8 2.8 0 0 0-.877 2.093c.088.99.459 1.878 1.03 2.602l-.008-.01a11.4 11.4 0 0 0 4.217 3.753l.063.03c.37.167.843.346 1.328.499l.1.028a3.4 3.4 0 0 0 1.598.1 2.7 2.7 0 0 0 1.684-1.192l.006-.011a2.1 2.1 0 0 0 .147-1.19c-.062-.105-.23-.167-.48-.293Z" />
+  </svg>
+)}
+{name === "linkedin" && (
+  <svg class={className} viewBox="18 18.6 17 15.7" fill="currentColor" {...a11y}>
+    <path d="M24.055 23.453h3.328v1.706h.048c.463-.832 1.596-1.706 3.286-1.706 3.513 0 4.162 2.187 4.162 5.031v5.794h-3.47v-5.136c0-1.224-.025-2.801-1.804-2.801-1.806 0-2.083 1.334-2.083 2.712v5.225h-3.467V23.453ZM18.04 23.453h3.607v10.825H18.04V23.453ZM21.647 20.445a1.804 1.804 0 1 1-3.608 0 1.804 1.804 0 0 1 3.608 0Z" />
+  </svg>
+)}
+{name === "facebook" && (
+  <svg class={className} viewBox="21.8 17.2 9.3 18.5" fill="currentColor" {...a11y}>
+    <path d="M31.087 17.211v3.7h-1.85c-.639 0-.926.75-.926 1.388v2.313h2.776v3.7H28.31v7.4h-3.7v-7.4h-2.775v-3.7h2.775v-3.7a3.7 3.7 0 0 1 3.7-3.7h2.776Z" />
+  </svg>
+)}
+{name === "youtube" && (
+  <svg class={className} viewBox="0 0 24 24" fill="currentColor" {...a11y}>
+    <path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12 31 31 0 0 0 1 16.8a3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1c.4-1.6.5-3.2.5-4.8s-.1-3.2-.5-4.8ZM9.7 15V9l5.8 3-5.8 3Z" />
+  </svg>
+)}
+{name === "x" && (
+  <svg class={className} viewBox="0 0 24 24" fill="currentColor" {...a11y}>
+    <path d="M18.2 2.2h3.4l-7.4 8.4 8.7 11.5h-6.8l-5.3-7-6.1 7H1.3l7.9-9L.8 2.2h7l4.8 6.4 5.6-6.4Zm-1.2 18h1.9L7 4.1H5l12 16.1Z" />
+  </svg>
+)}

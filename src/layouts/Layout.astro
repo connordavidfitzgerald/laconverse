@@ -1,0 +1,116 @@
+---
+import "../styles/global.css";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import VoiceNote from "../components/VoiceNote.astro";
+import { href, htmlLang, otherLang, t, type Lang } from "../i18n";
+import { getSettings } from "../lib/content";
+import { imageUrl } from "../lib/sanity";
+import type { Img, Seo } from "../lib/types";
+
+interface Props {
+  lang: Lang;
+  title?: string | null;
+  description?: string | null;
+  image?: Img | null;
+  seo?: Seo | null;
+  /** This page in the other language. Defaults to its home page. */
+  alternate?: string | null;
+  /** Hide the footer (e.g. full-screen video feed). */
+  bare?: boolean;
+  /** Black page (videos). */
+  dark?: boolean;
+  /** Header treatment: `overlay` sits transparent over a full-bleed hero
+      marked `data-header-hero` (no spacer), `dark` is the inverted bar.
+      Defaults to `dark` on dark pages, `light` otherwise. */
+  header?: "light" | "dark" | "overlay";
+  /** Keep the header compact from the top (full-screen feeds). */
+  compactHeader?: boolean;
+  /** The corner mic button. Defaults to on, except on bare pages. */
+  voiceLauncher?: boolean;
+}
+
+const {
+  lang,
+  title,
+  description,
+  image,
+  seo,
+  alternate: alt,
+  bare = false,
+  dark = false,
+} = Astro.props;
+const tone = Astro.props.header ?? (dark ? "dark" : "light");
+const compactHeader = Astro.props.compactHeader ?? false;
+const voiceLauncher = Astro.props.voiceLauncher ?? !bare;
+const settings = await getSettings(lang);
+const other = otherLang(lang);
+const alternate = alt ?? href(other, "home");
+const siteName = "La Converse";
+const pageTitle =
+  seo?.title ?? (title ? `${title} — ${siteName}` : (settings.seo?.title ?? siteName));
+const desc = seo?.description ?? description ?? settings.seo?.description ?? "";
+const ogImage = imageUrl(seo?.image ?? image ?? settings.seo?.image, 1200, 630);
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang={htmlLang[lang]}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang={lang} href={canonical} />
+    <link rel="alternate" hreflang={other} href={new URL(alternate, Astro.site)} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={title ?? siteName} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:locale" content={htmlLang[lang].replace("-", "_")} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <link
+      rel="preload"
+      href="/fonts/ABCFavoritCompressedTrial-Ultra.otf"
+      as="font"
+      type="font/otf"
+      crossorigin
+    />
+    <slot name="head" />
+  </head>
+  <body class:list={["min-h-dvh", dark && "bg-ink! text-paper"]}>
+    <a
+      href="#main"
+      class="label sr-only z-[60] bg-ink px-4 py-3 text-paper focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+    >
+      {t(lang).skip}
+    </a>
+    <Header
+      lang={lang}
+      settings={settings}
+      alternate={alternate}
+      tone={tone}
+      compact={compactHeader}
+    />
+    {tone !== "overlay" && (
+      <div
+        aria-hidden="true"
+        class={compactHeader ? "h-(--header-h)" : "h-(--header-h-full)"}
+      ></div>
+    )}
+    <main id="main">
+      <slot />
+    </main>
+    {!bare && <Footer lang={lang} settings={settings} alternate={alternate} />}
+    <VoiceNote lang={lang} settings={settings} launcher={voiceLauncher} />
+  </body>
+</html>
+
+<script>
+  import { fadeImages, revealOnScroll } from "../lib/motion";
+
+  revealOnScroll();
+  fadeImages(document.getElementById("main") ?? document);
+</script>

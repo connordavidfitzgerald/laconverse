@@ -1,0 +1,118 @@
+---
+/* Figma: MC CONVERSE (HOMEPAGE 4959:3576) and 6B FORMATIONS — UI. Every block
+   below the title is optional, so one template covers all the programs. */
+import AjaxForm from "../components/AjaxForm.astro";
+import BackLink from "../components/BackLink.astro";
+import FormFields from "../components/FormFields.astro";
+import Picture from "../components/Picture.astro";
+import Layout from "../layouts/Layout.astro";
+import { href, otherLang, t, type Lang } from "../i18n";
+import { renderRichText } from "../lib/portableText";
+import type { Program } from "../lib/types";
+
+interface Props {
+  lang: Lang;
+  program: Program;
+}
+const { lang, program } = Astro.props;
+const s = t(lang);
+const other = otherLang(lang);
+const translation = program.translations.find((x) => x.language === other);
+---
+
+<Layout
+  lang={lang}
+  title={program.title}
+  description={program.tagline}
+  image={program.image}
+  seo={program.seo}
+  alternate={translation ? href(other, "program", translation.slug) : href(other, "laReleve")}
+>
+  <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10">
+    <div class="lg:col-span-8 lg:col-start-3">
+      <BackLink href={href(lang, "laReleve")} label={s.laReleve} />
+      <h1 class="display pt-12 pb-12 text-center text-mega tracking-[-0.02em] text-balance lg:pt-16 lg:pb-16">
+        {program.title}
+      </h1>
+      <Picture
+        img={program.image}
+        ratio={353 / 440}
+        class="lg:aspect-[3/2]!"
+        eager
+        sizes="(min-width: 1024px) 66vw, 100vw"
+      />
+      {program.tagline && (
+        <p class="mt-5 font-display text-[1.375rem] font-bold leading-[0.95] tracking-[-0.02em] lg:text-intro">
+          {program.tagline}
+        </p>
+      )}
+      {program.body && (
+        <div
+          class="prose-intro mx-auto mt-8 max-w-[31rem] lg:max-w-3xl"
+          set:html={renderRichText(program.body)}
+        />
+      )}
+      {program.cta?.url && (
+        <p class="py-16 text-center">
+          <a
+            href={program.cta.url}
+            class="label inline-block bg-yellow px-5 py-3 text-xs hover:bg-ink hover:text-yellow lg:text-base"
+          >
+            {program.cta.label ?? s.applyCohort}
+          </a>
+        </p>
+      )}
+    </div>
+  </div>
+
+  {program.quote?.text && (
+    <figure class="px-5 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10">
+      <Picture
+        img={program.quote.image}
+        ratio={353 / 177}
+        class="lg:col-span-6 lg:col-start-4"
+        sizes="(min-width: 1024px) 50vw, 100vw"
+      />
+      <blockquote class="display mt-5 px-4 text-center text-lg leading-[0.95] lg:col-span-6 lg:col-start-4 lg:text-3xl">
+        {program.quote.text}
+      </blockquote>
+      <figcaption class="mt-5 px-4 lg:col-span-6 lg:col-start-4">
+        {program.quote.attribution && <p class="label text-xs">{program.quote.attribution}</p>}
+        {program.quote.source && (
+          <p class="mt-4 font-display text-xs font-medium uppercase">{program.quote.source}</p>
+        )}
+      </figcaption>
+    </figure>
+  )}
+
+  {program.form && (
+    <section
+      id="form"
+      class="scroll-mt-10 px-5 pt-10 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10"
+      aria-labelledby="form-title"
+    >
+      <div class="lg:col-span-6 lg:col-start-4">
+        <h2 id="form-title" class="display text-[1.875rem] leading-[0.95] lg:text-5xl">
+          {program.form.title}
+        </h2>
+        {program.form.text && (
+          <p class="mt-1 font-display text-base font-extrabold leading-[0.95] lg:text-xl">
+            {program.form.text}
+          </p>
+        )}
+        <AjaxForm action="/api/contact" lang={lang} class="mt-6">
+          <input type="hidden" name="kind" value="program" />
+          <input type="hidden" name="context" value={program.title} />
+          <FormFields lang={lang}>
+            <button
+              type="submit"
+              class="label mx-auto mt-4 h-[46px] w-[60%] rounded-[10px] bg-yellow text-sm hover:bg-ink hover:text-yellow disabled:opacity-60"
+            >
+              {s.submit}
+            </button>
+          </FormFields>
+        </AjaxForm>
+      </div>
+    </section>
+  )}
+</Layout>

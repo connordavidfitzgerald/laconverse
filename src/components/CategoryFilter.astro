@@ -1,0 +1,49 @@
+---
+/* The big inline category list with counts (SEARCH / TOP STORIES). As links
+   by default; on the search page the same markup acts as a filter. */
+import { href, t, type Lang } from "../i18n";
+
+interface Props {
+  lang: Lang;
+  categories: { title: string; slug: string; count: number }[];
+  current?: string | null;
+  total?: number;
+  asFilter?: boolean;
+}
+const { lang, categories, current = null, total, asFilter = false } = Astro.props;
+const s = t(lang);
+const item =
+  "font-display font-black uppercase leading-[0.95] tracking-[-0.02em] hover:text-ink/70 aria-[current=true]:text-ink";
+---
+
+<ul
+  class="flex flex-wrap justify-center gap-x-2.5 gap-y-0 text-center text-5xl text-ink/40 md:text-5xl"
+  data-filter-list
+>
+  <li>
+    <a
+      href={href(lang, "search")}
+      data-filter=""
+      aria-current={!current ? "true" : "false"}
+      class={item}
+    >
+      {s.all}
+      {total !== undefined && (
+        <sup class="ml-1 leading-[0.8] tracking-[-0.01em] text-[0.55em]">{total}</sup>
+      )}
+    </a>
+  </li>
+  {categories.map((c) => (
+    <li>
+      <a
+        href={asFilter ? `${href(lang, "search")}?c=${c.slug}` : href(lang, "category", c.slug)}
+        data-filter={c.slug}
+        aria-current={current === c.slug ? "true" : "false"}
+        class={item}
+      >
+        {c.title}
+        <sup class="ml-1 leading-[0.8] tracking-[-0.01em] text-[0.55em]">{c.count}</sup>
+      </a>
+    </li>
+  ))}
+</ul>

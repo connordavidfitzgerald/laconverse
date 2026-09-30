@@ -1,0 +1,63 @@
+---
+/* Figma: PODCASTS. */
+import BackLink from "../components/BackLink.astro";
+import Icon from "../components/Icon.astro";
+import Picture from "../components/Picture.astro";
+import Layout from "../layouts/Layout.astro";
+import { href, otherLang, t, type Lang } from "../i18n";
+import { getPodcasts } from "../lib/content";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+const podcasts = await getPodcasts(lang);
+---
+
+<Layout lang={lang} title={s.podcasts} alternate={href(otherLang(lang), "podcasts")}>
+  <div class="px-5 lg:px-10">
+    <BackLink href={href(lang, "laReleve")} label={s.laReleve} />
+    <h1 class="display pt-12 pb-24 text-center text-mega tracking-[-0.02em] lg:pt-16 lg:pb-40">
+      {s.podcasts}
+    </h1>
+
+    <ul class="grid gap-10 md:grid-cols-3 xl:grid-cols-4 md:gap-x-5 lg:gap-y-20">
+      {podcasts.map((p) => (
+        <li>
+          <article class="group relative flex flex-col gap-2.5" data-reveal>
+            <Picture
+              img={p.cover}
+              ratio={1}
+              sizes="(min-width: 768px) 50vw, 100vw"
+              class="media-inset"
+            />
+            <h2 class="display pt-2.5 text-5xl leading-[0.95] tracking-[-0.015em] lg:text-4xl">
+              <a href={href(lang, "podcast", p.slug)} class="after:absolute after:inset-0">
+                {p.title}
+              </a>
+            </h2>
+            {p.description && (
+              <p class="font-display text-2xl font-medium leading-[0.95] tracking-[-0.01em]">
+                {p.description}
+              </p>
+            )}
+            <p class="label mt-2.5 inline-flex items-center gap-2 text-xs">
+              <Icon name="play" class="h-2 w-2" />
+              {p.episodeCount} {s.episodes}
+            </p>
+          </article>
+        </li>
+      ))}
+    </ul>
+
+    <p class="py-16 text-center lg:py-24">
+      <a
+        href={href(lang, "program", "ecole-converse") + "#form"}
+        class="label inline-block bg-yellow px-5 py-3 text-xs hover:bg-ink hover:text-yellow lg:text-base"
+      >
+        {s.applyCohort}
+      </a>
+    </p>
+  </div>
+</Layout>

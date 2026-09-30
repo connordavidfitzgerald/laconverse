@@ -1,0 +1,54 @@
+---
+import Icon from "./Icon.astro";
+import { t, type Lang } from "../i18n";
+
+interface Props {
+  lang: Lang;
+  title: string;
+  class?: string;
+}
+const { lang, title, class: className } = Astro.props;
+const s = t(lang);
+---
+
+<share-button data-title={title} data-copied={s.linkCopied}>
+  <button
+    type="button"
+    class:list={["group label inline-flex items-center gap-1.5 text-md font-black", className]}
+  >
+    <span data-label class="inline-block">
+      {s.share}
+    </span>
+    <Icon
+      name="share"
+      class="h-3.5 w-3 transition-transform duration-200 ease-out group-hover:-translate-y-0.5"
+    />
+  </button>
+</share-button>
+
+<script>
+  import { swapText } from "../lib/motion";
+
+  class ShareButton extends HTMLElement {
+    connectedCallback() {
+      const button = this.querySelector("button")!;
+      const label = this.querySelector<HTMLElement>("[data-label]")!;
+      const original = label.textContent;
+      let timer = 0;
+      button.addEventListener("click", async () => {
+        const data = { title: this.dataset.title, url: location.href };
+        if (navigator.share) {
+          try {
+            await navigator.share(data);
+          } catch {}
+          return;
+        }
+        await navigator.clipboard?.writeText(location.href);
+        swapText(label, this.dataset.copied ?? "");
+        clearTimeout(timer);
+        timer = window.setTimeout(() => swapText(label, original ?? ""), 2000);
+      });
+    }
+  }
+  customElements.define("share-button", ShareButton);
+</script>

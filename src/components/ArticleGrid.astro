@@ -1,0 +1,114 @@
+---
+/* A list of story cards with “sort” header and a “load more” that pulls the
+   remaining cards from /<lang>/index.json, filtered the same way. */
+import ArticleCard from "./ArticleCard.astro";
+import Chip from "./Chip.astro";
+import Icon from "./Icon.astro";
+import { t, type Lang } from "../i18n";
+import type { ArticleCard as Card } from "../lib/types";
+
+interface Props {
+  lang: Lang;
+  articles: Card[];
+  total: number;
+  /** Filter applied to the JSON index for "load more". */
+  filter?: { category?: string; tag?: string; author?: string };
+  countLabel?: string;
+  /** Leave “load more” to a parent (the search page drives its own). */
+  managed?: boolean;
+}
+const { lang, articles, total, filter = {}, countLabel, managed = false } = Astro.props;
+const s = t(lang);
+---
+
+<article-grid
+  data-lang={lang}
+  data-category={filter.category}
+  data-tag={filter.tag}
+  data-author={filter.author}
+  data-shown={articles.length}
+  data-managed={managed ? "" : undefined}
+>
+  <div class="flex items-center justify-between border-b border-ink py-2.5">
+    <p class="label inline-flex items-center gap-1.5 text-sm font-black">
+      {s.sortLatest}
+      <Icon name="chevron" class="h-1.5 w-2.5" />
+    </p>
+    <p class="label text-sm font-black" data-count>
+      {total} {countLabel ?? s.results}
+    </p>
+  </div>
+  <div data-list class="mt-5 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+    {articles.map((a) => (
+      <ArticleCard article={a} lang={lang} />
+    ))}
+  </div>
+  {(managed || total > articles.length) && (
+    <p class="py-10 text-center">
+      <button type="button" data-more class="label text-lg disabled:opacity-40">
+        {s.loadMore}
+      </button>
+    </p>
+  )}
+  <template data-card>
+    <article class="group relative flex flex-col">
+      <div class="media-inset relative overflow-hidden bg-neutral-200" style="aspect-ratio: 4/3">
+        <img class="absolute inset-0 size-full object-cover" alt="" loading="lazy" />
+      </div>
+      <div class="@container flex flex-col gap-2.5 py-2.5 md:gap-5 md:pt-5 md:pb-2.5">
+        <div class="flex items-center justify-between gap-2 py-2 md:py-0">
+          <Chip category={{ slug: "", title: "" }} lang={lang} class="relative z-10" data-chip />
+          <p class="label flex min-w-0 gap-[5px] text-md font-black">
+            <span data-author class="hidden truncate @min-[20rem]:inline"></span>
+            <time data-date class="shrink-0 whitespace-nowrap opacity-50"></time>
+          </p>
+        </div>
+        <h3 class="display text-card text-balance">
+          <a data-title class="after:absolute after:inset-0"></a>
+        </h3>
+      </div>
+    </article>
+  </template>
+</article-grid>
+
+<script>
+  import { enter } from "../lib/motion";
+  import { cardLinks, loadIndex, type Entry } from "../lib/searchClient";
+
+  class ArticleGrid extends HTMLElement {
+    connectedCallback() {
+      const more = this.querySelector<HTMLButtonElement>("[data-more]");
+      if (!more || this.hasAttribute("data-managed")) return;
+      more.addEventListener("click", async () => {
+        more.disabled = true;
+        const { lang, category, tag, author } = this.dataset;
+        const all = (await loadIndex(lang!)).filter(
+          (e) =>
+            (!category || e.c.some((c) => c.slug === category)) &&
+            (!tag || e.g?.includes(tag)) &&
+            (!author || e.a.some((a) => a.slug === author)),
+        );
+        const shown = Number(this.dataset.shown);
+        const next = all.slice(shown, shown + 12);
+        this.render(next);
+        this.dataset.shown = String(shown + next.length);
+        more.disabled = false;
+        if (shown + next.length >= all.length) more.closest("p")!.remove();
+      });
+    }
+
+    render(entries: Entry[]) {
+      const tpl = this.querySelector<HTMLTemplateElement>("[data-card]")!;
+      const list = this.querySelector("[data-list]")!;
+      const added: Element[] = [];
+      for (const e of entries) {
+        const node = tpl.content.cloneNode(true) as DocumentFragment;
+        cardLinks(node, e, this.dataset.lang!);
+        added.push(...node.children);
+        list.append(node);
+      }
+      enter(added);
+    }
+  }
+  customElements.define("article-grid", ArticleGrid);
+</script>

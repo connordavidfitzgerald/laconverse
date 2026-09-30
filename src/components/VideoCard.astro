@@ -1,0 +1,45 @@
+---
+import Chip from "./Chip.astro";
+import Picture from "./Picture.astro";
+import { formatDuration, href, type Lang } from "../i18n";
+import type { VideoCard } from "../lib/types";
+
+interface Props {
+  video: VideoCard;
+  lang: Lang;
+  class?: string;
+}
+const { video, lang, class: className } = Astro.props;
+const [category] = video.categories;
+---
+
+<article class:list={["group relative flex flex-col gap-2.5", className]} data-reveal>
+  <Picture
+    img={video.poster}
+    ratio={9 / 16}
+    class="media-inset rounded-[10px] lg:rounded-none"
+    sizes="(min-width: 1024px) 20vw, 55vw"
+  />
+  <h3 class="display text-card-sm text-balance">
+    <a
+      href={`${href(lang, "videos")}#${video.slug}`}
+      class="title-line after:absolute after:inset-0"
+    >
+      {video.title}
+    </a>
+  </h3>
+  <div class="flex items-center justify-between">
+    {category ? (
+      <Chip
+        category={category}
+        lang={lang}
+        class="relative z-10 !px-2.5 !py-1 lg:!px-[13px] lg:!py-1.5 lg:text-base lg:font-black"
+      />
+    ) : (
+      <span />
+    )}
+    <span class="label text-xs opacity-50 lg:text-lg lg:font-extrabold lg:opacity-100">
+      {formatDuration(video.duration)}
+    </span>
+  </div>
+</article>

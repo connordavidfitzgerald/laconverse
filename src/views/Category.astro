@@ -1,0 +1,62 @@
+---
+/* Figma: 4 CATEGORY PAGE — UI. */
+import ArticleGrid from "../components/ArticleGrid.astro";
+import CategoryFilter from "../components/CategoryFilter.astro";
+import SearchForm from "../components/SearchForm.astro";
+import SupportBand from "../components/SupportBand.astro";
+import Layout from "../layouts/Layout.astro";
+import { href, otherLang, t, type Lang } from "../i18n";
+import { getCategories, getSettings } from "../lib/content";
+import type { TaxonomyPage } from "../lib/types";
+
+/* Sections and topics share the page; a topic shows the section list without
+   a current one. */
+interface Props {
+  lang: Lang;
+  category: TaxonomyPage;
+  kind?: "category" | "tag";
+}
+const { lang, category, kind = "category" } = Astro.props;
+const s = t(lang);
+const [categories, settings] = await Promise.all([getCategories(lang), getSettings(lang)]);
+const total = categories.reduce((n, c) => n + c.count, 0);
+// The same section or topic in the other language, when it has a slug there.
+const other = otherLang(lang);
+const otherSlug = category.alternates?.[other];
+---
+
+<Layout
+  lang={lang}
+  title={category.title}
+  description={category.description}
+  alternate={otherSlug ? href(other, kind, otherSlug) : href(other, "search")}
+>
+  <header class="px-5 lg:px-10">
+    <SearchForm lang={lang} category={kind === "category" ? category.slug : null} />
+    {category.description && (
+      <p class="mx-auto mt-10 max-w-2xl text-center font-display text-dek font-extrabold leading-[0.95] lg:mt-16">
+        {category.description}
+      </p>
+    )}
+  </header>
+  <div class="px-5 pt-[60px] pb-10 lg:px-10 lg:pt-20 lg:pb-14">
+    <CategoryFilter
+      lang={lang}
+      categories={categories}
+      current={kind === "category" ? category.slug : null}
+      total={total}
+    />
+  </div>
+  <div class="px-5 lg:px-10">
+    <ArticleGrid
+      lang={lang}
+      articles={category.articles}
+      total={category.total}
+      filter={kind === "category" ? { category: category.slug } : { tag: category.slug }}
+      countLabel={s.articlesCount}
+    />
+  </div>
+  <div class="px-5 py-10 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10 lg:py-20">
+    <SupportBand lang={lang} donateUrl={settings.donateUrl} class="lg:col-span-8 lg:col-start-3" />
+  </div>
+</Layout>

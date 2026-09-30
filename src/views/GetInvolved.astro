@@ -1,0 +1,176 @@
+---
+/* Figma: 8 ENGAGEZ-VOUS — UI, pared back to one centred column (the About
+   page's cols 3–10): title and intro, a quiet index of the ways to help, then
+   each section stacked and centred, the donate options in a yellow panel.
+   Favorit only: the wrapper sets `font-display` so no Inter shows through. */
+import Picture from "../components/Picture.astro";
+import Spray from "../components/Spray.astro";
+import Layout from "../layouts/Layout.astro";
+import { href, otherLang, t, type Lang } from "../i18n";
+import { getGetInvolved, getSettings } from "../lib/content";
+import type { Card } from "../lib/types";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+const [page, settings] = await Promise.all([getGetInvolved(lang), getSettings(lang)]);
+
+const slug = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+/* Sections in page order, shared by the index and the anchors. `#donate` is
+   fixed: the footer and support bands link to it. */
+type Block = { kind: "card"; card: Card } | { kind: "donate" } | { kind: "volunteer" };
+const blocks: (Block & { id: string; title: string })[] = [
+  ...page.cards.map((card): Block => ({ kind: "card", card })),
+  ...(page.donate ? [{ kind: "donate" } as Block] : []),
+  ...page.cardsAfter.map((card): Block => ({ kind: "card", card })),
+  ...(page.volunteer ? [{ kind: "volunteer" } as Block] : []),
+].map((b, i) => {
+  const title =
+    b.kind === "card"
+      ? (b.card.title ?? "")
+      : b.kind === "donate"
+        ? (page.donate?.title ?? s.donate)
+        : (page.volunteer?.title ?? "");
+  return {
+    ...b,
+    title,
+    id: b.kind === "donate" ? "donate" : slug(title) || `section-${i + 1}`,
+  };
+});
+---
+
+<Layout
+  lang={lang}
+  title={page.title ?? s.getInvolved}
+  seo={page.seo}
+  alternate={href(otherLang(lang), "getInvolved")}
+>
+  <div class="px-5 pb-20 text-center font-display lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10 lg:pb-32">
+    <div class="lg:col-span-8 lg:col-start-3">
+      <header class="pt-10 lg:pt-16">
+        <h1 class="display text-mega tracking-[-0.02em]">{page.title ?? s.getInvolved}</h1>
+        {page.intro && (
+          <p class="mx-auto mt-5 max-w-2xl text-dek font-black leading-[0.95] tracking-[-0.01em] lg:mt-10 lg:text-intro">
+            {page.intro}
+          </p>
+        )}
+        <nav aria-label={lang === "en" ? "On this page" : "Sur cette page"} class="mt-10">
+          <ul class="label flex flex-wrap justify-center gap-x-5 gap-y-2.5 text-sm lg:text-lg">
+            {blocks.map((b) => (
+              <li>
+                <a href={`#${b.id}`} class="link-line decoration-2">
+                  {b.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </header>
+
+      {blocks.map((b) => {
+        if (b.kind === "donate" && page.donate) {
+          return (
+            <section id="donate" class="relative mt-20 overflow-hidden bg-yellow px-5 py-12 lg:mt-32 lg:px-20 lg:py-20">
+              <Spray
+                class="-left-[55%] top-[45%] w-[190%] -rotate-[25deg] lg:-left-[10%] lg:top-[30%] lg:w-[120%]"
+                seed={31}
+              />
+              <h2 class="display relative text-section-lg tracking-[-0.02em]">{b.title}</h2>
+              {page.donate.text && (
+                <p class="relative mx-auto mt-5 max-w-lg text-dek font-extrabold leading-[0.95]">
+                  {page.donate.text}
+                </p>
+              )}
+              <ul class="relative mt-10 flex flex-wrap justify-center gap-2.5">
+                {page.donate.options.map((o) => (
+                  <li>
+                    <a
+                      href={o.url ?? settings.donateUrl ?? "#"}
+                      class="display press inline-block bg-ink px-4 py-2 text-[2.25rem] leading-[0.95] text-yellow hover:bg-paper hover:text-ink lg:px-5 lg:text-6xl"
+                    >
+                      {o.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          );
+        }
+
+        if (b.kind === "volunteer" && page.volunteer) {
+          const v = page.volunteer;
+          return (
+            <section id={b.id} class="mt-20 lg:mt-32">
+              <h2 class="display text-section-lg tracking-[-0.02em]">{b.title}</h2>
+              {v.intro && (
+                <p class="mx-auto mt-5 max-w-lg text-dek font-extrabold leading-[0.95]">{v.intro}</p>
+              )}
+              <ul class="mx-auto mt-10 max-w-xl">
+                {v.items.map((it) => (
+                  <li class="border-t-2 border-ink py-5 last:border-b-2" data-reveal>
+                    <h3 class="display text-card leading-[0.95]">{it.title}</h3>
+                    {it.text && <p class="mt-1.5 text-lg font-bold leading-[1.1]">{it.text}</p>}
+                  </li>
+                ))}
+              </ul>
+              {v.cta?.url && (
+                <a
+                  href={v.cta.url}
+                  class="label press mt-10 inline-block bg-yellow px-6 py-4 text-base hover:bg-ink hover:text-yellow lg:text-2xl"
+                >
+                  {v.cta.label}
+                </a>
+              )}
+            </section>
+          );
+        }
+
+        if (b.kind !== "card") return null;
+        const c = b.card;
+        return (
+          <section id={b.id} class="mt-20 lg:mt-32" data-reveal>
+            <h2 class="display text-section-lg tracking-[-0.02em]">{c.title}</h2>
+            <Picture
+              img={c.image}
+              ratio={353 / 250}
+              class="mt-5 lg:mt-10"
+              sizes="(min-width: 1024px) 66vw, 100vw"
+            />
+            {c.text && (
+              <p class="mx-auto mt-5 max-w-lg text-dek font-extrabold leading-[0.95] lg:mt-10">
+                {c.text}
+              </p>
+            )}
+            {c.cta?.url &&
+              (c.ctaStyle === "button" ? (
+                <a
+                  href={c.cta.url}
+                  data-voice-open={c.cta.url === "#voice" ? "" : undefined}
+                  class="label press mt-5 inline-block bg-yellow px-6 py-4 text-base hover:bg-ink hover:text-yellow lg:mt-10 lg:text-2xl"
+                >
+                  {c.cta.label}
+                </a>
+              ) : (
+                <a
+                  href={c.cta.url}
+                  data-voice-open={c.cta.url === "#voice" ? "" : undefined}
+                  class="label link-line mt-5 inline-block text-base decoration-2 lg:mt-10 lg:text-2xl"
+                >
+                  {c.cta.label} <span class="nudge-x">→</span>
+                </a>
+              ))}
+          </section>
+        );
+      })}
+    </div>
+  </div>
+</Layout>

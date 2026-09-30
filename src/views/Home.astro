@@ -1,0 +1,259 @@
+---
+/* Figma: HOMEPAGE (mobile) + HOMEPAGE — DESKTOP. */
+import ArticleCard from "../components/ArticleCard.astro";
+import ArticleSearch from "../components/ArticleSearch.astro";
+import Chip from "../components/Chip.astro";
+import Logo from "../components/Logo.astro";
+import PartnerCard from "../components/PartnerCard.astro";
+import Picture from "../components/Picture.astro";
+import PodcastCard from "../components/PodcastCard.astro";
+import RailControls from "../components/RailControls.astro";
+import SectionTitle from "../components/SectionTitle.astro";
+import SupportBand from "../components/SupportBand.astro";
+import VideoCard from "../components/VideoCard.astro";
+import Layout from "../layouts/Layout.astro";
+import { href, otherLang, t, type Lang } from "../i18n";
+import { getCategories, getHome, getIndex, getLatest, getSettings } from "../lib/content";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+const [home, settings, index, categories, latest] = await Promise.all([
+  getHome(lang),
+  getSettings(lang),
+  getIndex(lang),
+  getCategories(lang),
+  getLatest(lang, 6),
+]);
+const { lead, topStories, videos, podcasts, partnerStories } = home;
+const ecoleHref = home.ecole?.program?.slug
+  ? href(lang, "program", home.ecole.program.slug)
+  : href(lang, "program", "ecole-converse");
+// First word on its own line, the rest indented beneath it (desktop).
+const [ecoleFirst, ...ecoleRest] = (home.ecole?.title ?? "École Converse").split(" ");
+const ecoleTitle = [ecoleFirst, ecoleRest.join(" ")];
+---
+
+<Layout lang={lang} seo={home.seo} alternate={href(otherLang(lang), "home")}>
+  <!-- Lead story -->
+  {lead && (
+    <section class="px-2.5 lg:px-10">
+      <article class="group relative flex flex-col lg:mx-auto lg:grid lg:grid-cols-12 lg:gap-x-5">
+        <div class="order-2 px-2.5 flex flex-col items-center gap-5 pt-[60px] text-center lg:order-1 lg:col-span-8 lg:col-start-3 lg:px-2.5 lg:pt-[60px] lg:pb-5">
+          {lead.categories[0] && (
+            <Chip
+              category={lead.categories[0]}
+              lang={lang}
+              class="relative z-10 lg:px-[13px] lg:pt-1.5 lg:text-base lg:font-black"
+            />
+          )}
+          <h1 class="display text-hero pt-2">
+            <a href={href(lang, "article", lead.slug)} class="after:absolute after:inset-0">
+              {lead.title}
+            </a>
+          </h1>
+          <div class="flex flex-col items-center gap-5 lg:gap-10 lg:mt-5 lg:w-full lg:grid lg:grid-cols-6 lg:gap-x-5">
+            {lead.dek && (
+              <p class="font-display text-dek font-medium leading-[0.95] tracking-[-0.02em] text lg:col-span-4 lg:col-start-2 lg:px-0 lg:font-medium">
+                {lead.dek}
+              </p>
+            )}
+            {lead.authors[0] && (
+              <p class="text-sm font-medium label lg:col-span-4 lg:col-start-2 lg:text-lg">
+                {lead.authors[0].name}
+              </p>
+            )}
+          </div>
+        </div>
+        <Picture
+          img={lead.image}
+          ratio={1}
+          eager
+          sizes="(min-width: 1024px) 63vw, 100vw"
+          class="order-1 lg:order-2 lg:col-span-12 lg:col-start-1 lg:aspect-[5/3]! lg:mt-10"
+        />
+      </article>
+    </section>
+  )}
+
+  <!-- Top stories -->
+  <section class="px-5 pt-16 lg:px-10 lg:pt-20" aria-labelledby="top-stories">
+    <!-- Desktop: the search page's filter + grid, minus the search bar -->
+    <ArticleSearch
+      lang={lang}
+      categories={categories}
+      articles={latest}
+      total={index.length}
+      pageSize={6}
+      class="hidden! lg:block! xl:px-40"
+    />
+    <div class="grid gap-5 md:grid-cols-2 lg:hidden">
+      {topStories.map((a) => (
+        <ArticleCard article={a} lang={lang} />
+      ))}
+    </div>
+    <p class="py-[60px] text-center lg:hidden">
+      <a href={href(lang, "search")} class="label text-lg tracking-[-0.015em]">
+        {s.seeAllStories} <span class="nudge-x">→</span>
+      </a>
+    </p>
+  </section>
+
+  <!-- Support band: after videos on phones, before them on desktop -->
+  <div class="hidden px-10 pt-[120px] lg:grid lg:grid-cols-12 lg:gap-x-5">
+    <SupportBand
+      lang={lang}
+      {...home.support}
+      donateUrl={settings.donateUrl}
+      class="lg:col-span-8 lg:col-start-3"
+    />
+  </div>
+
+  <!-- Videos. Desktop: ruled kicker, poster title with the rail controls
+       opposite, then a full-width rail of cards three grid columns wide. -->
+  {videos.length > 0 && (
+    <section class="overflow-hidden pt-5 pb-10 lg:pt-[240px] lg:pb-0">
+      <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10 lg:py-5 lg:@container">
+        <SectionTitle
+          lang={lang}
+          title={s.videos}
+          href={href(lang, "videos")}
+          class="lg:col-span-8 lg:mt-5 lg:self-end lg:[&_a]:hidden lg:[&_h2]:text-section-lg lg:[&_h2]:leading-[0.82] lg:[&_h2]:tracking-[-0.03em]"
+        />
+        <RailControls
+          rail="home-videos"
+          count={videos.length}
+          lang={lang}
+          class="hidden! lg:col-span-4 lg:flex! lg:justify-end lg:self-end"
+        />
+        <ul
+          id="home-videos"
+          class="rail -mr-5 mt-2.5 gap-2.5 pr-5 lg:col-span-12 lg:-mr-10 lg:mt-10 lg:gap-5 lg:pr-10"
+        >
+          {videos.map((v) => (
+            <li class="w-[207px] lg:w-[calc(100cqw/4-0.9375rem)]">
+              <VideoCard video={v} lang={lang} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
+
+  <div class="px-5 pt-10 pb-[60px] lg:hidden">
+    <SupportBand lang={lang} {...home.support} donateUrl={settings.donateUrl} />
+  </div>
+
+  <!-- Podcasts: rails come before École on desktop, after it on phones -->
+  <div class="flex flex-col lg:flex-col-reverse">
+    <!-- École Converse. Desktop: ruled kicker, a two-line title that breaks
+         the grid and bleeds into the photo (cols 5–12), copy in cols 1–4. -->
+    <section class="px-5 pb-10 lg:px-10 lg:pt-[160px] lg:pb-100">
+      <div class="lg:grid lg:grid-cols-12 lg:gap-x-5">
+        <h2
+          class="display text-section tracking-[-0.015em] lg:relative lg:z-10 lg:col-span-12 lg:mt-10 lg:text-poster lg:leading-[0.82] lg:tracking-[-0.03em] lg:pointer-events-none"
+          data-reveal
+        >
+          <span class="lg:block">{ecoleTitle[0]}</span>
+          {ecoleTitle[1] && (
+            <>
+              {" "}
+              <span class="lg:block lg:pl-[calc((100%+1.25rem)/4)]">{ecoleTitle[1]}</span>
+            </>
+          )}
+        </h2>
+        <a
+          href={ecoleHref}
+          class="group relative mt-2.5 block lg:col-span-8 lg:col-start-5 lg:row-start-3 lg:-mt-[min(5.5vw,6.5rem)]"
+          tabindex="-1"
+          aria-hidden="true"
+          data-reveal
+        >
+          <Picture
+            img={home.ecole?.image}
+            ratio={1}
+            class="media-inset lg:aspect-[16/11]!"
+            sizes="(min-width: 1024px) 66vw, 100vw"
+          />
+          <Logo class="absolute bottom-[22px] left-[19px] h-[18px] w-auto text-paper lg:hidden" />
+        </a>
+        <div
+          class="flex flex-col gap-5 py-2.5 lg:col-span-4 lg:row-start-3 lg:gap-10 lg:self-end lg:py-0"
+          data-reveal
+        >
+          <p class="font-display text-intro font-black leading-[0.95] tracking-[-0.02em] lg:indent-[2.5em] lg:font-bold lg:leading-none">
+            {home.ecole?.text ??
+              (lang === "en"
+                ? "Offering courses in journalism, podcasting, and creative writing, École Converse trains the next generation of journalists through paid apprenticeships."
+                : "Avec des cours en journalisme, en balado et en création littéraire, l’École Converse forme la relève journalistique grâce à des stages rémunérés.")}
+          </p>
+          <a
+            href={ecoleHref}
+            class="label w-max bg-yellow px-[15px] py-2.5 text-xs leading-[1.2] hover:bg-ink hover:text-yellow lg:flex lg:w-full lg:items-baseline lg:justify-between lg:bg-lilac lg:px-5 lg:py-4 lg:font-bold lg:text-[2rem] lg:leading-none lg:tracking-[-0.02em] lg:hover:text-lilac"
+          >
+            {s.learnMore} <span class="nudge-x">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Podcasts: same desktop layout as Videos. -->
+    {podcasts.length > 0 && (
+      <section class="overflow-hidden pt-5 pb-10 lg:pt-[160px] lg:pb-0">
+        <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10 lg:py-5 lg:@container">
+          <SectionTitle
+            lang={lang}
+            title={s.podcasts}
+            class="[&_a]:hidden lg:col-span-8 lg:mt-10 lg:self-end lg:[&_h2]:text-section-lg lg:[&_h2]:leading-[0.82] lg:[&_h2]:tracking-[-0.03em]"
+            href={href(lang, "podcasts")}
+          />
+          <RailControls
+            rail="home-podcasts"
+            count={podcasts.length}
+            lang={lang}
+            class="hidden! lg:col-span-4 lg:flex! lg:justify-end lg:self-end"
+          />
+          <ul
+            id="home-podcasts"
+            class="rail -mr-5 mt-2.5 gap-2.5 pr-5 lg:col-span-12 lg:-mr-10 lg:mt-10 lg:gap-5 lg:pr-10"
+          >
+            {podcasts.map((p) => (
+              <li class="w-[207px] lg:w-[calc(100cqw/4-0.9375rem)]">
+                <PodcastCard podcast={p} lang={lang} />
+              </li>
+            ))}
+          </ul>
+          <a
+            href={href(lang, "podcasts")}
+            class="label mt-5 inline-block bg-yellow px-[15px] py-2.5 text-xs leading-[1.2] hover:bg-ink hover:text-yellow lg:hidden"
+          >
+            {s.seeAll} <span class="nudge-x">→</span>
+          </a>
+        </div>
+      </section>
+    )}
+  </div>
+
+  <!-- Independent media portal -->
+  {partnerStories.length > 0 && (
+    <section class="overflow-hidden px-5 pb-10 lg:px-10 lg:pt-20 lg:pb-60">
+      <div class="lg:grid lg:grid-cols-12 lg:gap-x-5">
+        <SectionTitle
+          lang={lang}
+          title={s.independentMedia}
+          class="lg:col-span-5 lg:self-start"
+          stacked
+        />
+        <ul class="rail -mr-5 mt-2.5 gap-2.5 pr-5 lg:col-span-7 lg:-mr-10 lg:mt-0 lg:gap-5 lg:pr-10">
+          {partnerStories.map((p) => (
+            <li class="w-[247px] lg:w-[351px]">
+              <PartnerCard story={p} lang={lang} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
+</Layout>

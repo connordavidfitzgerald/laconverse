@@ -1,0 +1,16 @@
+---
+import View from "../../../../views/Position.astro";
+import { getGiveYourVoice } from "../../../../lib/content";
+
+export async function getStaticPaths() {
+  const page = await getGiveYourVoice("en");
+  return page.positions.map((position) => ({
+    params: { slug: position.slug },
+    props: { position, page },
+  }));
+}
+
+const { position, page } = Astro.props;
+---
+
+<View lang="en" position={position} page={page} />

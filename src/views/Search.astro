@@ -1,0 +1,60 @@
+---
+/* Figma: SEARCH. The first 12 stories render statically; typing or picking a
+   category filters the full index client-side. */
+import ArticleSearch from "../components/ArticleSearch.astro";
+import PartnerCard from "../components/PartnerCard.astro";
+import SearchForm from "../components/SearchForm.astro";
+import SectionTitle from "../components/SectionTitle.astro";
+import SupportBand from "../components/SupportBand.astro";
+import Layout from "../layouts/Layout.astro";
+import { href, otherLang, t, type Lang } from "../i18n";
+import { getCategories, getHome, getIndex, getLatest, getSettings } from "../lib/content";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+const [index, categories, home, settings, latest] = await Promise.all([
+  getIndex(lang),
+  getCategories(lang),
+  getHome(lang),
+  getSettings(lang),
+  getLatest(lang),
+]);
+---
+
+<Layout lang={lang} title={s.search} alternate={href(otherLang(lang), "search")}>
+  <ArticleSearch
+    lang={lang}
+    categories={categories}
+    articles={latest}
+    total={index.length}
+    syncUrl
+    class="px-5 lg:px-10"
+  >
+    <SearchForm lang={lang} />
+  </ArticleSearch>
+
+  <div class="px-5 pt-10 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10 lg:pt-20">
+    <SupportBand
+      lang={lang}
+      {...home.support}
+      donateUrl={settings.donateUrl}
+      class="lg:col-span-8 lg:col-start-3"
+    />
+  </div>
+
+  {home.partnerStories.length > 0 && (
+    <section class="overflow-hidden px-5 py-10 lg:px-10 lg:py-20">
+      <SectionTitle lang={lang} title={s.independentMedia} />
+      <ul class="rail -mr-5 mt-2.5 gap-2.5 pr-5 lg:-mr-10 lg:gap-5 lg:pr-10">
+        {home.partnerStories.map((p) => (
+          <li class="w-[247px] lg:w-[351px]">
+            <PartnerCard story={p} lang={lang} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+</Layout>

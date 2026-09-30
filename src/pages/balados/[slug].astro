@@ -1,0 +1,15 @@
+---
+import View from "../../views/Podcast.astro";
+import { getPodcast, getPodcasts } from "../../lib/content";
+
+export async function getStaticPaths() {
+  const slugs: string[] = await getPodcasts("fr").then((list) => list.map((p) => p.slug));
+  return slugs.map((slug) => ({ params: { slug } }));
+}
+
+const slug = Astro.params.slug!;
+const podcast = await getPodcast("fr", slug);
+if (!podcast) return new Response(null, { status: 404 });
+---
+
+<View lang="fr" podcast={podcast} />

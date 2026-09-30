@@ -1,0 +1,47 @@
+---
+import Icon from "./Icon.astro";
+import type { Settings } from "../lib/types";
+
+interface Props {
+  socials: Settings["socials"];
+  variant?: "round" | "plain";
+  class?: string;
+}
+const { socials, variant = "round", class: className } = Astro.props;
+const names: Record<string, string> = {
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  whatsapp: "WhatsApp",
+  linkedin: "LinkedIn",
+  facebook: "Facebook",
+  youtube: "YouTube",
+  x: "X",
+};
+---
+
+<ul
+  class:list={[
+    "flex items-center",
+    variant === "round" ? "gap-[5px] md:gap-1.5" : "gap-4",
+    className,
+  ]}
+>
+  {socials.map(({ platform, url }) => (
+    <li>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener"
+        aria-label={names[platform] ?? platform}
+        class:list={[
+          "grid place-items-center",
+          variant === "round"
+            ? "press size-11 rounded-full bg-ink text-yellow hover:bg-paper hover:text-ink md:size-[53px]"
+            : "press size-5 text-ink hover:opacity-60",
+        ]}
+      >
+        <Icon name={platform} class={variant === "round" ? "size-4 md:size-5" : "size-5"} />
+      </a>
+    </li>
+  ))}
+</ul>

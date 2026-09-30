@@ -1,0 +1,58 @@
+---
+/* The underline inputs used by every sign-up / application form. */
+import { t, type Lang } from "../i18n";
+
+interface Props {
+  lang: Lang;
+  interests?: boolean;
+  about?: boolean;
+  message?: boolean;
+  phone?: boolean;
+}
+const { lang, interests = true, about = true, message = false, phone = false } = Astro.props;
+const s = t(lang);
+const input =
+  "display w-full border-b border-ink bg-transparent pb-2 text-sm leading-none tracking-[-0.01em] placeholder:text-ink/40 outline-none focus:border-b-2 lg:text-lg";
+---
+
+<div class="flex flex-col gap-6 lg:gap-8">
+  <label>
+    <span class="sr-only">{s.name}</span>
+    <input name="name" required autocomplete="name" placeholder={s.name} class={input} />
+  </label>
+  <label>
+    <span class="sr-only">{s.email}</span>
+    <input
+      name="email"
+      type="email"
+      required
+      autocomplete="email"
+      placeholder={s.email}
+      class={input}
+    />
+  </label>
+  {phone && (
+    <label>
+      <span class="sr-only">{s.phone}</span>
+      <input name="phone" type="tel" autocomplete="tel" placeholder={s.phone} class={input} />
+    </label>
+  )}
+  {interests && (
+    <label>
+      <span class="sr-only">{s.interests}</span>
+      <input name="interests" placeholder={s.interests} class={input} />
+    </label>
+  )}
+  {(about || message) && (
+    <label>
+      <span class="sr-only">{s.aboutYou}</span>
+      <textarea
+        name="message"
+        rows="4"
+        placeholder={message ? s.vnMessage : s.aboutYou}
+        class:list={[input, "resize-none pb-12"]}
+      ></textarea>
+    </label>
+  )}
+  <slot />
+</div>

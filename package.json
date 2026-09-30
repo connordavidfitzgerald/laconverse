@@ -1,0 +1,66 @@
+{
+  "name": "laconverse",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check": "astro check && sanity schema validate",
+    "migrate:extract": "tsx --env-file=.env scripts/migrate-webflow/extract.ts",
+    "migrate:csv": "tsx scripts/migrate-webflow/from-csv.ts",
+    "migrate:inspect": "tsx scripts/migrate-webflow/inspect.ts",
+    "migrate:transform": "tsx scripts/migrate-webflow/transform.ts",
+    "migrate:translate": "tsx --env-file=.env scripts/migrate-webflow/translate.ts",
+    "migrate:import": "sanity dataset import .migration/out/import.ndjson production --replace --allow-failing-assets",
+    "migrate:seed": "sanity dataset import .migration/out/seed.ndjson production --missing",
+    "migrate:validate": "tsx --env-file=.env scripts/migrate-webflow/validate.ts",
+    "migrate:merge-locales": "tsx --env-file=.env scripts/merge-locales/run.ts",
+    "tts": "tsx --env-file=.env scripts/tts/generate.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@astrojs/react": "^7.0.0",
+    "@astrojs/vercel": "^11.0.11",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@portabletext/to-html": "^6.0.0",
+    "@portabletext/types": "^4.0.2",
+    "@sanity/astro": "^3.5.1",
+    "@sanity/client": "^8.8.0",
+    "@sanity/document-internationalization": "^6.2.38",
+    "@sanity/icons": "^5.2.2",
+    "@sanity/image-url": "^2.1.1",
+    "@sanity/vision": "^6.16.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "astro": "^7.3.5",
+    "groq": "^6.16.0",
+    "gsap": "^3.15.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "sanity": "^6.16.0",
+    "styled-components": "^6.5.3",
+    "tailwindcss": "^4.3.3"
+  },
+  "allowScripts": {
+    "esbuild": true
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@portabletext/block-tools": "^6.0.2",
+    "@sanity/schema": "^6.16.0",
+    "@types/jsdom": "^30.0.0",
+    "jsdom": "^29.1.1",
+    "msedge-tts": "^2.0.8",
+    "prettier": "^3.9.9",
+    "prettier-plugin-astro": "^1.1.0",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3"
+  }
+}

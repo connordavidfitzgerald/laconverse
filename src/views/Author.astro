@@ -1,0 +1,70 @@
+---
+/* Figma: 10 AUTHOR PAGE — UI. */
+import ArticleGrid from "../components/ArticleGrid.astro";
+import Icon from "../components/Icon.astro";
+import Picture from "../components/Picture.astro";
+import SupportBand from "../components/SupportBand.astro";
+import Layout from "../layouts/Layout.astro";
+import { href, otherLang, t, type Lang } from "../i18n";
+import { getSettings } from "../lib/content";
+import type { ArticleCard, Person } from "../lib/types";
+
+interface Props {
+  lang: Lang;
+  person: Person & { total: number; articles: ArticleCard[] };
+}
+const { lang, person } = Astro.props;
+const s = t(lang);
+const settings = await getSettings(lang);
+---
+
+<Layout
+  lang={lang}
+  title={person.name}
+  description={person.bio}
+  image={person.image}
+  alternate={href(otherLang(lang), "author", person.slug)}
+>
+  <header class="flex flex-col items-center gap-5 px-5 pt-5 text-center lg:pt-10">
+    {person.role && <span class="label bg-yellow px-2.5 py-1.5 text-xs">{person.role}</span>}
+    <h1 class="display text-mega tracking-[-0.02em] text-balance">{person.name}</h1>
+    {person.bio && (
+      <p class="max-w-md font-display text-lg font-extrabold leading-[0.95] tracking-[-0.01em] lg:max-w-xl lg:text-2xl">
+        {person.bio}
+      </p>
+    )}
+    {person.email && (
+      <a
+        href={`mailto:${person.email}`}
+        class="grid size-[30px] place-items-center rounded-full bg-ink text-paper"
+        aria-label={`${s.email} ${person.name}`}
+      >
+        <Icon name="mail" class="h-2.5 w-3.5" />
+      </a>
+    )}
+    <Picture
+      img={person.image}
+      ratio={1}
+      class="mt-5 w-full max-w-[353px] lg:max-w-[480px]"
+      sizes="480px"
+      eager
+    />
+  </header>
+
+  <section class="px-5 pt-16 lg:px-10 lg:pt-24" aria-labelledby="by">
+    <h2 id="by" class="label text-xs lg:text-sm">
+      {s.articlesBy} {person.name}
+    </h2>
+    <ArticleGrid
+      lang={lang}
+      articles={person.articles}
+      total={person.total}
+      filter={{ author: person.slug }}
+      countLabel={s.articlesCount}
+    />
+  </section>
+
+  <div class="px-5 py-10 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10 lg:py-20">
+    <SupportBand lang={lang} donateUrl={settings.donateUrl} class="lg:col-span-8 lg:col-start-3" />
+  </div>
+</Layout>

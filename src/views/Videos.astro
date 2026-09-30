@@ -1,0 +1,327 @@
+---
+/* Figma: VIDEO + VIDEO SCROLL. A vertical, snap-scrolling feed: each video
+   sits centred between the (compact, inverted) header and the bottom of the
+   screen, with a gap either side so the neighbours peek in. “more” opens the
+   write-up over the video, Instagram-style: the text slides up over a dimmed,
+   still-playing clip and scrolls inside the frame. Videos play muted while in
+   view. */
+import AuthorCard from "../components/AuthorCard.astro";
+import Chip from "../components/Chip.astro";
+import Picture from "../components/Picture.astro";
+import ShareButton from "../components/ShareButton.astro";
+import Layout from "../layouts/Layout.astro";
+import { formatDate, href, otherLang, t, type Lang } from "../i18n";
+import { getVideos } from "../lib/content";
+import { embedSrc, plainText, renderRichText } from "../lib/portableText";
+import { imageUrl } from "../lib/sanity";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+const videos = await getVideos(lang);
+---
+
+<Layout
+  lang={lang}
+  title={s.videos}
+  alternate={href(otherLang(lang), "videos")}
+  dark
+  compactHeader
+  voiceLauncher={false}
+>
+  <video-feed class="flex flex-col items-center gap-(--feed-gap) py-(--feed-gap) [--feed-gap:1.25rem] lg:[--feed-gap:2rem]">
+    {videos.map((v, i) => {
+      const excerpt = plainText(v.body).slice(0, 120);
+      const iframe = !v.src && v.videoUrl ? embedSrc(v.videoUrl) : null;
+      return (
+        <article
+          id={v.slug}
+          class="w-full max-w-[calc(var(--feed-h)*9/16)] snap-center [--feed-h:calc(100dvh-var(--header-h)-2*var(--feed-gap))]"
+          data-slide
+        >
+          <div class="relative h-(--feed-h) overflow-hidden bg-neutral-900">
+            {v.src ? (
+              <video
+                src={v.src}
+                poster={imageUrl(v.poster, 900) ?? undefined}
+                class="absolute inset-0 size-full object-cover"
+                muted
+                loop
+                playsinline
+                preload={i === 0 ? "auto" : "none"}
+                data-video
+              ></video>
+            ) : iframe ? (
+              <iframe
+                src={iframe}
+                class="absolute inset-0 size-full"
+                loading="lazy"
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowfullscreen
+                title={v.title}
+              ></iframe>
+            ) : (
+              <Picture
+                img={v.poster}
+                class="absolute! inset-0 size-full"
+                ratio={9 / 16}
+                eager={i === 0}
+              />
+            )}
+
+            <div
+              data-scrim
+              aria-hidden="true"
+              class="pointer-events-none absolute inset-0 bg-ink/70 opacity-0"
+            ></div>
+
+            <div
+              data-caption
+              class="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-ink/80 via-ink/40 to-transparent px-5 pt-24 pb-[30px]"
+            >
+              <h2 class="display text-[2.25rem] leading-[0.95] tracking-[-0.015em] text-paper">
+                {v.title}
+              </h2>
+              <p class="pointer-events-auto mt-2.5 flex text-base font-medium text-paper">
+                <span class="truncate">{excerpt}…</span>
+                <button
+                  type="button"
+                  data-toggle
+                  aria-expanded="false"
+                  aria-controls={`body-${v.slug}`}
+                  class="shrink-0 pl-1 opacity-70 hover:opacity-100"
+                >
+                  {s.more}
+                </button>
+              </p>
+            </div>
+
+            <!-- The write-up, over the video. It starts a third of the way
+                 down and scrolls inside the frame; the empty top is the
+                 "tap the video to close" area. -->
+            <div
+              id={`body-${v.slug}`}
+              data-panel
+              class="absolute inset-0 overflow-y-auto overscroll-contain px-5 pt-[calc(var(--feed-h)*0.35)] pb-10 text-paper [scrollbar-width:none]"
+              hidden
+            >
+              <div data-rise class="flex items-end justify-between gap-4">
+                <h2 class="display text-[2.25rem] leading-[0.95] tracking-[-0.015em]">{v.title}</h2>
+                <button
+                  type="button"
+                  data-toggle
+                  aria-expanded="true"
+                  aria-controls={`body-${v.slug}`}
+                  class="shrink-0 pb-1 text-base font-medium opacity-70 hover:opacity-100"
+                >
+                  {s.less}
+                </button>
+              </div>
+              <div
+                data-rise
+                class="prose-article mt-6 [&_a]:text-yellow"
+                set:html={renderRichText(v.body)}
+              />
+              <div
+                data-rise
+                class="mt-10 flex items-center justify-between border-t border-paper pt-5"
+              >
+                <p class="label text-xs font-black">{formatDate(lang, v.publishedAt)}</p>
+                <ShareButton lang={lang} title={v.title} />
+              </div>
+              {v.categories[0] && (
+                <div data-rise>
+                  <Chip category={v.categories[0]} lang={lang} class="mt-5 text-ink" />
+                </div>
+              )}
+              {v.authorsFull[0] && (
+                <div data-rise>
+                  <AuthorCard
+                    person={v.authorsFull[0]}
+                    lang={lang}
+                    class="mt-10 border-paper bg-paper text-ink"
+                  />
+                </div>
+              )}
+            </div>
+
+            <a
+              href={href(lang, "home")}
+              data-exit
+              class="press label absolute left-4 top-4 rounded-full bg-ink/60 px-3 py-1.5 text-xs text-paper hover:bg-ink/80"
+            >
+              <span class="nudge-back">←</span> {s.back}
+            </a>
+
+            {v.src && (
+              <button
+                type="button"
+                data-sound
+                class="press label absolute right-4 top-4 overflow-hidden rounded-full bg-ink/60 px-3 py-1.5 text-xs text-paper hover:bg-ink/80"
+                data-on={s.mute}
+                data-off={s.unmute}
+              >
+                {s.mute}
+              </button>
+            )}
+          </div>
+        </article>
+      );
+    })}
+  </video-feed>
+</Layout>
+
+<script>
+  import { d, gsap, swapText } from "../lib/motion";
+
+  const SNAP = ["snap-y", "snap-mandatory"];
+
+  class VideoFeed extends HTMLElement {
+    connectedCallback() {
+      document.documentElement.classList.add(...SNAP);
+      // Mandatory snapping would otherwise hold the page on the last video.
+      const footer = document.querySelector<HTMLElement>("body > footer");
+      if (footer) footer.style.scrollSnapAlign = "end";
+
+      // Play what is on screen, pause the rest; a slide leaving the screen
+      // also folds its write-up away.
+      const io = new IntersectionObserver(
+        (entries) =>
+          entries.forEach((e) => {
+            const slide = e.target as HTMLElement;
+            const v = slide.querySelector<HTMLVideoElement>("[data-video]");
+            if (e.isIntersecting) v?.play().catch(() => {});
+            else {
+              v?.pause();
+              this.#close(slide);
+            }
+          }),
+        { threshold: 0.6 },
+      );
+      this.querySelectorAll<HTMLElement>("[data-slide]").forEach((s) => io.observe(s));
+
+      this.querySelectorAll<HTMLButtonElement>("[data-sound]").forEach((b) =>
+        b.addEventListener("click", () => {
+          const v = b.parentElement!.querySelector("video")!;
+          v.muted = !v.muted;
+          swapText(b, v.muted ? b.dataset.on! : b.dataset.off!);
+        }),
+      );
+
+      this.querySelectorAll<HTMLButtonElement>("[data-toggle]").forEach((b) =>
+        b.addEventListener("click", () => {
+          const slide = b.closest<HTMLElement>("[data-slide]")!;
+          b.getAttribute("aria-expanded") === "true" ? this.#close(slide, true) : this.#open(slide);
+        }),
+      );
+
+      // Tapping the dimmed video above the text closes it.
+      this.querySelectorAll<HTMLElement>("[data-panel]").forEach((p) =>
+        p.addEventListener(
+          "click",
+          (e) => e.target === p && this.#close(p.closest<HTMLElement>("[data-slide]")!, true),
+        ),
+      );
+      // Exit returns to the page the viewer came from on this site, else home.
+      const cameFromSite = document.referrer.startsWith(location.origin) && history.length > 1;
+      const home = this.querySelector<HTMLAnchorElement>("[data-exit]")!.href;
+      const exit = () => (cameFromSite ? history.back() : location.assign(home));
+      this.querySelectorAll<HTMLAnchorElement>("[data-exit]").forEach((a) =>
+        a.addEventListener("click", (e) => {
+          if (!cameFromSite) return;
+          e.preventDefault();
+          exit();
+        }),
+      );
+
+      // Escape folds an open write-up; with none open, it leaves the feed.
+      document.addEventListener("keydown", (this.#onKey = (e: KeyboardEvent) => {
+        if (e.key !== "Escape" || e.defaultPrevented) return;
+        // Only from the feed itself, not from the header, menu or voice note.
+        const target = e.target as Element;
+        if (target !== document.body && !this.contains(target)) return;
+        const open = this.querySelector<HTMLElement>("[data-panel]:not([hidden])");
+        if (open) this.#close(open.closest<HTMLElement>("[data-slide]")!, true);
+        else exit();
+      }));
+    }
+
+    #onKey?: (e: KeyboardEvent) => void;
+
+    #parts(slide: HTMLElement) {
+      return {
+        panel: slide.querySelector<HTMLElement>("[data-panel]")!,
+        scrim: slide.querySelector<HTMLElement>("[data-scrim]")!,
+        caption: slide.querySelector<HTMLElement>("[data-caption]")!,
+        more: slide.querySelector<HTMLButtonElement>("[data-caption] [data-toggle]")!,
+        rise: [...slide.querySelectorAll<HTMLElement>("[data-rise]")],
+      };
+    }
+
+    /** The caption steps aside, the video dims, and the write-up rises over
+        it block by block. */
+    #open(slide: HTMLElement) {
+      const { panel, scrim, caption, more, rise } = this.#parts(slide);
+      if (!panel.hidden && !panel.dataset.closing) return;
+      delete panel.dataset.closing;
+      more.setAttribute("aria-expanded", "true");
+      panel.hidden = false;
+      panel.scrollTop = 0;
+      gsap.killTweensOf([scrim, caption, ...rise]);
+      gsap.to(caption, { opacity: 0, y: 12, duration: d(0.25), ease: "power2.in" });
+      gsap.to(scrim, { opacity: 1, duration: d(0.4), ease: "power2.out" });
+      gsap.fromTo(
+        rise,
+        { y: 40, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: d(0.7),
+          stagger: d(0.05),
+          ease: "expo.out",
+          delay: d(0.08),
+          clearProps: "transform,opacity",
+        },
+      );
+      panel.querySelector<HTMLElement>("[data-toggle]")?.focus({ preventScroll: true });
+    }
+
+    #close(slide: HTMLElement, restoreFocus = false) {
+      const { panel, scrim, caption, more, rise } = this.#parts(slide);
+      if (panel.hidden || panel.dataset.closing !== undefined) return;
+      panel.dataset.closing = "true";
+      more.setAttribute("aria-expanded", "false");
+      if (restoreFocus) more.focus({ preventScroll: true });
+      gsap.killTweensOf([scrim, caption, ...rise]);
+      gsap.to(rise, {
+        y: 20,
+        opacity: 0,
+        duration: d(0.25),
+        stagger: { each: d(0.03), from: "end" },
+        ease: "power2.in",
+      });
+      gsap.to(scrim, { opacity: 0, duration: d(0.4), ease: "power2.out", delay: d(0.1) });
+      gsap.to(caption, {
+        opacity: 1,
+        y: 0,
+        duration: d(0.5),
+        ease: "power3.out",
+        delay: d(0.2),
+        clearProps: "transform,opacity",
+        onStart: () => {
+          panel.hidden = true;
+          delete panel.dataset.closing;
+          gsap.set(rise, { clearProps: "transform,opacity" });
+        },
+      });
+    }
+
+    disconnectedCallback() {
+      document.documentElement.classList.remove(...SNAP);
+      if (this.#onKey) document.removeEventListener("keydown", this.#onKey);
+    }
+  }
+  customElements.define("video-feed", VideoFeed);
+</script>

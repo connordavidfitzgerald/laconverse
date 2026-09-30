@@ -1,0 +1,149 @@
+---
+/* Figma: ABOUT (+ PARTNERS block). */
+import Icon from "../components/Icon.astro";
+import Picture from "../components/Picture.astro";
+import Layout from "../layouts/Layout.astro";
+import { href, otherLang, t, type Lang } from "../i18n";
+import { getAbout } from "../lib/content";
+import { renderRichText } from "../lib/portableText";
+import { imageUrl } from "../lib/sanity";
+import type { Person } from "../lib/types";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+const page = await getAbout(lang);
+const groups: [string, Person[]][] = [
+  [s.ourTeam, page.team],
+  [s.collaborators, page.collaborators],
+];
+---
+
+<Layout
+  lang={lang}
+  title={page.title ?? s.about}
+  seo={page.seo}
+  alternate={href(otherLang(lang), "about")}
+>
+  <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10">
+    <div class="lg:col-span-12">
+      <h1 class="display pt-10 pb-16 text-center text-mega tracking-[-0.02em] lg:pt-16">
+        {page.title ?? s.about}
+      </h1>
+      <Picture img={page.image} ratio={7 / 5} eager sizes="(min-width: 1024px) 66vw, 100vw" />
+
+      <div
+        class="prose-intro mx-auto mt-10 max-w-[31rem] lg:max-w-3xl"
+        set:html={renderRichText(page.intro)}
+      />
+    </div>
+  </div>
+
+  {groups
+    .filter(([, list]) => list.length)
+    .map(([title, list]) => (
+      <section class="px-5 pt-16 lg:px-10 lg:pt-24">
+        <h2 class="label pb-2.5 text-md">{title}</h2>
+        <ul class="grid grid-cols-2 gap-x-2.5 gap-y-5 md:grid-cols-3 lg:grid-cols-5 lg:gap-x-5">
+          {list.map((p) => (
+            <li>
+              <a href={href(lang, "author", p.slug)} class="group block" data-reveal>
+                <Picture
+                  img={p.image}
+                  ratio={171 / 211}
+                  sizes="(min-width: 1024px) 20vw, 50vw"
+                  class="media-inset"
+                  imgClass="grayscale-0 group-hover:grayscale"
+                />
+                <p class="label mt-2.5 text-xl leading-none">{p.name}</p>
+                {p.role && (
+                  <p class="font-display text-xl font-medium uppercase leading-none">{p.role}</p>
+                )}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+
+  {page.partners.length > 0 && (
+    <section class="px-5 pt-16 lg:px-10 lg:pt-24">
+      <h2 class="label pb-5 text-xs">Partners</h2>
+      <ul class="grid grid-cols-3 items-center gap-5 md:grid-cols-5 lg:grid-cols-8">
+        {page.partners.map((p) => {
+          const logo = imageUrl(p.logo, 300);
+          return (
+            <li>
+              <a
+                href={p.url ?? undefined}
+                target="_blank"
+                rel="noopener"
+                class="block hover:opacity-60"
+                data-reveal
+              >
+                {logo ? (
+                  <img
+                    src={logo}
+                    alt={p.name}
+                    class="mx-auto max-h-16 w-auto object-contain"
+                    loading="lazy"
+                  />
+                ) : (
+                  <span class="label text-sm">{p.name}</span>
+                )}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  )}
+
+  {page.sections.length > 0 && (
+    <section class="px-5 pt-16 pb-20 lg:px-10 lg:pt-24">
+      {page.sections.map((sec) => (
+        <details class="group border-ink [&+&]:border-t-0" data-accordion data-reveal>
+          <summary class="display flex cursor-pointer list-none items-center justify-between text-[2.25rem] leading-[0.95] tracking-[-0.015em] lg:text-7xl [&::-webkit-details-marker]:hidden">
+            {sec.title}
+            <Icon
+              name="plus"
+              class="size-3 shrink-0 transition-transform duration-300 ease-out group-open:rotate-45 group-[.is-closing]:rotate-0! lg:size-5"
+            />
+          </summary>
+          <div
+            class="prose-article max-w-2xl py-5"
+            data-accordion-body
+            set:html={renderRichText(sec.body)}
+          />
+        </details>
+      ))}
+    </section>
+  )}
+</Layout>
+
+<script>
+  import { collapse, expand } from "../lib/motion";
+
+  // Keep native <details> (works without JS, find-in-page opens it) but ease
+  // the body open and shut instead of jumping.
+  document.querySelectorAll<HTMLDetailsElement>("details[data-accordion]").forEach((details) => {
+    const body = details.querySelector<HTMLElement>("[data-accordion-body]")!;
+    details.querySelector("summary")!.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (details.open && !details.classList.contains("is-closing")) {
+        details.classList.add("is-closing");
+        collapse(body, () => {
+          details.classList.remove("is-closing");
+          details.open = false;
+          body.hidden = false;
+        });
+      } else {
+        details.classList.remove("is-closing");
+        details.open = true;
+        expand(body);
+      }
+    });
+  });
+</script>

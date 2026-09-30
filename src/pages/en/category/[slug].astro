@@ -1,0 +1,15 @@
+---
+import View from "../../../views/Category.astro";
+import { getCategories, getCategory } from "../../../lib/content";
+
+export async function getStaticPaths() {
+  const slugs: string[] = await getCategories("en").then((list) => list.map((c) => c.slug));
+  return slugs.map((slug) => ({ params: { slug } }));
+}
+
+const slug = Astro.params.slug!;
+const category = await getCategory("en", slug);
+if (!category) return new Response(null, { status: 404 });
+---
+
+<View lang="en" category={category} />

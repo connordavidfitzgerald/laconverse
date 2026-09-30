@@ -1,0 +1,31 @@
+---
+/* Compact horizontal card: square thumb + title + chip (article footer). */
+import Chip from "./Chip.astro";
+import Picture from "./Picture.astro";
+import { href, type Lang } from "../i18n";
+import type { ArticleCard } from "../lib/types";
+
+interface Props {
+  article: ArticleCard;
+  lang: Lang;
+}
+const { article, lang } = Astro.props;
+---
+
+<article class="group relative grid grid-cols-2 gap-5 border-t border-ink py-5" data-reveal>
+  <Picture img={article.image} ratio={1} sizes="(min-width: 768px) 20vw, 45vw" class="media-inset" />
+  <div class="flex flex-col justify-between gap-3">
+    <h3 class="display text-lg leading-[0.95] md:text-2xl">
+      <a href={href(lang, "article", article.slug)} class="title-line after:absolute after:inset-0">
+        {article.title}
+      </a>
+    </h3>
+    {article.categories[0] && (
+      <Chip
+        category={article.categories[0]}
+        lang={lang}
+        class="relative z-10 w-max !px-2.5 !py-1 !text-[0.625rem]"
+      />
+    )}
+  </div>
+</article>

@@ -1,0 +1,51 @@
+---
+/* “Keep La Converse independent” — yellow panel with the spray mark. */
+import Spray from "./Spray.astro";
+import { href, type Lang } from "../i18n";
+import type { Cta } from "../lib/types";
+
+interface Props {
+  lang: Lang;
+  title?: string | null;
+  text?: string | null;
+  cta?: Cta | null;
+  donateUrl?: string | null;
+  class?: string;
+}
+const { lang, title, text, cta, donateUrl, class: className } = Astro.props;
+const en = lang === "en";
+const heading = title ?? (en ? "Keep La Converse independent" : "Gardons La Converse indépendante");
+const body =
+  text ??
+  (en
+    ? "Community support is what keeps our reporting free and independent. Help us continue covering what matters."
+    : "C’est le soutien de la communauté qui garde nos reportages libres et indépendants. Aidez-nous à continuer de couvrir ce qui compte.");
+const label =
+  cta?.label ?? (en ? "Become a La Converse supporter" : "Devenir membre de La Converse");
+const url = cta?.url ?? donateUrl ?? `${href(lang, "getInvolved")}#donate`;
+---
+
+<section
+  class:list={[
+    "relative overflow-hidden bg-yellow px-5 py-[30px] lg:flex lg:items-center lg:gap-10 lg:p-20",
+    className,
+  ]}
+  data-reveal
+>
+  <Spray
+    class="-left-[55%] top-[55%] w-[190%] -rotate-[25deg] lg:-left-[0%] lg:top-[-20%] lg:w-[120%]"
+    seed={21}
+  />
+  <h2 class="display relative text-[2.5rem] leading-[0.95] tracking-[-0.01em] lg:flex-1 lg:text-support lg:tracking-[-0.0075em]">
+    {heading}
+  </h2>
+  <div class="relative mt-[30px] flex flex-col gap-[30px] lg:mt-0 lg:w-[33.3%] lg:shrink-0 lg:flex-col-reverse lg:gap-5 lg:pt-[15px]">
+    <a
+      href={url}
+      class="label grid place-items-center rounded-[10px] border border-ink p-10 text-center text-lg hover:bg-ink hover:text-yellow lg:px-10 lg:py-[30px] leading-[100%]"
+    >
+      {label}
+    </a>
+    <p class="display text-lg leading-[0.95] tracking-[-0.01em] lg:font-black">{body}</p>
+  </div>
+</section>

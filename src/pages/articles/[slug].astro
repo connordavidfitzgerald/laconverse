@@ -1,0 +1,15 @@
+---
+import View from "../../views/Article.astro";
+import { getArticle, getArticleSlugs } from "../../lib/content";
+
+export async function getStaticPaths() {
+  const slugs: string[] = await getArticleSlugs("fr");
+  return slugs.map((slug) => ({ params: { slug } }));
+}
+
+const slug = Astro.params.slug!;
+const article = await getArticle("fr", slug);
+if (!article) return new Response(null, { status: 404 });
+---
+
+<View lang="fr" article={article} />

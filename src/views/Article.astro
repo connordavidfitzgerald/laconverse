@@ -1,0 +1,260 @@
+---
+/* Figma: ARTICLE. The hero runs full-bleed under a transparent site header
+   (which turns solid once the hero has scrolled away); the title block sits on
+   8 columns below it and the body on a readable 6. */
+import AuthorCard from "../components/AuthorCard.astro";
+import Chip from "../components/Chip.astro";
+import Picture from "../components/Picture.astro";
+import ShareButton from "../components/ShareButton.astro";
+import StoryRow from "../components/StoryRow.astro";
+import Layout from "../layouts/Layout.astro";
+import { formatDate, href, otherLang, t, type Lang } from "../i18n";
+import { getRelated } from "../lib/content";
+import { formatLabel } from "../lib/formats";
+import { readingMinutes, renderRichText } from "../lib/portableText";
+import type { Article } from "../lib/types";
+
+interface Props {
+  lang: Lang;
+  article: Article;
+}
+const { lang, article } = Astro.props;
+const s = t(lang);
+const other = otherLang(lang);
+const translation = article.translations.find((x) => x.language === other && x.slug);
+const related = await getRelated(lang, article);
+const [author] = article.authorsFull;
+const hero = Boolean(article.image?.asset?.url);
+const kicker = [formatLabel(article.format, lang), article.series?.title]
+  .filter(Boolean)
+  .join(" · ");
+---
+
+<Layout
+  lang={lang}
+  title={article.title}
+  description={article.dek}
+  image={article.image}
+  seo={article.seo}
+  alternate={translation ? href(other, "article", translation.slug) : null}
+  header={hero ? "overlay" : "light"}
+>
+  <article>
+    {hero && (
+      <div data-header-hero class="relative">
+        <Picture
+          img={article.image}
+          ratio={4 / 5}
+          eager
+          class="min-h-[70svh] w-full lg:aspect-auto! lg:h-[min(100svh,56.25vw)] lg:min-h-0"
+          sizes="100vw"
+        />
+        <div
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-x-0 top-0 h-40 bg-linear-to-b from-ink/50 to-transparent lg:h-56"
+        ></div>
+      </div>
+    )}
+    <header class="lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10">
+      {!hero && (
+        <Picture
+          img={article.image}
+          ratio={1}
+          eager
+          class="lg:col-span-10 lg:col-start-2 lg:aspect-[16/9]!"
+          sizes="(min-width: 1024px) 83vw, 100vw"
+        />
+      )}
+      {article.image?.caption && (
+        <p
+          class:list={[
+            "px-5 pt-2 text-[0.625rem] font-medium opacity-60 lg:px-0 text-center ",
+            hero ? "lg:col-span-12" : "lg:col-span-10 lg:col-start-2",
+          ]}
+        >
+          {article.image.caption}
+        </p>
+      )}
+      <div class="flex flex-col items-center gap-5 px-5 pt-10 text-center lg:col-span-8 lg:col-start-3 lg:px-0 lg:pt-[60px]">
+        {article.categories[0] && (
+          <Chip category={article.categories[0]} lang={lang} class="text-sm! px-2.5! py-1!" />
+        )}
+
+        <h1 class="display text-hero">{article.title}</h1>
+        {article.dek && (
+          <p class="font-display text-dek font-medium leading-[0.95] tracking-[-0.02em] lg:font-medium">
+            {article.dek}
+          </p>
+        )}
+        {article.authorsFull.length > 0 && (
+          <div class="flex flex-col items-center gap-[5px] py-5">
+            <div class="flex -space-x-2">
+              {article.authorsFull.map((p) => (
+                <Picture
+                  img={p.image}
+                  ratio={1}
+                  class="w-10 rounded-full ring-2 ring-paper"
+                  sizes="40px"
+                />
+              ))}
+            </div>
+            <p class="label text-md font-medium">
+              {s.by}{" "}
+              {article.authorsFull.map((p, i) => (
+                <>
+                  {i > 0 && ", "}
+                  <a href={href(lang, "author", p.slug)}>{p.name}</a>
+                </>
+              ))}
+            </p>
+          </div>
+        )}
+      </div>
+    </header>
+
+    <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10">
+      <div class="lg:col-span-6 lg:col-start-4">
+        <div class="mt-10 flex items-center justify-between">
+          <p class="label text-md font-black">
+            <time datetime={article.publishedAt}>{formatDate(lang, article.publishedAt)}</time>
+            <span class="px-1.5">·</span>
+            {readingMinutes(article.body)} {s.readingTime}
+          </p>
+          <ShareButton lang={lang} title={article.title} />
+        </div>
+
+        {article.listen && (
+          <listen-bar class="mt-2.5 flex items-center gap-4 bg-yellow px-5 py-5">
+            <button
+              type="button"
+              class="press grid size-6 place-items-center rounded-full bg-ink text-paper hover:scale-110"
+              aria-label={s.listen}
+            >
+              <svg viewBox="0 0 10 12" class="h-2 w-2" fill="currentColor" data-play>
+                <path d="M0 0v12l10-6z" />
+              </svg>
+              <svg viewBox="0 0 10 12" class="hidden h-2 w-2" fill="currentColor" data-pause>
+                <path d="M0 0h3.5v12H0zM6.5 0H10v12H6.5z" />
+              </svg>
+            </button>
+            <span class="label flex-1 text-md font-black">{s.listen}</span>
+            <span class="label text-xs font-black" data-time></span>
+            <audio src={article.listen} preload="metadata"></audio>
+          </listen-bar>
+        )}
+
+        <div
+          class="prose-article tracking-[-0.01em] leading-[1.5] mt-10"
+          set:html={renderRichText(article.body)}
+        />
+
+        {article.photographers?.length || article.illustrators?.length ? (
+          <p class="label mt-10 text-xs font-black">
+            {article.photographers?.length ? (
+              <>
+                {s.photo} :{" "}
+                {article.photographers.map((p, i) => (
+                  <>
+                    {i > 0 && ", "}
+                    <a href={href(lang, "author", p.slug)}>{p.name}</a>
+                  </>
+                ))}
+              </>
+            ) : null}
+            {article.photographers?.length && article.illustrators?.length ? (
+              <span class="px-1.5">·</span>
+            ) : null}
+            {article.illustrators?.length ? (
+              <>
+                {s.illustration} :{" "}
+                {article.illustrators.map((p, i) => (
+                  <>
+                    {i > 0 && ", "}
+                    <a href={href(lang, "author", p.slug)}>{p.name}</a>
+                  </>
+                ))}
+              </>
+            ) : null}
+          </p>
+        ) : null}
+
+        {article.authorsNote?.length ? (
+          <aside class="mt-10 border border-ink p-5" aria-labelledby="authors-note">
+            <h2 id="authors-note" class="label text-xs">
+              {s.authorsNote}
+            </h2>
+            <div class="prose-article mt-3" set:html={renderRichText(article.authorsNote)} />
+          </aside>
+        ) : null}
+
+        {article.localJournalismInitiative && (
+          <p class="mt-10 text-xs font-medium opacity-70">{s.lji}</p>
+        )}
+        {article.machineTranslated && (
+          <p class="mt-10 text-xs font-medium opacity-70">{s.translatedFrom}</p>
+        )}
+
+        {article.tags?.length ? (
+          <nav class="mt-10 flex flex-wrap items-center gap-2.5" aria-label={s.topics}>
+            <span class="label text-xs font-black">{s.topics}</span>
+            {article.tags.map((tag) => (
+              <a
+                href={href(lang, "tag", tag.slug)}
+                class="label border border-ink px-2.5 py-1 text-xs hover:bg-ink hover:text-paper"
+              >
+                {tag.title}
+              </a>
+            ))}
+          </nav>
+        ) : null}
+
+        <div class="mt-16 flex items-center justify-between border-t border-ink pt-5">
+          <p class="label text-xs font-black">
+            <time datetime={article.publishedAt}>{formatDate(lang, article.publishedAt)}</time>
+          </p>
+          <ShareButton lang={lang} title={article.title} />
+        </div>
+
+        {author && <AuthorCard person={author} lang={lang} class="mt-10" />}
+
+        {related.length > 0 && (
+          <section class="mt-20 mb-20" aria-labelledby="related">
+            <h2 id="related" class="display mb-5 text-[1.875rem]">
+              {s.related}
+            </h2>
+            {related.map((a) => (
+              <StoryRow article={a} lang={lang} />
+            ))}
+            <div class="border-t border-ink"></div>
+          </section>
+        )}
+      </div>
+    </div>
+  </article>
+</Layout>
+
+<script>
+  class ListenBar extends HTMLElement {
+    connectedCallback() {
+      const audio = this.querySelector("audio")!;
+      const time = this.querySelector<HTMLElement>("[data-time]")!;
+      const fmt = (s: number) =>
+        `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+      const toggle = (on: boolean) => {
+        this.querySelector("[data-play]")!.classList.toggle("hidden", on);
+        this.querySelector("[data-pause]")!.classList.toggle("hidden", !on);
+      };
+      audio.addEventListener("loadedmetadata", () => (time.textContent = fmt(audio.duration)));
+      audio.addEventListener(
+        "timeupdate",
+        () => (time.textContent = fmt(audio.duration - audio.currentTime)),
+      );
+      audio.addEventListener("play", () => toggle(true));
+      audio.addEventListener("pause", () => toggle(false));
+      this.querySelector("button")!.addEventListener("click", () =>
+        audio.paused ? audio.play() : audio.pause(),
+      );
+    }
+  }
+  customElements.define("listen-bar", ListenBar);
+</script>

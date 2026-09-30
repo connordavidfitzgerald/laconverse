@@ -1,0 +1,103 @@
+---
+/* Figma: 8B DONNEZ VOTRE VOIX APPLICATION — UI. */
+import AjaxForm from "../components/AjaxForm.astro";
+import BackLink from "../components/BackLink.astro";
+import FormFields from "../components/FormFields.astro";
+import Icon from "../components/Icon.astro";
+import Layout from "../layouts/Layout.astro";
+import { href, otherLang, t, type Lang } from "../i18n";
+import type { GiveYourVoiceData, Position } from "../lib/types";
+
+interface Props {
+  lang: Lang;
+  position: Position;
+  page: GiveYourVoiceData;
+}
+const { lang, position, page } = Astro.props;
+const s = t(lang);
+const other = otherLang(lang);
+const translation = position.translations.find((x) => x.language === other);
+const lists: [string, string[]][] = [
+  [s.responsibilities, position.responsibilities],
+  [s.idealProfile, position.profile],
+];
+---
+
+<Layout
+  lang={lang}
+  title={position.title}
+  description={position.summary}
+  alternate={translation ? href(other, "position", translation.slug) : href(other, "giveYourVoice")}
+>
+  <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10">
+    <div class="lg:col-span-6 lg:col-start-4">
+      <p class="pt-5 text-center">
+        <BackLink href={href(lang, "giveYourVoice")} label={page.title ?? s.back} />
+      </p>
+      <h1 class="display pt-5 text-center text-mega tracking-[-0.02em] text-balance">
+        {position.title}
+      </h1>
+      {position.meta && (
+        <p class="mt-5 text-center">
+          <span class="label bg-yellow px-2.5 py-1.5 text-[0.625rem] lg:text-xs">
+            {position.meta}
+          </span>
+        </p>
+      )}
+      {position.summary && (
+        <p class="mt-12 font-display text-xl font-bold leading-[0.95] lg:text-intro">
+          {position.summary}
+        </p>
+      )}
+
+      {lists
+        .filter(([, items]) => items.length)
+        .map(([title, items]) => (
+          <section class="mt-12">
+            <h2 class="label text-[0.625rem] lg:text-xs">{title}</h2>
+            <ul class="mt-4 flex flex-col gap-2">
+              {items.map((it) => (
+                <li class="flex gap-2.5 font-display text-sm font-extrabold leading-[1.1] lg:text-lg">
+                  <Icon name="arrow" class="mt-1 h-2 w-2.5 shrink-0" />
+                  {it}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+
+      <section id="apply" class="mt-20 pb-20" aria-labelledby="apply-title">
+        <h2 id="apply-title" class="display text-[1.875rem] leading-[0.95] lg:text-5xl">
+          {page.apply?.title ?? s.apply}
+        </h2>
+        {page.apply?.text && (
+          <p class="mt-1 font-display text-lg font-extrabold leading-[0.95] lg:text-xl">
+            {page.apply.text}
+          </p>
+        )}
+        <AjaxForm action="/api/contact" lang={lang} multipart class="mt-6">
+          <input type="hidden" name="kind" value="application" />
+          <input type="hidden" name="context" value={position.title} />
+          <FormFields lang={lang}>
+            <label class="label mt-4 flex h-[60px] cursor-pointer items-center justify-center gap-1 rounded-[10px] border border-ink text-sm hover:bg-yellow has-[:focus-visible]:outline-2">
+              <span data-file-label>+ {s.attachCv}</span>
+              <input
+                type="file"
+                name="cv"
+                accept=".pdf,.doc,.docx,application/pdf"
+                class="sr-only"
+                onchange="this.previousElementSibling.textContent = this.files[0]?.name ?? this.previousElementSibling.textContent"
+              />
+            </label>
+            <button
+              type="submit"
+              class="label h-[76px] w-full rounded-[10px] bg-yellow text-sm hover:bg-ink hover:text-yellow disabled:opacity-60"
+            >
+              {s.submitApplication}
+            </button>
+          </FormFields>
+        </AjaxForm>
+      </section>
+    </div>
+  </div>
+</Layout>

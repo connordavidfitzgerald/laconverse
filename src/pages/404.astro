@@ -1,0 +1,20 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { href } from "../i18n";
+
+const lang = Astro.url.pathname.startsWith("/en") ? "en" : "fr";
+---
+
+<Layout lang={lang} title={lang === "en" ? "Page not found" : "Page introuvable"}>
+  <div class="flex flex-col items-center px-5 py-32 text-center">
+    <h1 class="display text-mega">404</h1>
+    <p class="mt-5 font-display text-dek font-extrabold">
+      {lang === "en"
+        ? "This page doesn’t exist, or it has moved."
+        : "Cette page n’existe pas ou a été déplacée."}
+    </p>
+    <a href={href(lang, "home")} class="label mt-10 bg-yellow px-5 py-3 text-sm">
+      {lang === "en" ? "Back to the homepage" : "Retour à l’accueil"}
+    </a>
+  </div>
+</Layout>

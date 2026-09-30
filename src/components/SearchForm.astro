@@ -1,0 +1,42 @@
+---
+/* The search page's underlined search bar. Inside `<article-search>` it filters
+   in place (the component listens for the #q input); elsewhere it submits to
+   the search page, carrying `category` as ?c= so the results stay in that
+   section. */
+import Icon from "./Icon.astro";
+import { href, t, type Lang } from "../i18n";
+
+interface Props {
+  lang: Lang;
+  category?: string | null;
+  class?: string;
+}
+const { lang, category, class: className } = Astro.props;
+const s = t(lang);
+---
+
+<form
+  role="search"
+  class:list={["flex items-center gap-2.5 border-b border-ink pb-2.5", className]}
+  action={href(lang, "search")}
+>
+  <label for="q" class="sr-only">
+    {s.search}
+  </label>
+  <input
+    id="q"
+    name="q"
+    type="search"
+    autocomplete="off"
+    placeholder={s.searchPlaceholder}
+    class="display min-w-0 flex-1 bg-transparent text-lg placeholder:text-ink outline-none lg:text-3xl"
+  />
+  {category && <input type="hidden" name="c" value={category} />}
+  <button
+    type="submit"
+    class="press grid size-[30px] shrink-0 place-items-center rounded-full bg-ink text-paper hover:scale-110"
+    aria-label={s.search}
+  >
+    <Icon name="search" class="size-2.5" />
+  </button>
+</form>

@@ -1,0 +1,61 @@
+---
+/* The story card used everywhere: image, category chip, byline + date, title.
+   `size` only changes the title scale and image ratio — the anatomy is fixed. */
+import Chip from "./Chip.astro";
+import Picture from "./Picture.astro";
+import { formatDate, href, type Lang } from "../i18n";
+import type { ArticleCard } from "../lib/types";
+
+interface Props {
+  article: ArticleCard;
+  lang: Lang;
+  size?: "lg" | "md" | "sm";
+  sizes?: string;
+  class?: string;
+}
+const {
+  article,
+  lang,
+  size = "lg",
+  sizes = "(min-width: 768px) 33vw, 100vw",
+  class: className,
+} = Astro.props;
+const url = href(lang, "article", article.slug);
+const [category] = article.categories;
+---
+
+<article class:list={["group relative flex flex-col", className]} data-reveal>
+  <Picture
+    img={article.image}
+    ratio={size === "sm" ? 247 / 265 : 4 / 3}
+    sizes={sizes}
+    class="media-inset"
+  />
+  <div class="@container flex flex-col gap-2.5 py-2.5 md:gap-5 md:pt-5 md:pb-2.5">
+    <div class="flex items-center justify-between gap-2 py-2 md:py-0">
+      {category ? <Chip category={category} lang={lang} class="relative z-10" /> : <span />}
+      <p class="label flex min-w-0 gap-[5px] text-md md:tracking-[-0.01em] font-black">
+        {article.authors[0] && (
+          <span class="hidden truncate @min-[20rem]:inline">{article.authors[0].name}</span>
+        )}
+        <time datetime={article.publishedAt} class="shrink-0 whitespace-nowrap opacity-50">
+          {formatDate(lang, article.publishedAt)}
+        </time>
+      </p>
+    </div>
+    <h3
+      class:list={[
+        "display text-balance",
+        size === "sm"
+          ? "text-card-sm"
+          : size === "md"
+            ? "text-card-sm md:text-[1.75rem]"
+            : "text-card md:tracking-[-0.02em]",
+      ]}
+    >
+      <a href={url} class="title-line after:absolute after:inset-0">
+        {article.title}
+      </a>
+    </h3>
+  </div>
+</article>
