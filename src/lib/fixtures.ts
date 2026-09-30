@@ -39,24 +39,22 @@ const paras = (...texts: string[]): RichText => texts.map((t) => p(t)) as RichTe
 /* ---- Categories --------------------------------------------------------- */
 
 const CATS: { slug: L<string>; title: L<string> }[] = [
-  { slug: { en: "culture", fr: "culture" }, title: { en: "Culture", fr: "Culture" } },
   {
-    slug: { en: "best-of-the-hood", fr: "le-meilleur-du-hood" },
-    title: { en: "Best of the Hood", fr: "Le meilleur du hood" },
+    slug: { en: "democracy-power", fr: "democratie-pouvoir" },
+    title: { en: "Democracy & Power", fr: "Démocratie & pouvoir" },
   },
+  { slug: { en: "society", fr: "societe" }, title: { en: "Society", fr: "Société" } },
+  { slug: { en: "migration", fr: "migrations" }, title: { en: "Migration", fr: "Migrations" } },
   {
-    slug: { en: "voices-from-elsewhere", fr: "les-voix-dailleurs" },
-    title: { en: "Voices from Elsewhere", fr: "Les voix d’ailleurs" },
+    slug: { en: "neighbourhoods", fr: "quartiers" },
+    title: { en: "Neighbourhoods", fr: "Quartiers" },
   },
-  { slug: { en: "migrations", fr: "migrations" }, title: { en: "Migrations", fr: "Migrations" } },
+  { slug: { en: "world", fr: "monde" }, title: { en: "World", fr: "Monde" } },
   {
-    slug: { en: "our-realities", fr: "nos-realites" },
-    title: { en: "Our Realities", fr: "Nos réalités" },
+    slug: { en: "nothing-but-love", fr: "que-du-love" },
+    title: { en: "Nothing but Love", fr: "Que du love" },
   },
-  {
-    slug: { en: "social-justice", fr: "politique-justice-sociale" },
-    title: { en: "Social Justice", fr: "Politique & justice sociale" },
-  },
+  { slug: { en: "solutions", fr: "solutions" }, title: { en: "Solutions", fr: "Solutions" } },
 ];
 const cat = (i: number, lang: Lang) => ({ title: CATS[i].title[lang], slug: CATS[i].slug[lang] });
 
@@ -203,7 +201,7 @@ const ARTS: { slug: L<string>; title: L<string>; dek?: L<string>; cat: number; d
       en: "Projet Montréal’s tabled motion was ultimately adopted, but not without some significant amendments.",
       fr: "La motion déposée par Projet Montréal a finalement été adoptée, mais non sans amendements importants.",
     },
-    cat: 5,
+    cat: 0,
     date: "2026-09-24",
   },
   {
@@ -212,7 +210,7 @@ const ARTS: { slug: L<string>; title: L<string>; dek?: L<string>; cat: number; d
       en: "“We’ve been saying it for years” – In Montréal-Nord, the Post 39 scandal surprises no one",
       fr: "« On le dit depuis des années » – À Montréal-Nord, le scandale du poste 39 ne surprend personne",
     },
-    cat: 5,
+    cat: 0,
     date: "2026-09-20",
   },
   {
@@ -224,7 +222,7 @@ const ARTS: { slug: L<string>; title: L<string>; dek?: L<string>; cat: number; d
       en: "Domestic violence – beyond the bruises, the fear of losing your children",
       fr: "Violence conjugale – au-delà des bleus, la peur de perdre ses enfants",
     },
-    cat: 4,
+    cat: 1,
     date: "2026-09-17",
   },
   {
@@ -236,7 +234,7 @@ const ARTS: { slug: L<string>; title: L<string>; dek?: L<string>; cat: number; d
       en: "Researcher Liza Hammar reframes the debate on the veil",
       fr: "La chercheuse Liza Hammar recadre le débat sur le voile",
     },
-    cat: 0,
+    cat: 5,
     date: "2026-09-12",
   },
   {
@@ -245,7 +243,7 @@ const ARTS: { slug: L<string>; title: L<string>; dek?: L<string>; cat: number; d
       en: "Law 94: Confusion and fear over inconsistent application",
       fr: "Loi 94 : confusion et peur face à une application incohérente",
     },
-    cat: 3,
+    cat: 2,
     date: "2026-09-08",
   },
   {
@@ -254,7 +252,7 @@ const ARTS: { slug: L<string>; title: L<string>; dek?: L<string>; cat: number; d
       en: "Why do responses to police racism struggle to take hold?",
       fr: "Pourquoi les réponses au racisme policier peinent-elles à s’imposer?",
     },
-    cat: 5,
+    cat: 0,
     date: "2026-09-02",
   },
   {
@@ -263,7 +261,7 @@ const ARTS: { slug: L<string>; title: L<string>; dek?: L<string>; cat: number; d
       en: "New community-led dictionary helps endangered Moose Cree language thrive",
       fr: "Un dictionnaire communautaire aide la langue crie de Moose, menacée, à survivre",
     },
-    cat: 0,
+    cat: 5,
     date: "2026-08-28",
   },
   {
@@ -272,7 +270,7 @@ const ARTS: { slug: L<string>; title: L<string>; dek?: L<string>; cat: number; d
       en: "One year after Nooran Rezayi’s death, family and friends demand answers",
       fr: "Un an après la mort de Nooran Rezayi, ses proches réclament des réponses",
     },
-    cat: 5,
+    cat: 0,
     date: "2026-08-25",
   },
 ];

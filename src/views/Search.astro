@@ -8,15 +8,15 @@ import SectionTitle from "../components/SectionTitle.astro";
 import SupportBand from "../components/SupportBand.astro";
 import Layout from "../layouts/Layout.astro";
 import { href, otherLang, t, type Lang } from "../i18n";
-import { getCategories, getHome, getIndex, getLatest, getSettings } from "../lib/content";
+import { getArticleCount, getCategories, getHome, getLatest, getSettings } from "../lib/content";
 
 interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
 const s = t(lang);
-const [index, categories, home, settings, latest] = await Promise.all([
-  getIndex(lang),
+const [total, categories, home, settings, latest] = await Promise.all([
+  getArticleCount(lang),
   getCategories(lang),
   getHome(lang),
   getSettings(lang),
@@ -29,7 +29,7 @@ const [index, categories, home, settings, latest] = await Promise.all([
     lang={lang}
     categories={categories}
     articles={latest}
-    total={index.length}
+    total={total}
     syncUrl
     class="px-5 lg:px-10"
   >

@@ -60,8 +60,27 @@ backup in `.migration/backup-before-merge.tar.gz`).
 4. **API → Tokens**: create an _Editor_ token and set it as `SANITY_WRITE_TOKEN`
    in `.env` and in Vercel. It stores form submissions and runs the import.
 5. `npm run dev`, then open `/admin`.
-6. So publishing updates the live site: add a Vercel deploy hook, and a Sanity
-   webhook (API → Webhooks) that calls it on create/update/delete.
+6. So publishing updates the live site, set up the webhook in
+   [Publishing](#publishing).
+
+## Publishing
+
+Articles, author pages and topic pages render on their first visit and Vercel
+caches them (ISR); every other page is built at deploy time. So the build
+doesn’t grow with the archive, and any publish in Sanity redeploys the site,
+which rebuilds the static pages and clears the cached ones. Changes are live
+once the deploy finishes (a minute or two).
+
+1. In Vercel, create a deploy hook for `main` (Settings → Git → Deploy Hooks).
+2. In Sanity (API → Webhooks), create a webhook:
+   - URL: the deploy hook URL, method POST
+   - Dataset `production`; trigger on create, update and delete
+   - Filter: `!(_type in ["submission", "sanity.imageAsset", "sanity.fileAsset"])`
+     (form submissions and uploads shouldn’t redeploy the site)
+
+Vercel queues deploys, so a burst of publishes ends in one up-to-date deploy.
+Disable the webhook while running a bulk import (`migrate:import`), then deploy
+once at the end.
 
 ## Forms and the voice note
 
@@ -182,4 +201,5 @@ already generated are in Sanity and keep working. If it breaks, the script's
 - [ ] Donate URL, newsletter endpoint and WhatsApp/Facebook links in Site settings.
 - [ ] Partner stories (Independent media portal) and About partners: new content, not in Webflow.
 - [ ] Final English copy for the interface strings in `src/i18n/index.ts`.
+
 # laconverse

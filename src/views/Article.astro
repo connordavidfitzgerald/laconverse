@@ -2,6 +2,7 @@
 /* Figma: ARTICLE. The hero runs full-bleed under a transparent site header
    (which turns solid once the hero has scrolled away); the title block sits on
    8 columns below it and the body on a readable 6. */
+import ArticleCtas from "../components/ArticleCtas.astro";
 import AuthorCard from "../components/AuthorCard.astro";
 import Chip from "../components/Chip.astro";
 import Picture from "../components/Picture.astro";
@@ -39,7 +40,7 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
   alternate={translation ? href(other, "article", translation.slug) : null}
   header={hero ? "overlay" : "light"}
 >
-  <article>
+  <article class="article-type">
     {hero && (
       <div data-header-hero class="relative">
         <Picture
@@ -68,7 +69,7 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
       {article.image?.caption && (
         <p
           class:list={[
-            "px-5 pt-2 text-[0.625rem] font-medium opacity-60 lg:px-0 text-center ",
+            "px-5 pt-2 text-[calc(0.625rem*var(--type-scale))] font-medium opacity-60 lg:px-0 text-center ",
             hero ? "lg:col-span-12" : "lg:col-span-10 lg:col-start-2",
           ]}
         >
@@ -143,10 +144,13 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
           </listen-bar>
         )}
 
-        <div
-          class="prose-article tracking-[-0.01em] leading-[1.5] mt-10"
-          set:html={renderRichText(article.body)}
-        />
+        <ArticleCtas lang={lang}>
+          <div
+            data-cta-body
+            class="prose-article tracking-[-0.01em] leading-[1.5] mt-10"
+            set:html={renderRichText(article.body)}
+          />
+        </ArticleCtas>
 
         {article.photographers?.length || article.illustrators?.length ? (
           <p class="label mt-10 text-xs font-black">
@@ -219,7 +223,7 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
 
         {related.length > 0 && (
           <section class="mt-20 mb-20" aria-labelledby="related">
-            <h2 id="related" class="display mb-5 text-[1.875rem]">
+            <h2 id="related" class="display mb-5 text-3xl/[0.95]">
               {s.related}
             </h2>
             {related.map((a) => (

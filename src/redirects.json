@@ -1865,27 +1865,27 @@
   },
   {
     "source": "/tag/justice-sociale",
-    "destination": "/categorie/nos-realites"
+    "destination": "/categorie/societe"
   },
   {
     "source": "/en/tag/justice-sociale",
-    "destination": "/en/category/our-realities"
+    "destination": "/en/category/society"
   },
   {
     "source": "/tag/hood-heroes",
-    "destination": "/categorie/nos-quartiers"
+    "destination": "/categorie/quartiers"
   },
   {
     "source": "/en/tag/hood-heroes",
-    "destination": "/en/category/our-neighbourhoods"
+    "destination": "/en/category/neighbourhoods"
   },
   {
     "source": "/tag/inegalites",
-    "destination": "/categorie/nos-realites"
+    "destination": "/categorie/societe"
   },
   {
     "source": "/en/tag/inegalites",
-    "destination": "/en/category/our-realities"
+    "destination": "/en/category/society"
   },
   {
     "source": "/tag/migrations",
@@ -1897,106 +1897,106 @@
   },
   {
     "source": "/tag/politique",
-    "destination": "/categorie/politique-justice"
+    "destination": "/categorie/democratie-pouvoir"
   },
   {
     "source": "/en/tag/politique",
-    "destination": "/en/category/politics-justice"
+    "destination": "/en/category/democracy-power"
   },
   {
     "source": "/tag/sante",
-    "destination": "/categorie/nos-realites"
+    "destination": "/categorie/societe"
   },
   {
     "source": "/en/tag/sante",
-    "destination": "/en/category/our-realities"
+    "destination": "/en/category/society"
   },
   {
     "source": "/tag/inspiration",
-    "destination": "/categorie/cultures"
+    "destination": "/categorie/que-du-love"
   },
   {
     "source": "/en/tag/inspiration",
-    "destination": "/en/category/cultures"
+    "destination": "/en/category/nothing-but-love"
   },
   {
     "source": "/tag/identites",
-    "destination": "/categorie/nos-realites"
+    "destination": "/categorie/societe"
   },
   {
     "source": "/en/tag/identites",
-    "destination": "/en/category/our-realities"
+    "destination": "/en/category/society"
   },
   {
     "source": "/tag/solutions",
-    "destination": "/categorie/nos-quartiers"
+    "destination": "/categorie/solutions"
   },
   {
     "source": "/en/tag/solutions",
-    "destination": "/en/category/our-neighbourhoods"
+    "destination": "/en/category/solutions"
   },
   {
     "source": "/tag/autochtonie",
-    "destination": "/categorie/nos-realites"
+    "destination": "/categorie/societe"
   },
   {
     "source": "/en/tag/autochtonie",
-    "destination": "/en/category/our-realities"
+    "destination": "/en/category/society"
   },
   {
     "source": "/tag/education",
-    "destination": "/categorie/nos-realites"
+    "destination": "/categorie/societe"
   },
   {
     "source": "/en/tag/education",
-    "destination": "/en/category/our-realities"
+    "destination": "/en/category/society"
   },
   {
     "source": "/tag/culture-g",
-    "destination": "/categorie/politique-justice"
+    "destination": "/categorie/democratie-pouvoir"
   },
   {
     "source": "/en/tag/culture-g",
-    "destination": "/en/category/politics-justice"
+    "destination": "/en/category/democracy-power"
   },
   {
     "source": "/tag/dialogues",
-    "destination": "/categorie/nos-realites"
+    "destination": "/categorie/societe"
   },
   {
     "source": "/en/tag/dialogues",
-    "destination": "/en/category/our-realities"
+    "destination": "/en/category/society"
   },
   {
     "source": "/tag/logement",
-    "destination": "/categorie/nos-quartiers"
+    "destination": "/categorie/quartiers"
   },
   {
     "source": "/en/tag/logement",
-    "destination": "/en/category/our-neighbourhoods"
+    "destination": "/en/category/neighbourhoods"
   },
   {
     "source": "/tag/lecole-converse",
-    "destination": "/categorie/nos-realites"
+    "destination": "/categorie/societe"
   },
   {
     "source": "/en/tag/lecole-converse",
-    "destination": "/en/category/our-realities"
+    "destination": "/en/category/society"
   },
   {
     "source": "/tag/enquete",
-    "destination": "/categorie/politique-justice"
+    "destination": "/categorie/democratie-pouvoir"
   },
   {
     "source": "/en/tag/enquete",
-    "destination": "/en/category/politics-justice"
+    "destination": "/en/category/democracy-power"
   },
   {
     "source": "/tag/sagesse-du-hood",
-    "destination": "/categorie/nos-quartiers"
+    "destination": "/categorie/quartiers"
   },
   {
     "source": "/en/tag/sagesse-du-hood",
-    "destination": "/en/category/our-neighbourhoods"
+    "destination": "/en/category/neighbourhoods"
   }
 ]

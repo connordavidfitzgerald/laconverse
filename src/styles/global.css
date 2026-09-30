@@ -42,13 +42,15 @@
 
   /* Category dots: brand yellow (oklch 0.91 0.18 110) walked round the hue
      wheel in 60° steps, chroma held near the yellow's and lightness lowered
-     where needed to stay in sRGB and read on white. */
+     where needed to stay in sRGB and read on white. Red is a seventh, off
+     the 60° walk, between pink and orange. */
   --color-cat-yellow: #eaeb47; /* h 110 */
   --color-cat-green: oklch(0.74 0.14 170);
   --color-cat-blue: oklch(0.66 0.13 230);
   --color-cat-violet: oklch(0.62 0.19 290);
   --color-cat-pink: oklch(0.68 0.19 350);
   --color-cat-orange: oklch(0.75 0.16 50);
+  --color-cat-red: oklch(0.63 0.21 25);
 
   --font-display: "Favorit Compressed", "Arial Narrow", "Helvetica Neue", sans-serif;
   --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -263,11 +265,30 @@
   }
 }
 
+/* Article pages read a size up (what the browser gives at 125% zoom). The
+   type tokens are redefined on `<article>`, so every `text-*` utility inside
+   scales together; unsized text inherits the scaled base. Chrome (header,
+   footer) keeps the site's normal sizes, and so does the headline
+   (`--text-hero`), which is already large enough at its design size. */
+@utility article-type {
+  --type-scale: 1.25;
+  font-size: calc(1rem * var(--type-scale));
+  --text-xs: calc(0.75rem * var(--type-scale));
+  --text-sm: calc(0.875rem * var(--type-scale));
+  --text-base: calc(1rem * var(--type-scale));
+  --text-lg: calc(1.125rem * var(--type-scale));
+  --text-xl: calc(1.25rem * var(--type-scale));
+  --text-2xl: calc(1.5rem * var(--type-scale));
+  --text-3xl: calc(1.875rem * var(--type-scale));
+  --text-4xl: calc(2.25rem * var(--type-scale));
+  --text-dek: calc(clamp(1.125rem, 1.2rem + 0.749vw, 1.75rem) * var(--type-scale));
+}
+
 /* Article body typography (Portable Text output). */
 @utility prose-article {
   font-family: var(--font-sans);
   font-weight: 500;
-  font-size: 1.15rem;
+  font-size: calc(1.15rem * var(--type-scale, 1));
   line-height: 1.35;
   & > * + * {
     margin-top: 1.25em;
@@ -314,7 +335,7 @@
     height: auto;
   }
   & figcaption {
-    font-size: 0.75rem;
+    font-size: calc(0.75rem * var(--type-scale, 1));
     margin-top: 0.5rem;
     opacity: 0.6;
   }

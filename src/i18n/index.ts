@@ -139,6 +139,12 @@ const strings = {
     vnPause: "Pause",
     vnOpen: "Record a voice note for the newsroom",
     vnFab: "Got a story?",
+    // In-article calls to action
+    ctaDonateTitle: "Keep La Converse independent",
+    ctaDonateText:
+      "Community support is what keeps our reporting free and independent. Help us continue covering what matters.",
+    ctaStoryText:
+      "Send the newsroom a voice note or a written message. You stay anonymous unless you tell us otherwise.",
     language: "Français",
   },
   fr: {
@@ -236,6 +242,11 @@ const strings = {
     vnPause: "Pause",
     vnOpen: "Enregistrer une note vocale pour la rédaction",
     vnFab: "Une histoire à raconter?",
+    ctaDonateTitle: "Gardons La Converse indépendante",
+    ctaDonateText:
+      "C’est le soutien de la communauté qui garde nos reportages libres et indépendants. Aidez-nous à continuer de couvrir ce qui compte.",
+    ctaStoryText:
+      "Envoyez une note vocale ou un message écrit à la rédaction. Vous restez anonyme, à moins de nous indiquer le contraire.",
     language: "English",
   },
 } as const;

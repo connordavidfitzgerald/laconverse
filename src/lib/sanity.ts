@@ -9,8 +9,8 @@ export const dataset =
 export const apiVersion = "2026-09-01";
 
 /* Null until a Sanity project is configured, in which case content.ts serves
-   the fixtures instead. Reads go straight to the API: the site is rebuilt on
-   publish, so there is no reason to read a cache that may lag it. */
+   the fixtures instead. Reads go straight to the API: the site is redeployed
+   on publish, so there is no reason to read a cache that may lag it. */
 export const client: SanityClient | null = projectId
   ? createClient({ projectId, dataset, apiVersion, useCdn: false, perspective: "published" })
   : null;

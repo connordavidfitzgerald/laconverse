@@ -180,7 +180,7 @@ const taxonomyPreview = {
   }),
 };
 
-/* Sections (rubriques): Nos réalités, Nos quartiers, Politique & justice… */
+/* Sections (rubriques): Société, Quartiers, Démocratie & pouvoir… */
 export const categoryType = defineType({
   name: "category",
   title: "Section",

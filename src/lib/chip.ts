@@ -9,28 +9,24 @@ export const DOT = {
   violet: "bg-cat-violet",
   pink: "bg-cat-pink",
   orange: "bg-cat-orange",
+  red: "bg-cat-red",
 } as const;
 const PALETTE = Object.keys(DOT) as (keyof typeof DOT)[];
 // Known categories: Sanity and fixture slugs, both locales. Anything else hashes into the palette.
 const KNOWN: Record<string, keyof typeof DOT> = {
-  cultures: "yellow",
-  culture: "yellow",
-  "nos-quartiers": "green",
-  "our-neighbourhoods": "green",
-  "le-meilleur-du-hood": "green",
-  "best-of-the-hood": "green",
-  "regards-du-monde": "blue",
-  "world-perspectives": "blue",
-  "les-voix-dailleurs": "blue",
-  "voices-from-elsewhere": "blue",
+  "que-du-love": "yellow",
+  "nothing-but-love": "yellow",
+  quartiers: "green",
+  neighbourhoods: "green",
+  monde: "blue",
+  world: "blue",
   migrations: "violet",
   migration: "violet",
-  "nos-realites": "pink",
-  "our-realities": "pink",
-  "politique-justice": "orange",
-  "politics-justice": "orange",
-  "politique-justice-sociale": "orange",
-  "social-justice": "orange",
+  societe: "pink",
+  society: "pink",
+  "democratie-pouvoir": "orange",
+  "democracy-power": "orange",
+  solutions: "red",
 };
 
 /** The dot's background class for a category slug. */

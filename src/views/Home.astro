@@ -13,17 +13,17 @@ import SupportBand from "../components/SupportBand.astro";
 import VideoCard from "../components/VideoCard.astro";
 import Layout from "../layouts/Layout.astro";
 import { href, otherLang, t, type Lang } from "../i18n";
-import { getCategories, getHome, getIndex, getLatest, getSettings } from "../lib/content";
+import { getArticleCount, getCategories, getHome, getLatest, getSettings } from "../lib/content";
 
 interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
 const s = t(lang);
-const [home, settings, index, categories, latest] = await Promise.all([
+const [home, settings, total, categories, latest] = await Promise.all([
   getHome(lang),
   getSettings(lang),
-  getIndex(lang),
+  getArticleCount(lang),
   getCategories(lang),
   getLatest(lang, 6),
 ]);
@@ -85,7 +85,7 @@ const ecoleTitle = [ecoleFirst, ecoleRest.join(" ")];
       lang={lang}
       categories={categories}
       articles={latest}
-      total={index.length}
+      total={total}
       pageSize={6}
       class="hidden! lg:block! xl:px-40"
     />

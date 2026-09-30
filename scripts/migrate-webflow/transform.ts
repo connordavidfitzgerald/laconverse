@@ -190,9 +190,20 @@ const byCount = (values: string[]) => {
     .map(([v]) => v);
 };
 const rows = [...sheet.values()];
+/* Menu order of the sections; any other sheet value follows, by count. */
+const SECTION_ORDER = [
+  "Démocratie & pouvoir",
+  "Société",
+  "Migrations",
+  "Quartiers",
+  "Monde",
+  "Que du love",
+  "Solutions",
+];
+const rank = (v: string) => (SECTION_ORDER.includes(v) ? SECTION_ORDER.indexOf(v) : Infinity);
 const sections = byCount(
   rows.map((r) => r.nouvelle_categorie).filter((v) => !NO_SECTION.has(v) && v !== REMOVE),
-);
+).sort((a, b) => rank(a) - rank(b));
 const topics = byCount(rows.flatMap((r) => split(r.tags))).sort((a, b) => a.localeCompare(b, "fr"));
 const series = byCount([
   ...rows.map((r) => r.serie).filter(Boolean),

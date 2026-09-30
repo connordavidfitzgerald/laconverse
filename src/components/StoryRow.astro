@@ -24,7 +24,7 @@ const { article, lang } = Astro.props;
       <Chip
         category={article.categories[0]}
         lang={lang}
-        class="relative z-10 w-max !px-2.5 !py-1 !text-[0.625rem]"
+        class="relative z-10 w-max !px-2.5 !py-1 !text-[calc(0.625rem*var(--type-scale,1))]"
       />
     )}
   </div>

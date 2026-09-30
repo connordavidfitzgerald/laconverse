@@ -1,6 +1,8 @@
 /* Every read the site makes. Each function runs a GROQ query when a Sanity
    project is configured and falls back to the fixtures otherwise, returning
-   the same shape either way. Results are memoized for the length of a build. */
+   the same shape either way. Article, author and topic pages render on demand
+   in a long-lived function, so identical queries are only shared while in
+   flight — a warm function must never serve a result from an earlier request. */
 import type { Lang } from "../i18n";
 import { client } from "./sanity";
 import * as fx from "./fixtures";
@@ -27,13 +29,17 @@ import type {
 } from "./types";
 import { imageUrl } from "./sanity";
 
-const cache = new Map<string, Promise<unknown>>();
+const inflight = new Map<string, Promise<unknown>>();
 
 function load<T>(query: string, params: Record<string, unknown>, fallback: () => T): Promise<T> {
   if (!client) return Promise.resolve(fallback());
   const key = query + JSON.stringify(params);
-  if (!cache.has(key)) cache.set(key, client.fetch<T>(query, params));
-  return cache.get(key) as Promise<T>;
+  if (!inflight.has(key))
+    inflight.set(
+      key,
+      client.fetch<T>(query, params).finally(() => inflight.delete(key)),
+    );
+  return inflight.get(key) as Promise<T>;
 }
 
 /* ---- Projections -------------------------------------------------------- */
@@ -120,8 +126,8 @@ export const getHome = (lang: Lang) =>
 
 /* ---- Articles ----------------------------------------------------------- */
 
-export const getArticleSlugs = (lang: Lang) =>
-  load<string[]>(`${ARTICLES}.slug.current`, { lang }, () => fx.articles(lang).map((a) => a.slug));
+export const getArticleCount = (lang: Lang) =>
+  load<number>(`count(${ARTICLES})`, { lang }, () => fx.articles(lang).length);
 
 export const getArticle = (lang: Lang, slug: string) =>
   load<Article | null>(
@@ -214,11 +220,6 @@ export const getTag = (lang: Lang, slug: string) =>
 
 /* ---- People ------------------------------------------------------------- */
 
-export const getPeopleSlugs = () =>
-  load<string[]>(`*[_type == "person" && defined(slug.current)].slug.current`, {}, () =>
-    fx.people("en").map((p) => p.slug),
-  );
-
 export const getAuthor = (lang: Lang, slug: string) =>
   load<(Person & { total: number; articles: ArticleCard[] }) | null>(
     `*[_type == "person" && slug.current == $slug][0]{
@@ -280,6 +281,7 @@ export const getLaReleve = (lang: Lang) =>
     () => fx.laReleve(lang),
   );
 
+/* Only programs that link to their own page have one. */
 export const getProgramSlugs = (lang: Lang) =>
   load<string[]>(
     `*[_type == "program" && language == $lang && defined(slug.current) && coalesce(linkTo, "self") == "self"].slug.current`,
@@ -293,12 +295,15 @@ export const getProgramSlugs = (lang: Lang) =>
 
 export const getProgram = (lang: Lang, slug: string) =>
   load<Program | null>(
-    `*[_type == "program" && language == $lang && slug.current == $slug][0]{
+    `*[_type == "program" && language == $lang && slug.current == $slug && coalesce(linkTo, "self") == "self"][0]{
       ...${PROGRAM_CARD}, tagline, ${BODY}, cta, form, seo, ${TRANSLATIONS},
       quote { ..., image ${IMG} }
     }`,
     { lang, slug },
-    () => fx.program(lang, slug),
+    () => {
+      const program = fx.program(lang, slug);
+      return (program?.linkTo ?? "self") === "self" ? program : null;
+    },
   );
 
 /* ---- Pages -------------------------------------------------------------- */

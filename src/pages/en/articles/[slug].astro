@@ -1,11 +1,8 @@
 ---
 import View from "../../../views/Article.astro";
-import { getArticle, getArticleSlugs } from "../../../lib/content";
+import { getArticle } from "../../../lib/content";
 
-export async function getStaticPaths() {
-  const slugs: string[] = await getArticleSlugs("en");
-  return slugs.map((slug) => ({ params: { slug } }));
-}
+export const prerender = false;
 
 const slug = Astro.params.slug!;
 const article = await getArticle("en", slug);

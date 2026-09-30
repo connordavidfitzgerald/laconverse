@@ -1,11 +1,8 @@
 ---
 import View from "../../../views/Author.astro";
-import { getAuthor, getPeopleSlugs } from "../../../lib/content";
+import { getAuthor } from "../../../lib/content";
 
-export async function getStaticPaths() {
-  const slugs: string[] = await getPeopleSlugs();
-  return slugs.map((slug) => ({ params: { slug } }));
-}
+export const prerender = false;
 
 const slug = Astro.params.slug!;
 const person = await getAuthor("en", slug);

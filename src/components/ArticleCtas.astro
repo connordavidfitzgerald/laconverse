@@ -1,0 +1,132 @@
+---
+/* Calls to action woven into the article body: after roughly every two
+   screens of reading, the next one of newsletter → donate → share your story
+   drops in after a paragraph (never after a heading, never in the last half
+   screen). Screens differ per device, so placement is measured in the browser;
+   without JS the article simply reads uninterrupted. Wraps the prose element,
+   which must carry `data-cta-body`. */
+import AjaxForm from "./AjaxForm.astro";
+import Spray from "./Spray.astro";
+import { href, t, type Lang } from "../i18n";
+import { getSettings } from "../lib/content";
+
+interface Props {
+  lang: Lang;
+  /** Screens of reading between two calls to action. */
+  every?: number;
+}
+const { lang, every = 2 } = Astro.props;
+const s = t(lang);
+const settings = await getSettings(lang);
+const donate = settings.donateUrl ?? `${href(lang, "getInvolved")}#donate`;
+
+/* Set entirely in Favorit, inset from the text column, with the spray mark
+   bleeding off a corner like the SupportBand. The prose styles reach into
+   anything inside the body, so the panels reset what would leak (link
+   underline, spacing). */
+const panel =
+  "relative mx-3 my-14! overflow-hidden bg-yellow px-6 py-8 font-display sm:mx-8 lg:mx-12 lg:px-10 lg:py-10";
+const title = "display text-4xl/[0.92] tracking-[-0.015em]";
+const text = "mt-4 text-xl/[1.1] font-extrabold tracking-[-0.01em]";
+const button =
+  "press label inline-grid place-items-center rounded-[10px] border border-ink bg-yellow px-6 py-4 text-lg no-underline! hover:bg-ink hover:text-yellow";
+const spray = "-right-[35%] top-[40%] w-[130%] -rotate-[20deg] lg:top-[30%] lg:w-[110%]";
+---
+
+<article-ctas data-every={every} class="block">
+  <slot />
+
+  <template>
+    <aside class={panel} aria-label={s.subscribe}>
+      <Spray class={spray} seed={11} />
+      <div class="relative">
+        <p class={title}>{s.newsletter}</p>
+        <AjaxForm
+          action={settings.newsletterAction ?? "/api/contact"}
+          external={!!settings.newsletterAction}
+          lang={lang}
+          class="mt-5"
+        >
+          <input type="hidden" name="kind" value="newsletter" />
+          <input type="hidden" name="context" value="article" />
+          <div class="flex items-end gap-2.5 border-b border-ink pb-3">
+            <input
+              name="email"
+              type="email"
+              required
+              autocomplete="email"
+              placeholder={s.email}
+              aria-label={s.email}
+              class="display min-w-0 flex-1 bg-transparent text-3xl tracking-[-0.02em] placeholder:text-ink/40 outline-none"
+            />
+            <button type="submit" class:list={[button, "shrink-0 disabled:opacity-50"]}>
+              {s.subscribe}
+            </button>
+          </div>
+        </AjaxForm>
+      </div>
+    </aside>
+  </template>
+
+  <template>
+    <aside class={panel} aria-label={s.donate}>
+      <Spray class={spray} seed={21} />
+      <div class="relative">
+        <p class={title}>{s.ctaDonateTitle}</p>
+        <p class={text}>{s.ctaDonateText}</p>
+        <a href={donate} class:list={[button, "mt-6"]}>
+          {s.supportUs}
+        </a>
+      </div>
+    </aside>
+  </template>
+
+  <template>
+    <aside class={panel} aria-label={s.vnFab}>
+      <Spray class={spray} seed={4} />
+      <div class="relative">
+        <p class={title}>{s.vnTitle}</p>
+        <p class={text}>{s.ctaStoryText}</p>
+        <div class="mt-6 flex flex-wrap gap-2.5">
+          <button type="button" data-voice-open class={button}>
+            {s.vnRecord}
+          </button>
+          <button type="button" data-voice-open="write" class={button}>
+            {s.vnWrite}
+          </button>
+        </div>
+      </div>
+    </aside>
+  </template>
+</article-ctas>
+
+<script>
+  class ArticleCtas extends HTMLElement {
+    async connectedCallback() {
+      const body = this.querySelector<HTMLElement>("[data-cta-body]");
+      const ctas = [...this.querySelectorAll("template")];
+      if (!body || !ctas.length) return;
+      // Measure with the real fonts, or line wrapping (and so height) is off.
+      await document.fonts?.ready;
+
+      const screen = window.innerHeight;
+      const step = screen * Number(this.dataset.every ?? 2);
+      const top = body.getBoundingClientRect().top;
+      const end = body.getBoundingClientRect().bottom - top;
+
+      // Pick every anchor first, then insert, so one insertion doesn't shift
+      // the measurements for the next.
+      const anchors: Element[] = [];
+      let next = step;
+      for (const el of body.children) {
+        const bottom = el.getBoundingClientRect().bottom - top;
+        if (bottom < next || !el.matches("p, ul, ol, blockquote, figure")) continue;
+        if (end - bottom < screen / 2) break;
+        anchors.push(el);
+        next = bottom + step;
+      }
+      anchors.forEach((el, i) => el.after(ctas[i % ctas.length].content.cloneNode(true)));
+    }
+  }
+  customElements.define("article-ctas", ArticleCtas);
+</script>

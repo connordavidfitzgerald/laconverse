@@ -90,7 +90,14 @@ for (const { source, destination } of JSON.parse(readFileSync("./src/redirects.j
 export default defineConfig({
   redirects,
   site: "https://laconverse.com",
-  adapter: vercel(),
+  /* Every page is built at deploy time except articles, authors and topics
+     (the routes with `prerender = false`): there are too many of those to
+     build each time, so Vercel renders each on its first visit and caches it
+     (ISR) until the next deploy. Publishing in Sanity redeploys the site; see
+     README → “Publishing”. */
+  adapter: vercel({ isr: { expiration: false, exclude: [/^\/api\//] } }),
+  // Static pages mostly wait on Sanity, so build several at once.
+  build: { concurrency: 6 },
   integrations: studio,
   vite: { plugins: [tailwindcss()] },
 });
