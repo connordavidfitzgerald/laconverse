@@ -22,7 +22,7 @@ const programUrl = (p: { slug: string; linkTo?: string | null }) =>
   seo={page.seo}
   alternate={href(otherLang(lang), "laReleve")}
 >
-  <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10">
+  <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
     <div class="lg:col-span-8 lg:col-start-3">
       <h1 class="display pt-10 pb-12 text-center text-mega tracking-[-0.02em] lg:pt-16 lg:pb-20">
         {page.title ?? s.laReleve}
@@ -44,7 +44,7 @@ const programUrl = (p: { slug: string; linkTo?: string | null }) =>
     </div>
   </div>
 
-  <section class="px-2.5 pb-10 lg:px-10 lg:pb-20" aria-labelledby="programs">
+  <section class="px-2.5 pb-10 lg:px-5 lg:pb-20" aria-labelledby="programs">
     <h2 id="programs" class="label px-0 pb-2.5 text-md lg:px-0">
       {s.ourPrograms}
     </h2>

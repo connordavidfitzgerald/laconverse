@@ -28,7 +28,7 @@ const translation = program.translations.find((x) => x.language === other);
   seo={program.seo}
   alternate={translation ? href(other, "program", translation.slug) : href(other, "laReleve")}
 >
-  <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10">
+  <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
     <div class="lg:col-span-8 lg:col-start-3">
       <BackLink href={href(lang, "laReleve")} label={s.laReleve} />
       <h1 class="display pt-12 pb-12 text-center text-mega tracking-[-0.02em] text-balance lg:pt-16 lg:pb-16">
@@ -66,7 +66,7 @@ const translation = program.translations.find((x) => x.language === other);
   </div>
 
   {program.quote?.text && (
-    <figure class="px-5 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10">
+    <figure class="px-5 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
       <Picture
         img={program.quote.image}
         ratio={353 / 177}
@@ -88,7 +88,7 @@ const translation = program.translations.find((x) => x.language === other);
   {program.form && (
     <section
       id="form"
-      class="scroll-mt-10 px-5 pt-10 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10"
+      class="scroll-mt-10 px-5 pt-10 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5"
       aria-labelledby="form-title"
     >
       <div class="lg:col-span-6 lg:col-start-4">

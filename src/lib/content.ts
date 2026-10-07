@@ -45,8 +45,11 @@ function load<T>(query: string, params: Record<string, unknown>, fallback: () =>
 /* ---- Projections -------------------------------------------------------- */
 
 const IMG = `{ ..., "asset": asset->{ _id, url, metadata { dimensions, lqip } } }`;
-/* Sections, topics, series and the page singletons are one document for both
-   languages, with `{ fr, en }` fields: `title[$lang]` picks this page's side. */
+/* Every document holds both languages, with `{ fr, en }` fields:
+   `title[$lang]` picks this page's side. An article, video, podcast, program
+   or position is on the site in each language it has a slug in (PUB). */
+const PUB = `defined(slug[$lang].current)`;
+const SLUG = `"slug": slug[$lang].current`;
 const TAX = `{ "title": title[$lang], "slug": slug[$lang].current }`;
 const CTA = (path = "cta") => `${path}{ "label": label[$lang], "url": url[$lang] }`;
 const SEO = (path = "seo") =>
@@ -56,18 +59,21 @@ const REF_CAT = `"categories": select(defined(category) => [category->${TAX}], [
 const REF_TAGS = `"tags": coalesce(tags[]->${TAX}, [])`;
 const REF_AUTH = `"authors": coalesce(authors[]->{ name, "slug": slug.current }, [])`;
 const PERSON = `{ name, "slug": slug.current, image ${IMG}, "role": role[$lang], "bio": bio[$lang], email }`;
-const BODY = `body[]{ ..., _type == "figure" => ${IMG}, _type == "audio" => { ..., "src": file.asset->url } }`;
+const BODY = `"body": body[$lang][]{ ..., _type == "figure" => ${IMG}, _type == "audio" => { ..., "src": file.asset->url } }`;
 const RICH = (field: string) => `${field}[$lang][]{ ..., _type == "figure" => ${IMG} }`;
-const TRANSLATIONS = `"translations": coalesce(*[_type == "translation.metadata" && references(^._id)][0].translations[].value->{ language, "slug": slug.current }, [])`;
+/* The languages the document is published in, for the language switch. */
+const TRANSLATIONS = `"translations": [{ "language": "fr", "slug": slug.fr.current }, { "language": "en", "slug": slug.en.current }][defined(slug)]`;
 
-const ARTICLE_CARD = `{ _id, title, "slug": slug.current, dek, publishedAt, image ${IMG}, ${REF_CAT}, ${REF_TAGS}, ${REF_AUTH} }`;
-const VIDEO_CARD = `{ _id, title, "slug": slug.current, poster ${IMG}, duration, publishedAt, ${REF_CAT} }`;
-const PODCAST_CARD = `{ _id, title, "slug": slug.current, cover ${IMG}, description, "episodeCount": count(episodes) }`;
-const PROGRAM_CARD = `{ _id, title, "slug": slug.current, image ${IMG}, linkTo }`;
-const PARTNER_STORY = `{ _id, title, url, image ${IMG}, partner, partnerLogo ${IMG}, publishedAt }`;
-const POSITION = `{ _id, title, "slug": slug.current, meta, summary, "responsibilities": coalesce(responsibilities, []), "profile": coalesce(profile, []), ${TRANSLATIONS} }`;
+const ARTICLE_CARD = `{ _id, "title": title[$lang], ${SLUG}, "dek": dek[$lang], publishedAt, image ${IMG}, ${REF_CAT}, ${REF_TAGS}, ${REF_AUTH} }`;
+const VIDEO_CARD = `{ _id, "title": title[$lang], ${SLUG}, poster ${IMG}, duration, publishedAt, ${REF_CAT} }`;
+const PODCAST_CARD = `{ _id, "title": title[$lang], ${SLUG}, cover ${IMG}, "description": description[$lang], "episodeCount": count(episodes) }`;
+const PROGRAM_CARD = `{ _id, "title": title[$lang], ${SLUG}, image ${IMG}, linkTo }`;
+const PARTNER_STORY = `{ _id, "title": title[$lang], url, image ${IMG}, partner, partnerLogo ${IMG}, publishedAt }`;
+const POSITION = `{ _id, "title": title[$lang], ${SLUG}, "meta": meta[$lang], "summary": summary[$lang], "responsibilities": coalesce(responsibilities[$lang], []), "profile": coalesce(profile[$lang], []), ${TRANSLATIONS} }`;
 
-const ARTICLES = `*[_type == "article" && language == $lang && defined(slug.current)] | order(publishedAt desc)`;
+const ARTICLES = `*[_type == "article" && ${PUB}] | order(publishedAt desc)`;
+/* This language's articles that reference the document in scope. */
+const REFERRING = `*[_type == "article" && ${PUB} && references(^._id)]`;
 
 /* ---- Global ------------------------------------------------------------- */
 
@@ -88,7 +94,7 @@ export const getCategories = (lang: Lang) =>
   load<(Category & { count: number })[]>(
     `*[_type == "category" && defined(slug[$lang].current)] | order(order asc){
       "title": title[$lang], "slug": slug[$lang].current, "description": description[$lang],
-      "count": count(*[_type == "article" && language == $lang && references(^._id)])
+      "count": count(${REFERRING})
     }`,
     { lang },
     () => fx.categories(lang),
@@ -102,22 +108,22 @@ export const getHome = (lang: Lang) =>
       "page": *[_id == "homePage"][0],
       "latest": ${ARTICLES}[0...8] ${ARTICLE_CARD}
     }{
-      "lead": coalesce(page.lead[$lang]->${ARTICLE_CARD}, latest[0]),
+      "lead": select(defined(page.lead->slug[$lang].current) => page.lead->${ARTICLE_CARD}, latest[0]),
       "topStories": select(
-        count(page.topStories[$lang]) > 0 => page.topStories[$lang][]->${ARTICLE_CARD},
+        count((page.topStories[]->)[${PUB}]) > 0 => (page.topStories[]->)[${PUB}]${ARTICLE_CARD},
         latest[1...7]
       ),
       "support": page.support{ "title": title[$lang], "text": text[$lang], "cta": ${CTA()} },
       "ecole": page.ecole{
         "title": title[$lang], "text": text[$lang], image ${IMG},
-        "program": program[$lang]->{ "slug": slug.current }
+        "program": program->{ ${SLUG} }
       },
       "seo": ${SEO("page.seo")},
-      "videos": *[_type == "video" && language == $lang && defined(slug.current)] | order(publishedAt desc)[0...8] ${VIDEO_CARD},
-      "podcasts": *[_type == "podcast" && language == $lang && defined(slug.current)] | order(order asc)[0...8] ${PODCAST_CARD},
-      "partnerStories": *[_type == "partnerStory" && language == $lang] | order(publishedAt desc)[0...8] ${PARTNER_STORY},
+      "videos": *[_type == "video" && ${PUB}] | order(publishedAt desc)[0...8] ${VIDEO_CARD},
+      "podcasts": *[_type == "podcast" && ${PUB}] | order(order asc)[0...8] ${PODCAST_CARD},
+      "partnerStories": *[_type == "partnerStory" && defined(title[$lang])] | order(publishedAt desc)[0...8] ${PARTNER_STORY},
       "categories": *[_type == "category" && defined(slug[$lang].current)] | order(order asc){
-        ...${TAX}, "count": count(*[_type == "article" && language == $lang && references(^._id)])
+        ...${TAX}, "count": count(${REFERRING})
       }
     }`,
     { lang },
@@ -131,13 +137,14 @@ export const getArticleCount = (lang: Lang) =>
 
 export const getArticle = (lang: Lang, slug: string) =>
   load<Article | null>(
-    `*[_type == "article" && language == $lang && slug.current == $slug][0]{
-      _id, title, "slug": slug.current, dek, publishedAt, image ${IMG}, ${REF_CAT}, ${REF_TAGS}, ${REF_AUTH},
-      ${BODY}, seo { ..., image ${IMG} }, ${TRANSLATIONS},
-      "listen": listen.asset->url,
-      trending, localJournalismInitiative, format, machineTranslated,
+    `*[_type == "article" && slug[$lang].current == $slug][0]{
+      _id, "title": title[$lang], ${SLUG}, "dek": dek[$lang], publishedAt, image ${IMG}, ${REF_CAT}, ${REF_TAGS}, ${REF_AUTH},
+      ${BODY}, "seo": ${SEO()}, ${TRANSLATIONS},
+      "listen": listen[$lang].asset->url,
+      trending, localJournalismInitiative, format,
+      "machineTranslated": machineTranslated == $lang,
       "series": series->${TAX},
-      "authorsNote": authorsNote,
+      "authorsNote": authorsNote[$lang],
       "photographers": coalesce(photographers[]->{ name, "slug": slug.current }, []),
       "illustrators": coalesce(illustrators[]->{ name, "slug": slug.current }, []),
       "authorsFull": coalesce(authors[]->${PERSON}, [])
@@ -190,8 +197,8 @@ export async function getIndex(lang: Lang): Promise<IndexEntry[]> {
 const TAXONOMY_PAGE = `{
   "title": title[$lang], "slug": slug[$lang].current, "description": description[$lang],
   "alternates": { "fr": slug.fr.current, "en": slug.en.current },
-  "total": count(*[_type == "article" && language == $lang && references(^._id)]),
-  "articles": *[_type == "article" && language == $lang && references(^._id)] | order(publishedAt desc)[0...12] ${ARTICLE_CARD}
+  "total": count(${REFERRING}),
+  "articles": ${REFERRING} | order(publishedAt desc)[0...12] ${ARTICLE_CARD}
 }`;
 
 export const getCategory = (lang: Lang, slug: string) =>
@@ -205,7 +212,7 @@ export const getTags = (lang: Lang) =>
   load<(Category & { count: number })[]>(
     `*[_type == "tag" && defined(slug[$lang].current)]{
       "title": title[$lang], "slug": slug[$lang].current, "description": description[$lang],
-      "count": count(*[_type == "article" && language == $lang && references(^._id)])
+      "count": count(${REFERRING})
     } | order(title asc)`,
     { lang },
     () => [],
@@ -224,8 +231,8 @@ export const getAuthor = (lang: Lang, slug: string) =>
   load<(Person & { total: number; articles: ArticleCard[] }) | null>(
     `*[_type == "person" && slug.current == $slug][0]{
       ...${PERSON},
-      "total": count(*[_type == "article" && language == $lang && references(^._id)]),
-      "articles": *[_type == "article" && language == $lang && references(^._id)] | order(publishedAt desc)[0...12] ${ARTICLE_CARD}
+      "total": count(${REFERRING}),
+      "articles": ${REFERRING} | order(publishedAt desc)[0...12] ${ARTICLE_CARD}
     }`,
     { lang, slug },
     () => fx.author(lang, slug),
@@ -235,9 +242,9 @@ export const getAuthor = (lang: Lang, slug: string) =>
 
 export const getVideos = (lang: Lang) =>
   load<Video[]>(
-    `*[_type == "video" && language == $lang && defined(slug.current)] | order(publishedAt desc){
+    `*[_type == "video" && ${PUB}] | order(publishedAt desc){
       ...${VIDEO_CARD}, "src": file.asset->url, videoUrl, ${BODY},
-      "authorsFull": coalesce(authors[]->${PERSON}, []), ${TRANSLATIONS}, seo
+      "authorsFull": coalesce(authors[]->${PERSON}, []), ${TRANSLATIONS}, "seo": ${SEO()}
     }`,
     { lang },
     () => fx.videos(lang),
@@ -247,17 +254,17 @@ export const getVideos = (lang: Lang) =>
 
 export const getPodcasts = (lang: Lang) =>
   load<PodcastCard[]>(
-    `*[_type == "podcast" && language == $lang && defined(slug.current)] | order(order asc, title asc) ${PODCAST_CARD}`,
+    `*[_type == "podcast" && ${PUB}] | order(order asc, title[$lang] asc) ${PODCAST_CARD}`,
     { lang },
     () => fx.podcasts(lang),
   );
 
 export const getPodcast = (lang: Lang, slug: string) =>
   load<Podcast | null>(
-    `*[_type == "podcast" && language == $lang && slug.current == $slug][0]{
-      ...${PODCAST_CARD}, image ${IMG}, intro, note, seo, ${TRANSLATIONS},
-      "episodes": coalesce(episodes[]{ _key, title, description, duration, publishedAt, "src": coalesce(audio.asset->url, audioUrl) }, []),
-      "credits": coalesce(credits[]{ role, names }, [])
+    `*[_type == "podcast" && slug[$lang].current == $slug][0]{
+      ...${PODCAST_CARD}, image ${IMG}, "intro": intro[$lang], "note": note[$lang], "seo": ${SEO()}, ${TRANSLATIONS},
+      "episodes": coalesce(episodes[]{ _key, "title": coalesce(title[$lang], title.fr, title.en), "description": description[$lang], duration, publishedAt, "src": coalesce(audio.asset->url, audioUrl) }, []),
+      "credits": coalesce(credits[]{ "role": coalesce(role[$lang], role.fr, role.en), names }, [])
     }`,
     { lang, slug },
     () => fx.podcast(lang, slug),
@@ -273,8 +280,8 @@ export const getLaReleve = (lang: Lang) =>
       "title": page.title[$lang], "intro": page.${RICH("intro")},
       "cta": ${CTA("page.cta")}, "seo": ${SEO("page.seo")},
       "programs": select(
-        count(page.programs[$lang]) > 0 => page.programs[$lang][]->${PROGRAM_CARD},
-        *[_type == "program" && language == $lang] | order(order asc) ${PROGRAM_CARD}
+        count((page.programs[]->)[${PUB}]) > 0 => (page.programs[]->)[${PUB}]${PROGRAM_CARD},
+        *[_type == "program" && ${PUB}] | order(order asc) ${PROGRAM_CARD}
       )
     }`,
     { lang },
@@ -284,7 +291,7 @@ export const getLaReleve = (lang: Lang) =>
 /* Only programs that link to their own page have one. */
 export const getProgramSlugs = (lang: Lang) =>
   load<string[]>(
-    `*[_type == "program" && language == $lang && defined(slug.current) && coalesce(linkTo, "self") == "self"].slug.current`,
+    `*[_type == "program" && ${PUB} && coalesce(linkTo, "self") == "self"]{ ${SLUG} }.slug`,
     { lang },
     () =>
       fx
@@ -295,9 +302,10 @@ export const getProgramSlugs = (lang: Lang) =>
 
 export const getProgram = (lang: Lang, slug: string) =>
   load<Program | null>(
-    `*[_type == "program" && language == $lang && slug.current == $slug && coalesce(linkTo, "self") == "self"][0]{
-      ...${PROGRAM_CARD}, tagline, ${BODY}, cta, form, seo, ${TRANSLATIONS},
-      quote { ..., image ${IMG} }
+    `*[_type == "program" && slug[$lang].current == $slug && coalesce(linkTo, "self") == "self"][0]{
+      ...${PROGRAM_CARD}, "tagline": tagline[$lang], ${BODY}, "cta": ${CTA()}, "seo": ${SEO()}, ${TRANSLATIONS},
+      "form": select(defined(form.title[$lang]) || defined(form.text[$lang]) => form{ "title": title[$lang], "text": text[$lang] }),
+      quote { image ${IMG}, "text": text[$lang], attribution, "source": source[$lang] }
     }`,
     { lang, slug },
     () => {
@@ -352,7 +360,7 @@ export const getGiveYourVoice = (lang: Lang) =>
       "apply": page.apply{ "title": title[$lang], "text": text[$lang] },
       "seo": ${SEO("page.seo")},
       "culture": page.culture{ "title": title[$lang], "text": text[$lang], image ${IMG} },
-      "positions": *[_type == "position" && language == $lang && open != false] | order(order asc) ${POSITION}
+      "positions": *[_type == "position" && ${PUB} && open != false] | order(order asc) ${POSITION}
     }`,
     { lang },
     () => fx.giveYourVoice(lang),
@@ -370,7 +378,7 @@ export const getContact = (lang: Lang) =>
 
 export const getPartnerStories = (lang: Lang) =>
   load<PartnerStory[]>(
-    `*[_type == "partnerStory" && language == $lang] | order(publishedAt desc)[0...8] ${PARTNER_STORY}`,
+    `*[_type == "partnerStory" && defined(title[$lang])] | order(publishedAt desc)[0...8] ${PARTNER_STORY}`,
     { lang },
     () => fx.home(lang).partnerStories,
   );

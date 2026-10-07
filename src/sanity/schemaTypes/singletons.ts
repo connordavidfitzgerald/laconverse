@@ -7,24 +7,16 @@ import { HeartIcon } from "@sanity/icons/Heart";
 import { BulbOutlineIcon } from "@sanity/icons/BulbOutline";
 import { EnvelopeIcon } from "@sanity/icons/Envelope";
 
-import { perLanguage } from "./shared";
-
 /* One document per page, shared by both languages, with a fixed ID (the type
    name) that the Studio structure opens directly and the frontend fetches.
-   Every piece of copy has a French and an English box; images, people and
-   settings are shared. Picks of articles and programs differ by language
-   (those are separate documents), so they get one slot per language. */
+   Every piece of copy has a French and an English box; images, people,
+   settings and picks of articles and programs are shared (each language's
+   page skips a pick that isn't published in it). */
 
 const title = defineField({ name: "title", type: "localeString" });
 const text = defineField({ name: "text", type: "localeText" });
 const cta = (name = "cta") => defineField({ name, type: "localeCta" });
 const seo = defineField({ name: "seo", type: "localeSeo" });
-/* A reference to a document of `type` in the given language. */
-const refIn = (type: string) => (lang: string) => ({
-  type: "reference" as const,
-  to: [{ type }],
-  options: { filter: "language == $lang", filterParams: { lang } },
-});
 
 export const siteSettingsType = defineType({
   name: "siteSettings",
@@ -78,21 +70,22 @@ export const homePageType = defineType({
   type: "document",
   icon: HomeIcon,
   fields: [
-    perLanguage("lead", refIn("article"), {
+    defineField({
+      name: "lead",
       title: "Lead story",
-      description: "Defaults to the latest article.",
+      type: "reference",
+      to: [{ type: "article" }],
+      description:
+        "Defaults to the latest article. A language it isn't published in shows its latest article instead.",
     }),
-    perLanguage(
-      "topStories",
-      (lang) =>
-        defineField({
-          name: lang,
-          type: "array",
-          of: [defineArrayMember(refIn("article")(lang))],
-          validation: (r) => r.max(12),
-        }),
-      { title: "Top stories", description: "Leave empty to show the latest articles." },
-    ),
+    defineField({
+      name: "topStories",
+      title: "Top stories",
+      type: "array",
+      of: [defineArrayMember({ type: "reference", to: [{ type: "article" }] })],
+      validation: (r) => r.max(12),
+      description: "Leave empty to show the latest articles.",
+    }),
     defineField({
       name: "support",
       title: "Support band",
@@ -107,7 +100,7 @@ export const homePageType = defineType({
         title,
         defineField({ name: "image", type: "figure" }),
         text,
-        perLanguage("program", refIn("program")),
+        defineField({ name: "program", type: "reference", to: [{ type: "program" }] }),
       ],
     }),
     seo,
@@ -176,11 +169,12 @@ export const laRelevePageType = defineType({
     title,
     defineField({ name: "intro", type: "localeRichText" }),
     cta(),
-    perLanguage(
-      "programs",
-      (lang) => ({ type: "array", of: [defineArrayMember(refIn("program")(lang))] }),
-      { description: "Leave empty to list every program in its menu order." },
-    ),
+    defineField({
+      name: "programs",
+      type: "array",
+      of: [defineArrayMember({ type: "reference", to: [{ type: "program" }] })],
+      description: "Leave empty to list every program in its menu order.",
+    }),
     seo,
   ],
 });

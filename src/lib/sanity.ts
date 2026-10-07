@@ -12,13 +12,13 @@ export const apiVersion = "2026-09-01";
    the fixtures instead. Reads go straight to the API: the site is redeployed
    on publish, so there is no reason to read a cache that may lag it. */
 export const client: SanityClient | null = projectId
-  ? createClient({ projectId, dataset, apiVersion, useCdn: false, perspective: "published" })
+  ? createClient({ projectId, dataset, apiVersion, useCdn: true, perspective: "published" })
   : null;
 
 /* Server-only client for the API routes and scripts. */
 export function writeClient(token = import.meta.env.SANITY_WRITE_TOKEN as string | undefined) {
   if (!projectId || !token) return null;
-  return createClient({ projectId, dataset, apiVersion, useCdn: false, token });
+  return createClient({ projectId, dataset, apiVersion, useCdn: true, token });
 }
 
 const builder = projectId ? createImageUrlBuilder({ projectId, dataset }) : null;

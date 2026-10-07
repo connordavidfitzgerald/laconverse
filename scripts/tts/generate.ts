@@ -153,21 +153,46 @@ async function generate(a: Article, hash: string) {
   });
   await client
     .patch(a._id)
+    .setIfMissing({ listen: {}, listenSource: {} })
     .set({
-      listen: { _type: "file", asset: { _type: "reference", _ref: asset._id } },
-      listenSource: hash,
+      [`listen.${a.language}`]: { _type: "file", asset: { _type: "reference", _ref: asset._id } },
+      [`listenSource.${a.language}`]: hash,
     })
     .commit();
 }
 
-const articles = await client.fetch<Article[]>(
-  `*[_type == "article" && !(_id in path("drafts.**")) && defined(slug.current)
-     && ($lang == null || language == $lang) && ($slug == null || slug.current == $slug)]
-   | order(publishedAt desc){
-     _id, title, dek, language, "slug": slug.current, body,
-     "hasAudio": defined(listen.asset), listenSource
-   }`,
-  { lang: LANG ?? null, slug: SLUG ?? null },
+/* Each article holds both languages ({ fr, en } fields); each language it's
+   published in (has a slug in) gets its own reading. */
+type ByLang<T> = Partial<Record<string, T>>;
+const docs = await client.fetch<
+  {
+    _id: string;
+    title?: ByLang<string>;
+    dek?: ByLang<string>;
+    slug?: ByLang<{ current?: string }>;
+    body?: ByLang<Block[]>;
+    listen?: ByLang<{ asset?: unknown }>;
+    listenSource?: ByLang<string>;
+  }[]
+>(
+  `*[_type == "article" && !(_id in path("drafts.**"))
+     && ($slug == null || $slug in [slug.fr.current, slug.en.current])]
+   | order(publishedAt desc){ _id, title, dek, slug, body, listen, listenSource }`,
+  { slug: SLUG ?? null },
+);
+const articles: Article[] = docs.flatMap((d) =>
+  Object.keys(VOICES)
+    .filter((lang) => (!LANG || lang === LANG) && d.slug?.[lang]?.current)
+    .map((lang) => ({
+      _id: d._id,
+      title: d.title?.[lang] ?? "",
+      dek: d.dek?.[lang],
+      language: lang,
+      slug: d.slug![lang]!.current!,
+      body: d.body?.[lang],
+      hasAudio: Boolean(d.listen?.[lang]?.asset),
+      listenSource: d.listenSource?.[lang],
+    })),
 );
 
 const queue = articles
@@ -179,7 +204,7 @@ const queue = articles
   })
   .slice(0, LIMIT);
 
-console.log(`${queue.length} of ${articles.length} articles to read.`);
+console.log(`${queue.length} of ${articles.length} article readings to make.`);
 let done = 0;
 let failed = 0;
 async function worker() {

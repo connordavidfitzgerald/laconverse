@@ -1,6 +1,6 @@
 ---
 import { href, type Lang } from "../i18n";
-import { dotClass } from "../lib/chip";
+import { DOTS, dotClass } from "../lib/chip";
 import type { CategoryRef } from "../lib/types";
 
 interface Props {
@@ -16,16 +16,20 @@ const { category, lang, size = "sm", class: className, ...rest } = Astro.props;
 <a
   href={href(lang, "category", category.slug)}
   class:list={[
-    "label inline-flex items-center gap-[0.45em] bg-white whitespace-nowrap hover:bg-ink hover:text-yellow font-black",
-    size === "sm" ? " text-md " : " text-md",
+    "label inline-flex items-baseline gap-[0.45em] whitespace-nowrap text-ink hover:bg-ink hover:text-yellow hover:shadow-[0_0_0_0.4em_var(--color-ink)] font-black",
+    size === "sm" ? " text-sm " : " text-md",
     className,
   ]}
   {...rest}
 >
-  <span
-    aria-hidden="true"
-    data-dot
-    class:list={["size-[0.6em] shrink-0 rounded-full", dotClass(category.slug)]}
-  ></span>
+  {DOTS ? (
+    <span
+      aria-hidden="true"
+      data-dot
+      class:list={["size-[0.6em] shrink-0 self-center rounded-full", dotClass(category.slug)]}
+    />
+  ) : (
+    <span aria-hidden="true" class="size-[1cap] shrink-0 bg-yellow" />
+  )}
   <span data-label>{category.title}</span>
 </a>

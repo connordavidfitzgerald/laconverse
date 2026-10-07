@@ -4,8 +4,10 @@ import {
   ctaType,
   figureType,
   localeCtaType,
+  localeNoteType,
   localeRichTextType,
   localeSeoType,
+  localeStringListType,
   localeStringType,
   localeTextType,
   richTextType,
@@ -33,18 +35,6 @@ import {
   laRelevePageType,
   siteSettingsType,
 } from "./singletons";
-
-/* Translated as whole documents (linked with the translation plugin). People,
-   sections, topics, series and the page singletons are instead one document
-   with a French and an English box per field. */
-export const translatedTypes = [
-  "article",
-  "video",
-  "podcast",
-  "program",
-  "position",
-  "partnerStory",
-];
 
 /* One fixed document each, with the type name as its ID. */
 export const singletonTypes = [
@@ -80,6 +70,8 @@ export const schemaTypes: SchemaTypeDefinition[] = [
   localeStringType,
   localeTextType,
   localeRichTextType,
+  localeNoteType,
+  localeStringListType,
   localeCtaType,
   localeSeoType,
   seoType,

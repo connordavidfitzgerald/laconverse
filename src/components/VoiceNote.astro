@@ -40,20 +40,26 @@ const field =
       type="button"
       data-voice-open
       data-voice-fab
+      data-intro
       aria-label={s.vnOpen}
       class="group fixed bottom-4 right-4 z-30 rounded-full outline-offset-4 md:bottom-6 md:right-6"
     >
       <span
         aria-hidden="true"
-        class="label pointer-events-none absolute right-full top-1/2 mr-2.5 hidden -translate-y-1/2 translate-x-2 whitespace-nowrap rounded-full bg-ink px-3 py-1.5 text-xs text-paper opacity-0 transition-[opacity,translate] duration-300 ease-power3-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 md:block"
+        data-fab-label
+        class="label pointer-events-none absolute right-full top-1/2 mr-2.5 hidden -translate-y-1/2 translate-x-2 whitespace-nowrap rounded-full bg-yellow px-4 py-2 text-md text-ink opacity-0 transition-[opacity,translate] duration-300 ease-power3-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 md:block font-black"
       >
-        {s.vnFab}
+        <span data-fab-text class="inline-block">
+          {s.vnFab}
+        </span>
       </span>
       <span
         data-fab-disc
-        class="grid size-[52px] place-items-center rounded-full bg-ink text-paper shadow-[0_8px_24px_-8px_rgb(0_0_0/0.5)] transition-transform duration-200 ease-out group-hover:scale-105 group-active:scale-95"
+        class="relative grid size-[52px] place-items-center rounded-full bg-yellow text-ink shadow-[0_8px_24px_-8px_rgb(0_0_0/0.5)] transition-transform duration-200 ease-out group-hover:scale-105 group-active:scale-95"
       >
-        <Icon name="mic" class="h-[18px] w-[17px]" />
+        <span data-fab-icon class="grid place-items-center">
+          <Icon name="mic" class="h-[18px] w-[17px]" />
+        </span>
       </span>
     </button>
   )}
@@ -85,224 +91,216 @@ const field =
           <button
             type="button"
             data-close
-            class="press label rounded-full bg-ink px-3 py-1.5 text-xs text-paper hover:bg-ink/80"
+            class="press label shrink-0 rounded-full bg-ink px-3 py-1.5 text-xs text-paper hover:bg-ink/80"
           >
             ← {s.vnEsc}
           </button>
 
-          <h2
-            id="vn-title"
-            class="display mt-12 text-[2rem] leading-[0.95] tracking-[-0.01em] text-balance md:mt-10 md:text-4xl"
-          >
-            {s.vnTitle}
-          </h2>
+          <!-- Main content, centred in the space between the close button and
+               the privacy note. -->
+          <div class="flex w-full flex-1 flex-col items-center justify-center pt-10">
+            <h2
+              id="vn-title"
+              class="display text-[2rem] leading-[0.95] tracking-[-0.01em] text-balance md:text-4xl"
+            >
+              {s.vnTitle}
+            </h2>
 
-          <!-- Mode switch -->
-          <button
-            type="button"
-            data-mode="write"
-            class="label mt-5 text-xs underline underline-offset-2"
-          >
-            {s.vnWrite}
-          </button>
-          <button
-            type="button"
-            data-mode="record"
-            class="label mt-5 inline-flex items-center gap-2 text-xs underline underline-offset-2"
-            hidden
-          >
-            <span class="grid size-6 place-items-center rounded-full bg-ink text-paper">
-              <Icon name="mic" class="h-3 w-3" />
-            </span>
-            {s.vnRecord}
-          </button>
+            <!-- Mode switch -->
+            <button
+              type="button"
+              data-mode="write"
+              class="label mt-5 text-xs underline underline-offset-2"
+            >
+              {s.vnWrite}
+            </button>
+            <button
+              type="button"
+              data-mode="record"
+              class="label mt-5 inline-flex items-center gap-2 text-xs underline underline-offset-2"
+              hidden
+            >
+              <span class="grid size-6 place-items-center rounded-full bg-ink text-paper">
+                <Icon name="mic" class="h-3 w-3" />
+              </span>
+              {s.vnRecord}
+            </button>
 
-          <!-- RECORD FLOW ------------------------------------------------------>
-          <form data-panel="record" class="mt-10 flex w-full flex-col items-center" novalidate>
-            <!-- start -->
-            <div data-step="start" class="flex flex-col items-center gap-4">
-              <button
-                type="button"
-                data-start
-                class="press grid size-[84px] place-items-center rounded-full bg-ink text-paper hover:scale-105"
-                aria-label={s.vnTap}
-              >
-                <Icon name="mic" class="h-[23px] w-[22px]" />
-              </button>
-              <p class="label text-xs">{s.vnTap}</p>
-              <p data-mic-error class="max-w-xs text-sm font-medium" hidden>
-                {s.vnNoMic}
-              </p>
-            </div>
-
-            <!-- player (recording / finished / details) -->
-            <div data-step="player" class="flex w-full flex-col items-center" hidden>
-              <div class="flex h-[69px] w-full items-center gap-4 rounded-full bg-ink px-5 text-paper">
-                <span data-rec-dot class="size-2.5 shrink-0 rounded-full bg-[#ff3b30]"></span>
+            <!-- RECORD FLOW ------------------------------------------------------>
+            <form data-panel="record" class="mt-10 flex w-full flex-col items-center" novalidate>
+              <!-- start -->
+              <div data-step="start" class="flex flex-col items-center gap-4">
                 <button
                   type="button"
-                  data-play
-                  class="grid size-5 shrink-0 place-items-center text-paper"
-                  hidden
-                  aria-label={s.vnPlay}
+                  data-start
+                  class="press grid size-[84px] place-items-center rounded-full bg-ink text-paper hover:scale-105"
+                  aria-label={s.vnTap}
                 >
-                  <span data-icon-play>
-                    <Icon name="play" class="h-3 w-2.5" />
-                  </span>
-                  <span data-icon-pause class="hidden">
-                    <Icon name="pause" class="h-3 w-2.5" />
-                  </span>
+                  <Icon name="mic" class="h-[23px] w-[22px]" />
                 </button>
-                <div
-                  data-bars
-                  class="flex h-8 flex-1 items-center justify-center gap-[3px]"
-                  aria-hidden="true"
-                >
-                  {Array.from({ length: BARS }, () => (
-                    <span
-                      class="w-[3px] rounded-full bg-yellow transition-opacity duration-200"
-                      style="height: 12%"
-                    ></span>
-                  ))}
-                </div>
-                <span data-time class="label w-10 shrink-0 text-right text-sm" aria-live="off">
-                  0:00
-                </span>
-              </div>
-
-              <div data-recording class="mt-5 flex flex-col items-center gap-4">
-                <button
-                  type="button"
-                  data-stop
-                  class="press grid size-[60px] place-items-center rounded-full bg-ink text-paper hover:scale-105"
-                  aria-label={s.vnRecording}
-                >
-                  <Icon name="stop" class="size-4" />
-                </button>
-                <p class="label text-xs" aria-live="polite">
-                  {s.vnRecording}
+                <p class="label text-xs">{s.vnTap}</p>
+                <p data-mic-error class="max-w-xs text-sm font-medium" hidden>
+                  {s.vnNoMic}
                 </p>
               </div>
 
-              <div data-finished class="mt-5 grid w-full grid-cols-2 gap-2.5" hidden>
-                <button
-                  type="button"
-                  data-redo
-                  class="press label flex h-[46px] items-center justify-center gap-2 rounded-[10px] border border-ink text-lg hover:bg-ink hover:text-yellow"
-                >
-                  <Icon name="redo" class="size-4" />
-                  {s.vnRedo}
-                </button>
-                <button
-                  type="button"
-                  data-next
-                  class="press label flex h-[46px] items-center justify-center gap-2 rounded-[10px] bg-ink text-lg text-paper"
-                >
-                  {s.vnSubmit}
-                  <Icon name="arrow" class="nudge-x h-3 w-4" />
-                </button>
-              </div>
-
-              <div data-details class="mt-4 w-full" hidden>
-                <button
-                  type="button"
-                  data-redo
-                  class="label mx-auto flex items-center gap-1.5 text-sm underline underline-offset-2"
-                >
-                  <Icon name="redo" class="size-3.5" />
-                  {s.vnRedo}
-                </button>
-                <p class="label mt-5 text-sm">{s.vnReach}</p>
-                <div class="mt-4 flex flex-col gap-6 text-left">
-                  <label>
-                    <span class="sr-only">{s.email}</span>
-                    <input
-                      name="email"
-                      type="email"
-                      autocomplete="email"
-                      placeholder={s.email}
-                      class={field}
-                    />
-                  </label>
-                  <label>
-                    <span class="sr-only">{s.phone}</span>
-                    <input
-                      name="phone"
-                      type="tel"
-                      autocomplete="tel"
-                      placeholder={s.phone}
-                      class={field}
-                    />
-                  </label>
-                  <label>
-                    <span class="sr-only">{s.name}</span>
-                    <input name="name" autocomplete="name" placeholder={s.name} class={field} />
-                  </label>
+              <!-- player (recording / finished / details) -->
+              <div data-step="player" class="flex w-full flex-col items-center" hidden>
+                <div class="flex h-[69px] w-full items-center gap-4 rounded-full bg-ink px-5 text-paper">
+                  <span data-rec-dot class="size-2.5 shrink-0 rounded-full bg-[#ff3b30]"></span>
+                  <button
+                    type="button"
+                    data-play
+                    class="grid size-5 shrink-0 place-items-center text-paper"
+                    hidden
+                    aria-label={s.vnPlay}
+                  >
+                    <span data-icon-play>
+                      <Icon name="play" class="h-3 w-2.5" />
+                    </span>
+                    <span data-icon-pause class="hidden">
+                      <Icon name="pause" class="h-3 w-2.5" />
+                    </span>
+                  </button>
+                  <div
+                    data-bars
+                    class="flex h-8 flex-1 items-center justify-center gap-[3px]"
+                    aria-hidden="true"
+                  >
+                    {Array.from({ length: BARS }, () => (
+                      <span
+                        class="w-[3px] rounded-full bg-yellow transition-opacity duration-200"
+                        style="height: 12%"
+                      ></span>
+                    ))}
+                  </div>
+                  <span data-time class="label w-10 shrink-0 text-right text-sm" aria-live="off">
+                    0:00
+                  </span>
                 </div>
-                <button
-                  type="submit"
-                  class="press label mt-8 h-[46px] w-full rounded-[10px] bg-ink text-lg text-paper disabled:opacity-60"
-                >
-                  {s.vnSend}
-                </button>
+
+                <div data-recording class="mt-5 flex flex-col items-center gap-4">
+                  <button
+                    type="button"
+                    data-stop
+                    class="press grid size-[60px] place-items-center rounded-full bg-ink text-paper hover:scale-105"
+                    aria-label={s.vnRecording}
+                  >
+                    <Icon name="stop" class="size-4" />
+                  </button>
+                  <p class="label text-xs" aria-live="polite">
+                    {s.vnRecording}
+                  </p>
+                </div>
+
+                <div data-finished class="mt-5 grid w-full grid-cols-2 gap-2.5" hidden>
+                  <button
+                    type="button"
+                    data-redo
+                    class="press label flex h-[46px] items-center justify-center gap-2 rounded-[10px] border border-ink text-lg hover:bg-ink hover:text-yellow"
+                  >
+                    <Icon name="redo" class="size-4" />
+                    {s.vnRedo}
+                  </button>
+                  <button
+                    type="button"
+                    data-next
+                    class="press label flex h-[46px] items-center justify-center gap-2 rounded-[10px] bg-ink text-lg text-paper"
+                  >
+                    {s.vnSubmit}
+                    <Icon name="arrow" class="nudge-x h-3 w-4" />
+                  </button>
+                </div>
+
+                <div data-details class="mt-4 w-full" hidden>
+                  <button
+                    type="button"
+                    data-redo
+                    class="label mx-auto flex items-center gap-1.5 text-sm underline underline-offset-2"
+                  >
+                    <Icon name="redo" class="size-3.5" />
+                    {s.vnRedo}
+                  </button>
+                  <p class="label mt-5 text-sm">{s.vnReach}</p>
+                  <div class="mt-4 flex flex-col gap-6 text-left">
+                    <label>
+                      <span class="sr-only">{s.email}</span>
+                      <input
+                        name="email"
+                        type="email"
+                        autocomplete="email"
+                        placeholder={s.email}
+                        class={field}
+                      />
+                    </label>
+                    <label>
+                      <span class="sr-only">{s.phone}</span>
+                      <input
+                        name="phone"
+                        type="tel"
+                        autocomplete="tel"
+                        placeholder={s.phone}
+                        class={field}
+                      />
+                    </label>
+                    <label>
+                      <span class="sr-only">{s.name}</span>
+                      <input name="name" autocomplete="name" placeholder={s.name} class={field} />
+                    </label>
+                  </div>
+                  <button
+                    type="submit"
+                    class="press label mt-8 h-[46px] w-full rounded-[10px] bg-ink text-lg text-paper disabled:opacity-60"
+                  >
+                    {s.vnSend}
+                  </button>
+                </div>
               </div>
-            </div>
-          </form>
+            </form>
 
-          <!-- WRITE FLOW ------------------------------------------------------->
-          <form data-panel="write" class="mt-8 w-full" hidden novalidate>
-            <label>
-              <span class="sr-only">{s.vnMessage}</span>
-              <textarea
-                name="message"
-                required
-                rows="6"
-                placeholder={s.vnMessage}
-                class="display w-full resize-none rounded-[10px] border border-ink bg-transparent p-4 text-2xl leading-none placeholder:text-ink/40 outline-none focus:border-2"
-              ></textarea>
-            </label>
-            <p class="label mt-5 text-sm">{s.vnReach}</p>
-            <div class="mt-4 flex flex-col gap-6 text-left">
+            <!-- WRITE FLOW ------------------------------------------------------->
+            <form data-panel="write" class="mt-8 w-full" hidden novalidate>
               <label>
-                <span class="sr-only">{s.email}</span>
-                <input
-                  name="email"
-                  type="email"
-                  autocomplete="email"
-                  placeholder={s.email}
-                  class={field}
-                />
+                <span class="sr-only">{s.vnMessage}</span>
+                <textarea
+                  name="message"
+                  required
+                  rows="6"
+                  placeholder={s.vnMessage}
+                  class="display w-full resize-none rounded-[10px] border border-ink bg-transparent p-4 text-2xl leading-none placeholder:text-ink/40 outline-none focus:border-2"
+                ></textarea>
               </label>
-              <label>
-                <span class="sr-only">{s.name}</span>
-                <input name="name" autocomplete="name" placeholder={s.name} class={field} />
-              </label>
-            </div>
-            <button
-              type="submit"
-              class="press label mt-8 h-[46px] w-full rounded-[10px] bg-ink text-lg text-paper disabled:opacity-60"
-            >
-              {s.vnSend}
-            </button>
-          </form>
+              <p class="label mt-5 text-sm">{s.vnReach}</p>
+              <div class="mt-4 flex flex-col gap-6 text-left">
+                <label>
+                  <span class="sr-only">{s.email}</span>
+                  <input
+                    name="email"
+                    type="email"
+                    autocomplete="email"
+                    placeholder={s.email}
+                    class={field}
+                  />
+                </label>
+                <label>
+                  <span class="sr-only">{s.name}</span>
+                  <input name="name" autocomplete="name" placeholder={s.name} class={field} />
+                </label>
+              </div>
+              <button
+                type="submit"
+                class="press label mt-8 h-[46px] w-full rounded-[10px] bg-ink text-lg text-paper disabled:opacity-60"
+              >
+                {s.vnSend}
+              </button>
+            </form>
 
-          <p data-done class="display mt-10 text-3xl leading-[0.95]" role="status" hidden></p>
+            <p data-done class="display mt-10 text-3xl leading-[0.95]" role="status" hidden></p>
+          </div>
 
-          <p class="mt-auto max-w-[19rem] py-8 text-[0.625rem] font-medium leading-[1.35] md:max-w-sm md:text-xs">
+          <p class="max-w-[19rem] py-8 text-[0.625rem] font-medium leading-[1.35] md:max-w-sm md:text-xs">
             {s.vnPrivacy}
           </p>
-        </div>
-
-        <div class="relative flex items-center justify-between px-5 pb-5">
-          <Socials
-            socials={settings.socials.filter((x) =>
-              ["whatsapp", "linkedin", "instagram"].includes(x.platform),
-            )}
-            variant="plain"
-          />
-          <a href={`mailto:${settings.email}`} class="display text-lg leading-none">
-            {settings.email}
-          </a>
         </div>
       </div>
     </div>
@@ -322,6 +320,16 @@ const field =
     opacity: 0;
     pointer-events: none;
   }
+  /* Held back until the intro timeline has set its starting state. */
+  [data-voice-fab][data-intro] {
+    visibility: hidden;
+  }
+  [data-scroll] {
+    scrollbar-width: none;
+  }
+  [data-scroll]::-webkit-scrollbar {
+    display: none;
+  }
   voice-note dialog::backdrop {
     transition: opacity 300ms ease-out;
   }
@@ -336,7 +344,7 @@ const field =
 </style>
 
 <script>
-  import { appear, d, gsap } from "../lib/motion";
+  import { appear, d, gsap, reduced } from "../lib/motion";
 
   const MAX_SECONDS = 300;
   const fmt = (sec: number) =>
@@ -377,6 +385,7 @@ const field =
     /** The button the dialog grew out of, to shrink back into. */
     origin: HTMLElement | null = null;
     morph: gsap.core.Timeline | null = null;
+    intro: gsap.core.Timeline | null = null;
     leaving = false;
 
     $<T extends HTMLElement = HTMLElement>(sel: string) {
@@ -390,6 +399,7 @@ const field =
       this.dialog = this.$<HTMLDialogElement>("dialog");
       this.fab = this.querySelector("[data-voice-fab]");
       this.watchFab();
+      this.introFab();
 
       document.addEventListener("click", (e) => {
         const opener = (e.target as Element).closest<HTMLElement>("[data-voice-open]");
@@ -490,6 +500,85 @@ const field =
         }).observe(foot);
     }
 
+    /** On load the corner button grows in larger than life with its note
+        unfurling from behind it, holds, then the note retracts into the disc
+        as the disc settles to its resting size. */
+    introFab() {
+      const fab = this.fab;
+      if (!fab) return;
+      if (reduced()) return void fab.removeAttribute("data-intro");
+      const disc = fab.querySelector<HTMLElement>("[data-fab-disc]")!;
+      const icon = fab.querySelector<HTMLElement>("[data-fab-icon]")!;
+      const label = fab.querySelector<HTMLElement>("[data-fab-label]")!;
+      const text = fab.querySelector<HTMLElement>("[data-fab-text]")!;
+
+      // The full intro plays once per visit; later pages just pop the disc in.
+      let seen = false;
+      try {
+        seen = sessionStorage.getItem("vn-intro") !== null;
+        sessionStorage.setItem("vn-intro", "");
+      } catch {}
+      if (seen) {
+        gsap.set(disc, { transition: "none", scale: 0 });
+        gsap.set(icon, { scale: 0.6, opacity: 0 });
+        fab.removeAttribute("data-intro");
+        this.intro = gsap
+          .timeline({ delay: 0.3 })
+          .to(disc, { scale: 1, duration: 0.5, ease: "back.out(2.5)" })
+          .to(icon, { scale: 1, opacity: 1, duration: 0.35 }, 0.1)
+          .set(icon, { clearProps: "all" })
+          .set(disc, { clearProps: "transform,transition" });
+        return;
+      }
+
+      const BIG = 1.35;
+      // GSAP folds the label's `translate-x-2` into its own x, so x is
+      // absolute: 0 is where hover shows it. While the disc is enlarged the
+      // label steps clear of the extra radius.
+      const shown = -(52 * (BIG - 1)) / 2;
+      // The clip's left inset, in %. Tweened as a number: the browser
+      // serialises a fully open inset() to its short form, which GSAP can't
+      // interpolate back from.
+      const clip = { left: 100 };
+      const paint = () =>
+        void (label.style.clipPath = `inset(0% 0% 0% ${clip.left}% round 999px)`);
+
+      // CSS transitions on these would fight the tweens.
+      gsap.set([disc, label], { transition: "none" });
+      gsap.set(disc, { scale: 0 });
+      gsap.set(icon, { scale: 0.4, rotate: -35, opacity: 0 });
+      gsap.set(label, { opacity: 1, x: shown + 28 });
+      paint();
+      gsap.set(text, { x: 24, opacity: 0 });
+      fab.removeAttribute("data-intro");
+
+      const tl = (this.intro = gsap.timeline({ delay: 0.5 }));
+      tl.addLabel("in")
+        .to(disc, { scale: BIG, duration: 1.2, ease: "expo.out" }, "in")
+        .to(icon, { scale: 1, rotate: 0, opacity: 1, duration: 1, ease: "expo.out" }, "in+=0.12")
+        .to(label, { x: shown, duration: 1.1, ease: "expo.out" }, "in+=0.3")
+        .to(clip, { left: 0, duration: 1.1, ease: "expo.out", onUpdate: paint }, "in+=0.3")
+        .to(text, { x: 0, opacity: 1, duration: 1, ease: "expo.out" }, "in+=0.42")
+
+        .addLabel("out", "+=1.4")
+        .to(text, { x: 16, opacity: 0, duration: 0.45, ease: "power3.in" }, "out")
+        .to(label, { x: shown + 36, duration: 0.9, ease: "expo.inOut" }, "out")
+        .to(clip, { left: 100, duration: 0.9, ease: "expo.inOut", onUpdate: paint }, "out")
+        .to(disc, { scale: 1, duration: 1.1, ease: "expo.inOut" }, "out+=0.3")
+        .to(
+          icon,
+          { scale: 0.85, duration: 0.35, ease: "power2.in", yoyo: true, repeat: 1 },
+          "out+=0.55",
+        )
+
+        // Hand back to the hover styles: drop the inline values while the
+        // label is still clipped and untransitioned, then the rest.
+        .set([text, icon], { clearProps: "all" })
+        .set(label, { clearProps: "opacity,transform" })
+        .set(disc, { clearProps: "transform" })
+        .set([disc, label], { clearProps: "clipPath,transition" }, "+=0.05");
+    }
+
     /** `el`'s shape as a clip on the dialog, plus the shift that carries the
         clip onto it when it lies outside the dialog (the `md` box). */
     shape(el: HTMLElement) {
@@ -522,6 +611,7 @@ const field =
 
     open(mode: "record" | "write", from?: HTMLElement | null) {
       if (!this.dialog.open) {
+        this.intro?.progress(1);
         this.origin =
           [from, this.fab?.querySelector<HTMLElement>("[data-fab-disc]")].find(showing) ?? null;
         this.leaving = false;

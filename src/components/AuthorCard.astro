@@ -14,7 +14,6 @@ const { person, lang, class: className } = Astro.props;
 <a
   href={href(lang, "author", person.slug)}
   class:list={["group flex gap-4 border border-ink p-2.5 hover:bg-yellow", className]}
-  data-reveal
 >
   <Picture img={person.image} ratio={1} class="w-[134px] shrink-0 md:w-40" sizes="160px" />
   <div class="flex flex-col gap-4 py-1">

@@ -34,23 +34,6 @@ export function appear(el: HTMLElement | null, opts: { y?: number; delay?: numbe
   );
 }
 
-/** Fade new items in with a light stagger (load more, search results). */
-export function enter(els: Element[], opts: { y?: number; stagger?: number } = {}) {
-  if (!els.length) return;
-  gsap.fromTo(
-    els,
-    { opacity: 0, y: opts.y ?? 12 },
-    {
-      opacity: 1,
-      y: 0,
-      duration: d(0.5),
-      stagger: reduced() ? 0 : (opts.stagger ?? 0.04),
-      clearProps: "transform,opacity",
-    },
-  );
-  fadeImages(els);
-}
-
 /** Open a collapsed block by animating its height from 0. */
 export function expand(el: HTMLElement, onDone?: () => void) {
   el.hidden = false;
@@ -101,45 +84,53 @@ export function swapText(el: HTMLElement, text: string) {
     );
 }
 
-/** Images that haven't loaded yet fade in when they do, rather than popping.
-    Images with an LQIP background already have a placeholder, so skip them. */
+/** Images fade in over their placeholder colour (see Picture) once they've
+    both loaded and scrolled into view. Lazy images load a screen or two ahead
+    of the viewport, so fading on load alone would finish off-screen. Images
+    already on screen and loaded at start are left alone, so nothing above the
+    fold flickers. Text is never animated in. Images that become ready in the
+    same frame (a row of cards scrolling in together) fade in one after the
+    other, in reading order. */
+let ready: HTMLImageElement[] = [];
+function queueFade(img: HTMLImageElement) {
+  if (!ready.length)
+    requestAnimationFrame(() => {
+      const batch = ready
+        .map((el) => ({ el, r: el.getBoundingClientRect() }))
+        .sort((a, b) => a.r.top - b.r.top || a.r.left - b.r.left)
+        .map(({ el }) => el);
+      ready = [];
+      gsap.to(batch, {
+        opacity: 1,
+        duration: 0.8,
+        delay: 0.2,
+        stagger: 0.12,
+        clearProps: "opacity",
+      });
+    });
+  ready.push(img);
+}
+
 export function fadeImages(scope: ParentNode | Element[] = document) {
   if (reduced()) return;
   const imgs = Array.isArray(scope)
     ? scope.flatMap((el) => [...el.querySelectorAll("img")])
     : [...scope.querySelectorAll("img")];
   for (const img of imgs) {
-    if (img.complete || img.style.background || img.dataset.faded) continue;
+    if (img.dataset.faded !== undefined) continue;
+    const below = img.getBoundingClientRect().top > innerHeight;
+    if (!below && img.complete) continue;
     img.dataset.faded = "";
     gsap.set(img, { opacity: 0 });
-    const show = () => gsap.to(img, { opacity: 1, duration: 0.5, clearProps: "opacity" });
-    img.addEventListener("load", show, { once: true });
-    img.addEventListener("error", show, { once: true });
+    const loaded = new Promise<void>((done) => {
+      if (img.complete) return done();
+      img.addEventListener("load", () => done(), { once: true });
+      img.addEventListener("error", () => done(), { once: true });
+    });
+    const seen = new Promise<void>((done) => {
+      if (!below) return done();
+      ScrollTrigger.create({ trigger: img, start: "top 92%", once: true, onEnter: () => done() });
+    });
+    Promise.all([loaded, seen]).then(() => queueFade(img));
   }
-}
-
-/** `[data-reveal]` elements that start below the fold fade up as they scroll
-    in. Anything already on screen at load is left alone, so nothing above the
-    fold ever flickers. Opacity only (no visibility), so keyboard focus still
-    reaches unrevealed links — focusing one scrolls it in, which reveals it. */
-export function revealOnScroll() {
-  if (reduced()) return;
-  const fold = innerHeight;
-  const pending = [...document.querySelectorAll<HTMLElement>("[data-reveal]")].filter(
-    (el) => el.getBoundingClientRect().top > fold,
-  );
-  if (!pending.length) return;
-  gsap.set(pending, { opacity: 0, y: 16 });
-  ScrollTrigger.batch(pending, {
-    start: "top 92%",
-    once: true,
-    onEnter: (batch) =>
-      gsap.to(batch, {
-        opacity: 1,
-        y: 0,
-        duration: 0.7,
-        stagger: 0.07,
-        clearProps: "transform,opacity",
-      }),
-  });
 }

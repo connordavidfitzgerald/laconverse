@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { createClient } from "@sanity/client";
 
 import { OUT, readJson } from "./lib";
+import { countKeys } from "../merge-locales/lib";
 
 const projectId = process.env.PUBLIC_SANITY_PROJECT_ID;
 const token = process.env.SANITY_WRITE_TOKEN;
@@ -26,15 +27,14 @@ const report = readJson<{
 }>(join(OUT, "report.json"));
 
 let failed = false;
-const actual = await client.fetch<{ type: string; lang: string | null }[]>(
-  `*[!(_id in path("drafts.**")) && _type in $types]{ "type": _type, "lang": language }`,
+const actual = await client.fetch<{ _type: string; slug?: unknown }[]>(
+  `*[!(_id in path("drafts.**")) && _type in $types]{ _type, slug }`,
   {
     types: [...new Set(Object.keys(report.counts).map((k) => k.replace(/\.(fr|en)$/, "")))],
   },
 );
 const tally: Record<string, number> = {};
-for (const { type, lang } of actual)
-  tally[`${type}${lang ? `.${lang}` : ""}`] = (tally[`${type}${lang ? `.${lang}` : ""}`] ?? 0) + 1;
+for (const d of actual) for (const k of countKeys(d)) tally[k] = (tally[k] ?? 0) + 1;
 
 console.log("type.lang".padEnd(28), "expected", "in sanity");
 for (const [k, expected] of Object.entries(report.counts)) {
@@ -88,12 +88,16 @@ const html = (
 if (html)
   console.log(`\n${html} articles look like they still contain raw HTML — check richtext.ts.`);
 
-const samples = await client.fetch<{ title: string; slug: string; language: string }[]>(
-  `*[_type == "article"] | order(publishedAt desc)[0...5]{ title, "slug": slug.current, language }`,
+const samples = await client.fetch<{ title: string; fr?: string; en?: string }[]>(
+  `*[_type == "article"] | order(publishedAt desc)[0...5]{
+    "title": coalesce(title.fr, title.en), "fr": slug.fr.current, "en": slug.en.current
+  }`,
 );
 console.log("\nSpot-check these against the live site:");
-for (const s of samples)
-  console.log(`  ${s.language === "en" ? "/en" : ""}/articles/${s.slug}   ${s.title}`);
+for (const s of samples) {
+  if (s.fr) console.log(`  /articles/${s.fr}   ${s.title}`);
+  if (s.en) console.log(`  /en/articles/${s.en}`);
+}
 
 console.log(failed ? "\n✗ Validation found problems." : "\n✓ Counts and references match.");
 process.exit(failed ? 1 : 0);

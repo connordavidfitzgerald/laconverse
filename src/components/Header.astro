@@ -7,7 +7,8 @@
 
    Tones: `light` (paper bar), `dark` (ink bar, videos), `overlay`
    (transparent over a `[data-header-hero]`, turning light once the hero has
-   scrolled under the bar). */
+   scrolled under the bar), `yellow` (yellow over a yellow `[data-header-hero]`,
+   likewise turning light past it). */
 import Icon from "./Icon.astro";
 import Logo from "./Logo.astro";
 import Socials from "./Socials.astro";
@@ -19,7 +20,7 @@ interface Props {
   lang: Lang;
   settings: Settings;
   alternate: string;
-  tone?: "light" | "dark" | "overlay";
+  tone?: "light" | "dark" | "overlay" | "yellow";
   /** Keep the bar compact at the top of the page too (the video feed). */
   compact?: boolean;
 }
@@ -73,7 +74,7 @@ const media = [
 
     <div
       data-hdr-bar
-      class="relative z-10 flex items-center justify-between gap-6 px-5 py-5 transition-[padding] duration-500 ease-power3-out lg:px-10 lg:py-10 lg:group-data-compact/hdr:py-5"
+      class="relative z-10 flex items-center justify-between gap-6 px-5 py-5 transition-[padding] duration-500 ease-power3-out lg:px-5 lg:py-5 lg:group-data-compact/hdr:py-5"
     >
       <a href={href(lang, "home")} class="block shrink-0" aria-label="La Converse — accueil">
         <Logo class="h-[18px] w-auto" />
@@ -224,7 +225,7 @@ const media = [
       style="clip-path: inset(0% 0% 100% 0%)"
     >
       <Spray class="left-[35%] top-[-10%] w-[80%] -rotate-[18deg] opacity-70" seed={17} />
-      <div class="relative px-10 pb-14 pt-[calc(var(--header-h)+1.5rem)]">
+      <div class="relative px-5 pt-[calc(var(--header-h)-0.5rem)] pb-20">
         <div data-drop-group="articles" data-menu-nav class="grid grid-cols-12 gap-x-5" hidden>
           <div class="col-span-3 flex flex-col items-start gap-4">
             <p class="label text-sm" data-drop-item>
@@ -310,14 +311,14 @@ const media = [
     </div>
 
     <nav class="relative flex-1 px-5 pt-0" aria-label={s.menu} data-menu-nav>
-      <ul class="display text-[2rem] leading-[1.1] tracking-[-0.015em] md:text-5xl">
+      <ul class="display text-[1.5rem] leading-[1.1] tracking-[-0.015em] md:text-5xl">
         <li class="border-b border-ink py-2.5">
           <ul>
             {settings.menuCategories.map((c) => (
               <li>
                 <a
                   href={href(lang, "category", c.slug)}
-                  class="block link-line decoration-2"
+                  class="block link-line decoration-2 font-black"
                   data-menu-line
                 >
                   {c.title}
@@ -346,7 +347,7 @@ const media = [
               class="h-2.5 w-5 transition-transform duration-300 ease-out [[aria-expanded=true]>&]:rotate-180"
             />
           </button>
-          <ul id="menu-action" class="pb-1 pl-4 text-2xl md:text-3xl" hidden>
+          <ul id="menu-action" class="leading-[105%] py-0.5 pl-4 text-2xl md:text-3xl" hidden>
             {actionLinks.map(({ label, url }) => (
               <li>
                 <a href={url} class="block link-line decoration-2" data-menu-line>
@@ -453,6 +454,9 @@ const media = [
     --fg: var(--color-paper);
     --bg: transparent;
   }
+  [data-hdr][data-tone="yellow"]:not([data-scrolled]) {
+    --bg: var(--color-yellow);
+  }
   /* The yellow panel shows through behind the bar while it's open. */
   [data-hdr][data-drop-open] {
     --fg: var(--color-ink);
@@ -554,12 +558,12 @@ const media = [
   const canHover = matchMedia("(hover: hover) and (pointer: fine)");
 
   /** Scroll state for the fixed bar: compacts it past the first few pixels
-      and, over a full-bleed hero, flips it to the light tone once the hero
-      has slid under the bar. */
+      and, over a hero (`overlay`, `yellow`), flips it to the light tone once
+      the hero has slid under the bar. */
   function watchScroll(header: HTMLElement) {
     const bar = header.querySelector<HTMLElement>("[data-hdr-bar]")!;
     const hero =
-      header.dataset.tone === "overlay"
+      header.dataset.tone === "overlay" || header.dataset.tone === "yellow"
         ? document.querySelector<HTMLElement>("[data-header-hero]")
         : null;
     const always = header.dataset.compact === "always";

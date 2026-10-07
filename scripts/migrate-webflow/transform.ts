@@ -36,7 +36,7 @@ import {
   type WfSite,
 } from "./lib";
 import { OCCUPATIONS, resolveMapping, VIDEO_SERIES, type Target } from "./mapping";
-import { mergeDocs, singletonSpecs } from "../merge-locales/lib";
+import { countKeys, mergeAll, mergeDocs, singletonSpecs } from "../merge-locales/lib";
 import { htmlLists, htmlToPortableText, htmlToText, restrictBlocks } from "./richtext";
 import { loadMemory, localize } from "./translation";
 import { FORMATS } from "../../src/lib/formats";
@@ -792,10 +792,12 @@ for (const lang of ["fr", "en"] as Lang[]) {
       ),
     }),
   );
-  const programs = fx.programs(lang).map((p) => {
+  /* Both languages' programs share an ID base (the French slug), so they
+     merge into one document below. */
+  const programs = fx.programs(lang).map((p, i) => {
     const full = fx.program(lang, p.slug)!;
     return compact({
-      _id: `program-${p.slug}-${lang}`,
+      _id: `program-${fx.programs("fr")[i]?.slug ?? p.slug}-${lang}`,
       _type: "program",
       language: lang,
       title: full.title,
@@ -902,9 +904,14 @@ for (const [type, { fr, en }] of Object.entries(pages))
 
 /* ---- Write ------------------------------------------------------------- */
 
+/* Each article, video, podcast, program and position was built once per
+   language above; the site stores one bilingual document per item. */
+const merged = mergeAll(docs);
+const mergedSeed = mergeAll(seed);
+
 mkdirSync(OUT, { recursive: true });
-writeFileSync(join(OUT, "import.ndjson"), docs.map((d) => JSON.stringify(d)).join("\n") + "\n");
-writeFileSync(join(OUT, "seed.ndjson"), seed.map((d) => JSON.stringify(d)).join("\n") + "\n");
+writeFileSync(join(OUT, "import.ndjson"), merged.map((d) => JSON.stringify(d)).join("\n") + "\n");
+writeFileSync(join(OUT, "seed.ndjson"), mergedSeed.map((d) => JSON.stringify(d)).join("\n") + "\n");
 writeJson(join(process.cwd(), "src", "redirects.json"), redirects);
 /* The English to-do list: every missing string, grouped by document. */
 writeJson(join(OUT, "to-translate.en.json"), {
@@ -913,9 +920,7 @@ writeJson(join(OUT, "to-translate.en.json"), {
 });
 
 const counts: Record<string, number> = {};
-for (const d of docs)
-  counts[`${d._type}${d.language ? `.${d.language}` : ""}`] =
-    (counts[`${d._type}${d.language ? `.${d.language}` : ""}`] ?? 0) + 1;
+for (const d of merged) for (const k of countKeys(d)) counts[k] = (counts[k] ?? 0) + 1;
 const issueCounts: Record<string, number> = {};
 for (const i of issues) issueCounts[i.kind] = (issueCounts[i.kind] ?? 0) + 1;
 const source = readJson<Record<string, Record<string, number>>>(join(RAW, "summary.json"));
@@ -943,5 +948,5 @@ console.log(
 );
 console.log("Issues:", issueCounts);
 console.log(
-  `\nWrote ${docs.length} documents, ${seed.length} seed documents, ${redirects.length} redirects. See .migration/out/report.json`,
+  `\nWrote ${merged.length} documents, ${mergedSeed.length} seed documents, ${redirects.length} redirects. See .migration/out/report.json`,
 );

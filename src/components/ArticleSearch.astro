@@ -19,7 +19,15 @@ interface Props {
   pageSize?: number;
   class?: string;
 }
-const { lang, categories, articles, total, syncUrl = false, pageSize = 12, class: className } = Astro.props;
+const {
+  lang,
+  categories,
+  articles,
+  total,
+  syncUrl = false,
+  pageSize = 12,
+  class: className,
+} = Astro.props;
 const s = t(lang);
 const hasForm = Astro.slots.has("default");
 ---
@@ -34,14 +42,14 @@ const hasForm = Astro.slots.has("default");
   data-sync={syncUrl ? "" : undefined}
 >
   <slot />
-  <div class:list={["pb-[60px]", hasForm ? "pt-[60px] lg:pt-20" : "pt-10"]}>
+  <div class:list={["lg:pt-35 lg:pb-30 py-20"]}>
     <CategoryFilter lang={lang} categories={categories} total={total} asFilter />
   </div>
   <ArticleGrid lang={lang} articles={articles} total={total} managed />
 </article-search>
 
 <script>
-  import { enter } from "../lib/motion";
+  import { fadeImages } from "../lib/motion";
   import { cardLinks, fold, loadIndex, type Entry } from "../lib/searchClient";
 
   const articles = (el: HTMLElement) => el.querySelector("[data-list]")!.childElementCount;
@@ -136,7 +144,7 @@ const hasForm = Astro.slots.has("default");
         added.push(...node.children);
         list.append(node);
       }
-      if (animate) enter(added, { y: 8, stagger: 0.03 });
+      if (animate) fadeImages(added);
       this.shown = Math.min(this.results.length, this.shown + this.page);
       this.querySelector("[data-more]")!.closest("p")!.hidden = this.shown >= this.results.length;
     }

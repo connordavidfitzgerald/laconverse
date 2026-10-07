@@ -13,7 +13,7 @@ const { story, lang, class: className } = Astro.props;
 const logo = imageUrl(story.partnerLogo, 80);
 ---
 
-<article class:list={["group relative flex flex-col", className]} data-reveal>
+<article class:list={["group relative flex flex-col", className]}>
   <Picture
     img={story.image}
     ratio={247 / 265}

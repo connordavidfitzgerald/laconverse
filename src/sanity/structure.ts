@@ -1,7 +1,6 @@
 import type { StructureResolver } from "sanity/structure";
 import { EnvelopeIcon } from "@sanity/icons/Envelope";
 
-import { LANGUAGES } from "./languages";
 import { schemaTypes, singletonTypes } from "./schemaTypes";
 
 const byName = new Map(schemaTypes.map((type) => [type.name, type]));
@@ -17,46 +16,35 @@ export const structure: StructureResolver = (S) => {
       .icon(byName.get(type)?.icon as never)
       .child(S.document().schemaType(type).documentId(type).title(titleOf(type)));
 
-  /* Editorial types split by language so the lists stay manageable. */
-  const byLanguage = (type: string) =>
+  /* Editorial types: one list each, newest first where they're dated. Every
+     document holds both languages. */
+  const editorial = (type: string, ordering?: { field: string; direction: "asc" | "desc" }) =>
     S.listItem()
       .id(type)
       .title(titleOf(type))
       .icon(byName.get(type)?.icon as never)
-      .child(
-        S.list()
-          .title(titleOf(type))
-          .items(
-            LANGUAGES.map(({ id, title }) =>
-              S.listItem()
-                .id(`${type}-${id}`)
-                .title(title)
-                .child(
-                  S.documentTypeList(type)
-                    .title(`${titleOf(type)} (${id.toUpperCase()})`)
-                    .filter("_type == $type && language == $lang")
-                    .params({ type, lang: id })
-                    .initialValueTemplates([S.initialValueTemplateItem(`${type}-${id}`)]),
-                ),
-            ),
-          ),
-      );
+      .child(() => {
+        const list = S.documentTypeList(type).title(titleOf(type));
+        return ordering ? list.defaultOrdering([ordering]) : list;
+      });
+  const newest = { field: "publishedAt", direction: "desc" } as const;
+  const menuOrder = { field: "order", direction: "asc" } as const;
 
   return S.list()
     .title("La Converse")
     .items([
-      byLanguage("article"),
-      byLanguage("video"),
-      byLanguage("podcast"),
+      editorial("article", newest),
+      editorial("video", newest),
+      editorial("podcast", menuOrder),
       S.documentTypeListItem("category").title("Sections"),
       S.documentTypeListItem("tag").title("Topics"),
       S.documentTypeListItem("series").title("Series"),
       S.documentTypeListItem("person").title("People"),
-      byLanguage("partnerStory"),
+      editorial("partnerStory", newest),
       S.divider(),
       ...singletonTypes.filter((t) => t !== "siteSettings").map(singleton),
-      byLanguage("program"),
-      byLanguage("position"),
+      editorial("program", menuOrder),
+      editorial("position", menuOrder),
       S.divider(),
       S.listItem()
         .id("inbox")

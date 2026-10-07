@@ -29,7 +29,7 @@ const lists: [string, string[]][] = [
   description={position.summary}
   alternate={translation ? href(other, "position", translation.slug) : href(other, "giveYourVoice")}
 >
-  <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10">
+  <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
     <div class="lg:col-span-6 lg:col-start-4">
       <p class="pt-5 text-center">
         <BackLink href={href(lang, "giveYourVoice")} label={page.title ?? s.back} />

@@ -27,7 +27,7 @@ const groups: [string, Person[]][] = [
   seo={page.seo}
   alternate={href(otherLang(lang), "about")}
 >
-  <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10">
+  <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
     <div class="lg:col-span-12">
       <h1 class="display pt-10 pb-16 text-center text-mega tracking-[-0.02em] lg:pt-16">
         {page.title ?? s.about}
@@ -44,12 +44,12 @@ const groups: [string, Person[]][] = [
   {groups
     .filter(([, list]) => list.length)
     .map(([title, list]) => (
-      <section class="px-5 pt-16 lg:px-10 lg:pt-24">
+      <section class="px-5 pt-16 lg:px-5 lg:pt-24">
         <h2 class="label pb-2.5 text-md">{title}</h2>
         <ul class="grid grid-cols-2 gap-x-2.5 gap-y-5 md:grid-cols-3 lg:grid-cols-5 lg:gap-x-5">
           {list.map((p) => (
             <li>
-              <a href={href(lang, "author", p.slug)} class="group block" data-reveal>
+              <a href={href(lang, "author", p.slug)} class="group block">
                 <Picture
                   img={p.image}
                   ratio={171 / 211}
@@ -69,7 +69,7 @@ const groups: [string, Person[]][] = [
     ))}
 
   {page.partners.length > 0 && (
-    <section class="px-5 pt-16 lg:px-10 lg:pt-24">
+    <section class="px-5 pt-16 lg:px-5 lg:pt-24">
       <h2 class="label pb-5 text-xs">Partners</h2>
       <ul class="grid grid-cols-3 items-center gap-5 md:grid-cols-5 lg:grid-cols-8">
         {page.partners.map((p) => {
@@ -81,7 +81,6 @@ const groups: [string, Person[]][] = [
                 target="_blank"
                 rel="noopener"
                 class="block hover:opacity-60"
-                data-reveal
               >
                 {logo ? (
                   <img
@@ -102,9 +101,9 @@ const groups: [string, Person[]][] = [
   )}
 
   {page.sections.length > 0 && (
-    <section class="px-5 pt-16 pb-20 lg:px-10 lg:pt-24">
+    <section class="px-5 pt-16 pb-20 lg:px-5 lg:pt-24">
       {page.sections.map((sec) => (
-        <details class="group border-ink [&+&]:border-t-0" data-accordion data-reveal>
+        <details class="group border-ink [&+&]:border-t-0" data-accordion>
           <summary class="display flex cursor-pointer list-none items-center justify-between text-[2.25rem] leading-[0.95] tracking-[-0.015em] lg:text-7xl [&::-webkit-details-marker]:hidden">
             {sec.title}
             <Icon

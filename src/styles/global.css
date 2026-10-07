@@ -67,13 +67,13 @@
   --text-poster: min(12.5vw, 15rem);
   --text-poster--line-height: 0.82;
   --text-poster--letter-spacing: -0.03em;
-  --text-section-lg: clamp(2.25rem, 0.704rem + 6.292vw, 7.5rem); /* 36 → 120 */
+  --text-section-lg: 3rem; /* 36 → 120 */
   --text-section-lg--line-height: 1;
   --text-section: clamp(2.25rem, 1.256rem + 4.045vw, 5.625rem); /* 36 → 90 */
   --text-section--line-height: 0.95;
   --text-support: clamp(2.5rem, 1rem + 3.25vw, 5.5rem); /* 40 → 100 */
   --text-support--line-height: 0.95;
-  --text-card: clamp(2rem, 1.853rem + 0.599vw, 2.5rem); /* 32 → 40 */
+  --text-card: clamp(1.5rem, 1.853rem + 0.599vw, 2rem); /* 32 → 40 */
   --text-card--line-height: 0.95;
   --text-card-sm: clamp(1.5rem, 1.426rem + 0.2996vw, 1.75rem); /* 24 → 28 */
   --text-card-sm--line-height: 0.95;
@@ -81,7 +81,7 @@
   --text-dek--line-height: 0.95;
   --text-intro: clamp(1.5rem, 1.279rem + 0.899vw, 2.25rem); /* 24 → 36 */
   --text-intro--line-height: 1;
-
+  --text-sm: 1rem;
   --spacing-gutter: 1.25rem; /* 20 — side margin on phones, column gap everywhere */
   --spacing-margin: clamp(1.25rem, 0.882rem + 1.498vw, 2.5rem); /* 20 → 40 page margin */
   --spacing-section: 6rem; /* 96 */
@@ -116,6 +116,39 @@
     text-rendering: optimizeLegibility;
     /* Anchors and snap points land below the fixed header. */
     scroll-padding-top: var(--header-h);
+  }
+  /* Square yellow scrollbar, flush to the window edge. Chrome and Safari draw
+     it from the WebKit pseudo-elements; Chrome ignores those once
+     `scrollbar-width`/`scrollbar-color` are set, so the standard properties
+     only go to browsers without them (Firefox, whose native thumb stays
+     rounded). */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    background: transparent;
+  }
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+    border: 0;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-ink);
+    border: 0;
+    border-radius: 0;
+  }
+  ::-webkit-scrollbar-button {
+    display: none;
+  }
+  @supports not selector(::-webkit-scrollbar) {
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-ink) transparent;
+    }
+  }
+  ::selection {
+    background: var(--color-yellow);
+    color: var(--color-ink);
   }
   body {
     background: var(--color-paper);
@@ -192,7 +225,7 @@
   }
   @media (hover: hover) {
     :where(.group):hover & img {
-      transform: scale(0.94);
+      transform: scale(0.975);
     }
   }
 }
@@ -269,9 +302,13 @@
    type tokens are redefined on `<article>`, so every `text-*` utility inside
    scales together; unsized text inherits the scaled base. Chrome (header,
    footer) keeps the site's normal sizes, and so does the headline
-   (`--text-hero`), which is already large enough at its design size. */
+   (`--text-hero`), which is already large enough at its design size. Phones
+   keep the original sizes; the scale-up starts at `md`. */
 @utility article-type {
-  --type-scale: 1.25;
+  --type-scale: 1;
+  @media (width >= 48rem) {
+    --type-scale: 1.25;
+  }
   font-size: calc(1rem * var(--type-scale));
   --text-xs: calc(0.75rem * var(--type-scale));
   --text-sm: calc(0.875rem * var(--type-scale));

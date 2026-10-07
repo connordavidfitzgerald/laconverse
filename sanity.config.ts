@@ -1,11 +1,10 @@
 import { defineConfig } from "sanity";
 import { structureTool } from "sanity/structure";
 import { visionTool } from "@sanity/vision";
-import { documentInternationalization } from "@sanity/document-internationalization";
 
-import { LANGUAGES } from "./src/sanity/languages";
-import { schemaTypes, singletonTypes, translatedTypes } from "./src/sanity/schemaTypes";
+import { schemaTypes, singletonTypes } from "./src/sanity/schemaTypes";
 import { structure } from "./src/sanity/structure";
+import { autoTranslate } from "./src/sanity/translate/plugin";
 
 /* Bundled by Astro for /admin (import.meta.env) and loaded by the Sanity CLI
    under Node (process.env). */
@@ -21,41 +20,19 @@ export default defineConfig({
   dataset: env("PUBLIC_SANITY_DATASET") || "production",
   basePath: "/admin",
 
-  plugins: [
-    structureTool({ structure }),
-    documentInternationalization({
-      supportedLanguages: [...LANGUAGES],
-      schemaTypes: translatedTypes,
-    }),
-    visionTool(),
-  ],
+  plugins: [structureTool({ structure }), autoTranslate(), visionTool()],
 
   schema: {
     types: schemaTypes,
-    templates: (prev) => [
-      // Singletons are never created from the menu (the structure opens them
-      // by ID); translated types are only ever created in a language.
-      ...prev.filter(({ schemaType }) => !singletons.has(schemaType)),
-      ...translatedTypes.flatMap((schemaType) =>
-        LANGUAGES.map(({ id }) => ({
-          id: `${schemaType}-${id}`,
-          title: `${schemaType} (${id})`,
-          schemaType,
-          value: { language: id },
-        })),
-      ),
-    ],
+    // Singletons are never created from the menu (the structure opens them by ID).
+    templates: (prev) => prev.filter(({ schemaType }) => !singletons.has(schemaType)),
   },
 
   document: {
-    /* Global "create" shows only language-bound templates, so nothing
-       editorial is ever created without a language. */
+    /* Form submissions only come from the site. */
     newDocumentOptions: (prev, { creationContext }) =>
       creationContext.type === "global"
-        ? prev.filter(({ templateId }) => {
-            if (singletons.has(templateId) || templateId === "submission") return false;
-            return !translatedTypes.includes(templateId) && !templateId.endsWith("-parameterized");
-          })
+        ? prev.filter(({ templateId }) => templateId !== "submission")
         : prev,
     actions: (prev, { schemaType }) =>
       singletons.has(schemaType)

@@ -1,5 +1,5 @@
 ---
-/* The big inline category list with counts (SEARCH / TOP STORIES). As links
+/* The big inline category list (SEARCH / TOP STORIES). As links
    by default; on the search page the same markup acts as a filter. */
 import { href, t, type Lang } from "../i18n";
 
@@ -10,14 +10,14 @@ interface Props {
   total?: number;
   asFilter?: boolean;
 }
-const { lang, categories, current = null, total, asFilter = false } = Astro.props;
+const { lang, categories, current = null, asFilter = false } = Astro.props;
 const s = t(lang);
 const item =
   "font-display font-black uppercase leading-[0.95] tracking-[-0.02em] hover:text-ink/70 aria-[current=true]:text-ink";
 ---
 
 <ul
-  class="flex flex-wrap justify-center gap-x-2.5 gap-y-0 text-center text-5xl text-ink/40 md:text-5xl"
+  class="flex flex-wrap justify-center gap-x-2.5 lg:px-60 gap-y-0.5 md:gap-y-0 text-center font-display font-black leading-[0.95] text-3xl text-ink/40 md:text-5xl *:not-last:after:ml-2.5 *:not-last:after:content-['·'_/_'']"
   data-filter-list
 >
   <li>
@@ -28,9 +28,6 @@ const item =
       class={item}
     >
       {s.all}
-      {total !== undefined && (
-        <sup class="ml-1 leading-[0.8] tracking-[-0.01em] text-[0.55em]">{total}</sup>
-      )}
     </a>
   </li>
   {categories.map((c) => (
@@ -42,7 +39,6 @@ const item =
         class={item}
       >
         {c.title}
-        <sup class="ml-1 leading-[0.8] tracking-[-0.01em] text-[0.55em]">{c.count}</sup>
       </a>
     </li>
   ))}

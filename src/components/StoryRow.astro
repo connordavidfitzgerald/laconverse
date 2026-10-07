@@ -12,7 +12,7 @@ interface Props {
 const { article, lang } = Astro.props;
 ---
 
-<article class="group relative grid grid-cols-2 gap-5 border-t border-ink py-5" data-reveal>
+<article class="group relative grid grid-cols-2 gap-5 border-t border-ink py-5">
   <Picture img={article.image} ratio={1} sizes="(min-width: 768px) 20vw, 45vw" class="media-inset" />
   <div class="flex flex-col justify-between gap-3">
     <h3 class="display text-lg leading-[0.95] md:text-2xl">
@@ -24,7 +24,7 @@ const { article, lang } = Astro.props;
       <Chip
         category={article.categories[0]}
         lang={lang}
-        class="relative z-10 w-max !px-2.5 !py-1 !text-[calc(0.625rem*var(--type-scale,1))]"
+        class="relative z-10 w-max !text-[calc(0.625rem*var(--type-scale,1))]"
       />
     )}
   </div>

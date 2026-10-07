@@ -1,6 +1,10 @@
 /* Category chip colours, shared by Chip.astro and the browser-side card
    template (searchClient.ts). */
 
+/** Colour-coded category dots. Off for now: chips use a plain yellow square.
+    Flip to true to bring the dots back (Chip.astro and searchClient.ts follow). */
+export const DOTS = false;
+
 // Full class names so Tailwind sees them (it drops theme colours no class uses).
 export const DOT = {
   yellow: "bg-cat-yellow",

@@ -13,7 +13,7 @@ const { video, lang, class: className } = Astro.props;
 const [category] = video.categories;
 ---
 
-<article class:list={["group relative flex flex-col gap-2.5", className]} data-reveal>
+<article class:list={["group relative flex flex-col gap-2.5", className]}>
   <Picture
     img={video.poster}
     ratio={9 / 16}
@@ -33,7 +33,7 @@ const [category] = video.categories;
       <Chip
         category={category}
         lang={lang}
-        class="relative z-10 !px-2.5 !py-1 lg:!px-[13px] lg:!py-1.5 lg:text-base lg:font-black"
+        class="relative z-10 lg:text-base lg:font-black"
       />
     ) : (
       <span />

@@ -54,7 +54,7 @@ const blocks: (Block & { id: string; title: string })[] = [
   seo={page.seo}
   alternate={href(otherLang(lang), "getInvolved")}
 >
-  <div class="px-5 pb-20 text-center font-display lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10 lg:pb-32">
+  <div class="px-5 pb-20 text-center font-display lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5 lg:pb-32">
     <div class="lg:col-span-8 lg:col-start-3">
       <header class="pt-10 lg:pt-16">
         <h1 class="display text-mega tracking-[-0.02em]">{page.title ?? s.getInvolved}</h1>
@@ -116,7 +116,7 @@ const blocks: (Block & { id: string; title: string })[] = [
               )}
               <ul class="mx-auto mt-10 max-w-xl">
                 {v.items.map((it) => (
-                  <li class="border-t-2 border-ink py-5 last:border-b-2" data-reveal>
+                  <li class="border-t-2 border-ink py-5 last:border-b-2">
                     <h3 class="display text-card leading-[0.95]">{it.title}</h3>
                     {it.text && <p class="mt-1.5 text-lg font-bold leading-[1.1]">{it.text}</p>}
                   </li>
@@ -137,7 +137,7 @@ const blocks: (Block & { id: string; title: string })[] = [
         if (b.kind !== "card") return null;
         const c = b.card;
         return (
-          <section id={b.id} class="mt-20 lg:mt-32" data-reveal>
+          <section id={b.id} class="mt-20 lg:mt-32">
             <h2 class="display text-section-lg tracking-[-0.02em]">{c.title}</h2>
             <Picture
               img={c.image}

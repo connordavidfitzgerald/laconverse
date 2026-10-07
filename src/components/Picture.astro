@@ -1,7 +1,9 @@
 ---
 /* A Sanity image in a fixed-ratio frame, cropped by its hotspot. With no image
    (fixtures, or an article imported without one) the frame keeps its size and
-   shows a flat tone so the layout never collapses. */
+   shows its flat placeholder colour so the layout never collapses. The image
+   fades in over that colour once it loads (`fadeImages` in lib/motion). */
+import { placeholder } from "../lib/placeholder";
 import { imageUrl, srcset } from "../lib/sanity";
 import type { Img } from "../lib/types";
 
@@ -31,12 +33,13 @@ const dims = img?.asset?.metadata?.dimensions;
 const r = ratio ?? (dims ? dims.width / dims.height : 4 / 3);
 const src = imageUrl(img, 1280, ratio ? Math.round(1280 / ratio) : undefined);
 const set = srcset(img, widths, ratio);
-const lqip = img?.asset?.metadata?.lqip;
+const fill = placeholder(img?.asset?._id ?? src ?? "");
 ---
 
 <div
-  class:list={["relative overflow-hidden bg-neutral-200", className]}
-  style={`aspect-ratio: ${r}`}
+  data-media
+  class:list={["relative overflow-hidden", className]}
+  style={`aspect-ratio: ${r}; background-color: ${fill}`}
 >
   {src && (
     <img
@@ -48,7 +51,6 @@ const lqip = img?.asset?.metadata?.lqip;
       fetchpriority={eager ? "high" : undefined}
       decoding="async"
       class:list={["absolute inset-0 size-full object-cover", imgClass]}
-      style={lqip ? `background: url(${lqip}) center / cover` : undefined}
     />
   )}
 </div>

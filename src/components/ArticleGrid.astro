@@ -2,7 +2,6 @@
 /* A list of story cards with “sort” header and a “load more” that pulls the
    remaining cards from /<lang>/index.json, filtered the same way. */
 import ArticleCard from "./ArticleCard.astro";
-import Chip from "./Chip.astro";
 import Icon from "./Icon.astro";
 import { t, type Lang } from "../i18n";
 import type { ArticleCard as Card } from "../lib/types";
@@ -19,6 +18,15 @@ interface Props {
 }
 const { lang, articles, total, filter = {}, countLabel, managed = false } = Astro.props;
 const s = t(lang);
+// The client-side card template: a card with every slot present, filled per entry.
+const blank: Card = {
+  _id: "",
+  title: "",
+  slug: "",
+  publishedAt: new Date(0).toISOString(),
+  categories: [{ slug: "", title: "" }],
+  authors: [{ slug: "", name: "" }],
+};
 ---
 
 <article-grid
@@ -44,35 +52,23 @@ const s = t(lang);
     ))}
   </div>
   {(managed || total > articles.length) && (
-    <p class="py-10 text-center">
-      <button type="button" data-more class="label text-lg disabled:opacity-40">
+    <p class="py-30 text-center">
+      <button
+        type="button"
+        data-more
+        class="label font-black text-xl disabled:opacity-40 text-ink hover:bg-ink hover:text-yellow hover:shadow-[0_0_0_0.4em_var(--color-ink)]"
+      >
         {s.loadMore}
       </button>
     </p>
   )}
   <template data-card>
-    <article class="group relative flex flex-col">
-      <div class="media-inset relative overflow-hidden bg-neutral-200" style="aspect-ratio: 4/3">
-        <img class="absolute inset-0 size-full object-cover" alt="" loading="lazy" />
-      </div>
-      <div class="@container flex flex-col gap-2.5 py-2.5 md:gap-5 md:pt-5 md:pb-2.5">
-        <div class="flex items-center justify-between gap-2 py-2 md:py-0">
-          <Chip category={{ slug: "", title: "" }} lang={lang} class="relative z-10" data-chip />
-          <p class="label flex min-w-0 gap-[5px] text-md font-black">
-            <span data-author class="hidden truncate @min-[20rem]:inline"></span>
-            <time data-date class="shrink-0 whitespace-nowrap opacity-50"></time>
-          </p>
-        </div>
-        <h3 class="display text-card text-balance">
-          <a data-title class="after:absolute after:inset-0"></a>
-        </h3>
-      </div>
-    </article>
+    <ArticleCard article={blank} lang={lang} />
   </template>
 </article-grid>
 
 <script>
-  import { enter } from "../lib/motion";
+  import { fadeImages } from "../lib/motion";
   import { cardLinks, loadIndex, type Entry } from "../lib/searchClient";
 
   class ArticleGrid extends HTMLElement {
@@ -107,7 +103,7 @@ const s = t(lang);
         added.push(...node.children);
         list.append(node);
       }
-      enter(added);
+      fadeImages(added);
     }
   }
   customElements.define("article-grid", ArticleGrid);

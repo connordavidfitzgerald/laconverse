@@ -1,6 +1,7 @@
 /* Browser side of the article index: fetched once per page, shared by search
    and "load more". */
 import { DOT, dotClass } from "./chip";
+import { placeholder } from "./placeholder";
 import type { IndexEntry } from "./types";
 
 export type Entry = IndexEntry;
@@ -29,9 +30,17 @@ const dates = {
 /** Fill a cloned card template with an index entry. */
 export function cardLinks(node: DocumentFragment, e: Entry, lang: string) {
   const p = paths[lang as "en" | "fr"] ?? paths.fr;
-  const img = node.querySelector("img")!;
-  if (e.i) img.src = e.i;
-  else img.remove();
+  const media = node.querySelector<HTMLElement>("[data-media]")!;
+  media.style.backgroundColor = placeholder(e.i ?? e.s);
+  if (e.i) {
+    const img = document.createElement("img");
+    img.className = "absolute inset-0 size-full object-cover";
+    img.alt = "";
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.src = e.i;
+    media.append(img);
+  }
   const title = node.querySelector<HTMLAnchorElement>("[data-title]")!;
   title.href = p.article + e.s;
   title.textContent = e.t;
@@ -39,9 +48,11 @@ export function cardLinks(node: DocumentFragment, e: Entry, lang: string) {
   if (e.c[0]) {
     chip.href = p.category + e.c[0].slug;
     chip.querySelector("[data-label]")!.textContent = e.c[0].title;
-    const dot = chip.querySelector("[data-dot]")!;
-    dot.classList.remove(...Object.values(DOT));
-    dot.classList.add(dotClass(e.c[0].slug));
+    const dot = chip.querySelector("[data-dot]");
+    if (dot) {
+      dot.classList.remove(...Object.values(DOT));
+      dot.classList.add(dotClass(e.c[0].slug));
+    }
   } else chip.remove();
   node.querySelector("[data-author]")!.textContent = e.a[0]?.name ?? "";
   const time = node.querySelector<HTMLTimeElement>("[data-date]")!;

@@ -11,7 +11,7 @@ interface Props {
 const { podcast, lang, class: className } = Astro.props;
 ---
 
-<article class:list={["group relative flex flex-col gap-2.5 lg:gap-[17px]", className]} data-reveal>
+<article class:list={["group relative flex flex-col gap-2.5 lg:gap-[17px]", className]}>
   <Picture
     img={podcast.cover}
     ratio={1}

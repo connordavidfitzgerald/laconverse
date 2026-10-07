@@ -16,7 +16,7 @@ const podcasts = await getPodcasts(lang);
 ---
 
 <Layout lang={lang} title={s.podcasts} alternate={href(otherLang(lang), "podcasts")}>
-  <div class="px-5 lg:px-10">
+  <div class="px-5 lg:px-5">
     <BackLink href={href(lang, "laReleve")} label={s.laReleve} />
     <h1 class="display pt-12 pb-24 text-center text-mega tracking-[-0.02em] lg:pt-16 lg:pb-40">
       {s.podcasts}
@@ -25,7 +25,7 @@ const podcasts = await getPodcasts(lang);
     <ul class="grid gap-10 md:grid-cols-3 xl:grid-cols-4 md:gap-x-5 lg:gap-y-20">
       {podcasts.map((p) => (
         <li>
-          <article class="group relative flex flex-col gap-2.5" data-reveal>
+          <article class="group relative flex flex-col gap-2.5">
             <Picture
               img={p.cover}
               ratio={1}

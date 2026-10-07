@@ -28,27 +28,49 @@ under `src/pages` are thin wrappers around the views in `src/views`, one per
 locale. Interface strings (buttons, labels) are in the same file; everything
 editorial comes from Sanity.
 
-Translation model:
-
-- **Articles, videos, podcasts, programs, positions and partner stories** are
-  one document per language, linked by `@sanity/document-internationalization`.
-- **Sections, topics, series and people** are one document shared by both
-  languages. Text fields have a French and an English box (`localeString`,
-  `localeText`, stored as `{ fr, en }`); sections, topics and series also have
-  a slug per language.
-- **Page singletons** (Home, About, La Relève, Get involved, Give your voice,
-  Contact, Site settings) are one fixed document each (`homePage`, …) with
-  French and English boxes for all their copy. Images, people and settings are
-  shared. Picks of articles and programs (the Home lead and top stories, the
-  École block, La Relève's programs) have one slot per language, since those
-  are separate documents.
+Translation model: **every document holds both languages.** Text fields have
+a French and an English box side by side (`localeString`, `localeText`,
+`localeRichText`…, stored as `{ fr, en }`); images, people, sections and dates
+are shared. Articles, videos, podcasts, programs, positions, sections, topics
+and series have a slug per language, and are on the site in each language
+they have a slug in, so a story can go out in French first and get its
+English side later. Partner stories show in each language whose title is
+filled in. The page singletons (Home, About, La Relève, Get involved, Give your
+voice, Contact, Site settings) are one fixed document each (`homePage`, …);
+their picks of articles and programs skip any that aren't published in the
+page's language.
 
 Queries pick a side with `title[$lang]` (see `src/lib/content.ts`), so the
 pages receive plain strings either way. The field layout of the bilingual
 types is in `scripts/merge-locales/lib.ts`, shared by the import and by the
-one-off conversion from the old per-language documents
-(`npm run migrate:merge-locales`, already run on `production` on 2026-09-30;
-backup in `.migration/backup-before-merge.tar.gz`).
+conversion from the old one-document-per-language model
+(`npm run migrate:merge-locales`; sections, topics, series and singletons were
+converted on `production` on 2026-09-30, backup in
+`.migration/backup-before-merge.tar.gz`).
+
+### Auto-translate
+
+Every French/English pair in the Studio has **FR → EN** and **EN → FR**
+buttons under it, and the document menu (⋯ next to Publish) has
+**Auto-translate**, which fills every empty field of one language from the
+other in one go, including the body, the SEO fields and the slug (made from the
+translated title; an existing slug is never changed). It marks the document
+_Machine-translated_ for that language, and the article page then says it was
+translated, until an editor clears the field after reviewing it.
+
+Translation is done by [Langbly](https://langbly.com), which speaks Google
+Translate's API. 500,000 characters a month (roughly 50–70 articles) are free;
+**beyond that Langbly bills the card on the account**, so set a monthly
+spending cap in the Langbly dashboard. Setup, once:
+
+1. Create a Langbly account and an API key.
+2. Put the key in `.env` and in Vercel as `LANGBLY_API_KEY`, then redeploy.
+
+The Studio calls `/api/translate` on the site (`src/pages/api/translate.ts`),
+which holds the key; Langbly sees only the text being translated and says it
+keeps none of it. It runs on a language model, writes international French and
+American English, and occasionally swaps « » for straight quotes: read the
+result over before publishing.
 
 ## Sanity setup (once)
 
@@ -145,20 +167,19 @@ npm run migrate:translate                 # the rest (resumable)
 npm run migrate:transform && npm run migrate:import
 ```
 
-It needs `ANTHROPIC_API_KEY` in `.env`. A document only gets an English
-version once _all_ its strings are translated. The rest are listed in
-`.migration/out/to-translate.en.json`. English documents are flagged
+It needs `ANTHROPIC_API_KEY` in `.env`. A document only gets an English side
+once _all_ its strings are translated. The rest are listed in
+`.migration/out/to-translate.en.json`. The transform builds one document per
+language, then merges each pair into one bilingual document
+(`scripts/merge-locales/lib.ts`). English sides are flagged
 `machineTranslated` (visible in the Studio, and articles show a “Translated
 from the French” line) until an editor reviews them.
 
 Once the dataset is live and editors are working in the Studio, don't use
-`migrate:import` (it `--replace`s every document). Bring in just the new
-English articles and their translation links, leaving everything already
-there untouched:
-
-```sh
-npx sanity dataset import .migration/out/import.ndjson production --missing --allow-failing-assets
-```
+`migrate:import` (it `--replace`s every document), and don't rely on
+`--missing` to add English: the English side lives in the same document as the
+French, which already exists. Fill in what's left with Auto-translate in the
+Studio instead.
 
 **Redirects.** Old URL patterns (`/tag/*`, `/balados-series/*`, `/carriere/*`,
 `/a-propos/equipe`, `/ecole/*`, …) are in `astro.config.mjs`. Author pages and
@@ -171,7 +192,8 @@ the Studio.
 
 ## Article audio
 
-“Listen to the article” plays the article's _Audio version_ file. It's
+“Listen to the article” plays the article's _Audio version_ for the page's
+language (one file per language). It's
 generated with Microsoft Edge's neural voices (`fr-CA-SylvieNeural`,
 `en-CA-ClaraNeural`) through [msedge-tts](https://www.npmjs.com/package/msedge-tts),
 free and keyless:

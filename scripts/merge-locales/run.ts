@@ -1,5 +1,6 @@
-/* One-off: convert sections, topics, series and the page singletons from one
- * document per language to one bilingual document (see lib.ts).
+/* Convert every document still stored one per language (articles, videos,
+ * podcasts, programs, positions, partner stories; earlier, sections, topics,
+ * series and the page singletons) to one bilingual document (see lib.ts).
  *
  *   npm run migrate:merge-locales                      # dry run: prints the plan
  *   npm run migrate:merge-locales -- --apply           # does it
@@ -13,7 +14,7 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createClient } from "@sanity/client";
 
-import { planMigration } from "./lib";
+import { PAIRED_TYPES, planMigration, singletonSpecs } from "./lib";
 
 const arg = (name: string) => {
   const i = process.argv.indexOf(`--${name}`);
@@ -37,9 +38,9 @@ const client = createClient({
 });
 
 const docs = await client.fetch(
-  `*[_type in ["category", "tag", "series", "translation.metadata"]
-     || _id match "*Page-*" || _id match "siteSettings-*"
-     || references(*[_type in ["category", "tag", "series"]]._id)]`,
+  `*[_type in $types || _type in $singletons || _type == "translation.metadata"
+     || references(*[_type in $types]._id)]`,
+  { types: PAIRED_TYPES, singletons: Object.keys(singletonSpecs) },
 );
 const plan = planMigration(docs);
 
@@ -47,6 +48,9 @@ console.log(`Dataset "${dataset}":`);
 console.log(`  ${plan.creates.length} bilingual documents to create`);
 console.log(`  ${plan.patches.length} documents to repoint`);
 console.log(`  ${plan.deletes.length} per-language documents and translation links to delete`);
+const byType: Record<string, number> = {};
+for (const d of plan.creates) byType[d._type] = (byType[d._type] ?? 0) + 1;
+console.log(`  merged by type: ${JSON.stringify(byType)}`);
 const out = join(".migration", "out", `merge-locales.${dataset}.json`);
 writeFileSync(out, JSON.stringify({ ...plan, ids: Object.fromEntries(plan.ids) }, null, 1));
 console.log(`  Full plan: ${out}`);
@@ -76,6 +80,8 @@ async function inChunks<T>(
   }
 }
 await inChunks("created", plan.creates, (tx, d) => tx.createOrReplace(d));
-await inChunks("repointed", plan.patches, (tx, p) => tx.patch(p.id, (q) => q.set(p.set)));
+await inChunks("repointed", plan.patches, (tx, p) =>
+  tx.patch(p.id, (q) => q.set(p.set).unset(p.unset)),
+);
 await inChunks("deleted", plan.deletes, (tx, id) => tx.delete(id));
 console.log("\nDone. Redeploy the site so the pages are rebuilt from the new documents.");

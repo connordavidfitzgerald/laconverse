@@ -21,9 +21,10 @@ interface Props {
   /** Black page (videos). */
   dark?: boolean;
   /** Header treatment: `overlay` sits transparent over a full-bleed hero
-      marked `data-header-hero` (no spacer), `dark` is the inverted bar.
+      marked `data-header-hero` (no spacer), `yellow` is yellow over a yellow
+      `data-header-hero` (spacer included), `dark` is the inverted bar.
       Defaults to `dark` on dark pages, `light` otherwise. */
-  header?: "light" | "dark" | "overlay";
+  header?: "light" | "dark" | "overlay" | "yellow";
   /** Keep the header compact from the top (full-screen feeds). */
   compactHeader?: boolean;
   /** The corner mic button. Defaults to on, except on bare pages. */
@@ -97,7 +98,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     {tone !== "overlay" && (
       <div
         aria-hidden="true"
-        class={compactHeader ? "h-(--header-h)" : "h-(--header-h-full)"}
+        class:list={[
+          compactHeader ? "h-(--header-h)" : "h-(--header-h-full)",
+          tone === "yellow" && "bg-yellow",
+        ]}
       ></div>
     )}
     <main id="main">
@@ -109,8 +113,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 </html>
 
 <script>
-  import { fadeImages, revealOnScroll } from "../lib/motion";
+  import { fadeImages } from "../lib/motion";
 
-  revealOnScroll();
   fadeImages(document.getElementById("main") ?? document);
 </script>

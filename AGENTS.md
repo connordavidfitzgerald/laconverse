@@ -32,6 +32,9 @@ Consult these guides before working on related tasks:
 - All reads go through `src/lib/content.ts` (GROQ, falling back to
   `src/lib/fixtures.ts` when no Sanity project is configured). Keep the two in
   the same shape (`src/lib/types.ts`).
+- Every Sanity document holds both languages as `{ fr, en }` fields (no
+  per-language documents); a document is live in each language it has a slug
+  in. Studio Auto-translate (Langbly) lives in `src/sanity/translate/`.
 - Components are plain Astro + Tailwind; interactivity is small custom elements
   in `<script>` tags. No animation library yet.
 - Webflow migration: see README → “Webflow → Sanity migration”.

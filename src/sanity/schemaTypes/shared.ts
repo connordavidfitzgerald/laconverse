@@ -2,44 +2,6 @@ import { defineArrayMember, defineField, defineType, type FieldDefinition } from
 
 import { LANGUAGES } from "../languages";
 
-/* Every localized document carries a `language` field. The translation plugin
-   writes it for editorial types; singletons get it from their fixed template. */
-export const languageField = defineField({
-  name: "language",
-  type: "string",
-  readOnly: true,
-  hidden: true,
-  options: { list: LANGUAGES.map(({ id, title }) => ({ value: id, title })) },
-});
-
-/* Slug validated only against documents in the same language, so an English
-   and a French article can share a slug. */
-export const slugField = (source = "title") =>
-  defineField({
-    name: "slug",
-    type: "slug",
-    options: {
-      source,
-      maxLength: 120,
-      isUnique: async (slug, context) => {
-        const { document, getClient } = context;
-        const client = getClient({ apiVersion: "2026-09-01" });
-        const id = document?._id.replace(/^drafts\./, "");
-        const count = await client.fetch<number>(
-          `count(*[_type == $type && slug.current == $slug && language == $language && !(_id in [$id, "drafts." + $id])])`,
-          {
-            type: document?._type,
-            slug,
-            language: (document as { language?: string })?.language ?? null,
-            id,
-          },
-        );
-        return count === 0;
-      },
-    },
-    validation: (rule) => rule.required(),
-  });
-
 export const figureType = defineType({
   name: "figure",
   title: "Image",
@@ -57,10 +19,10 @@ export const figureType = defineType({
   ],
 });
 
-/* Bilingual fields, for documents shared by both languages (people,
-   sections, topics, series, the page singletons): one box per language,
-   stored as `{ fr, en }` so GROQ picks a side with `title[$lang]`. Short
-   fields sit side by side; longer ones stack. */
+/* Bilingual fields. Every document is shared by both languages: one box per
+   language, stored as `{ fr, en }` so GROQ picks a side with `title[$lang]`.
+   Short fields sit side by side; longer ones stack. Each pair gets a
+   "Translate" button (src/sanity/translate). */
 export const localeStringType = defineType({
   name: "localeString",
   title: "Localized string",
@@ -81,6 +43,46 @@ export const localeRichTextType = defineType({
   title: "Localized rich text",
   type: "object",
   fields: LANGUAGES.map(({ id, title }) => defineField({ name: id, title, type: "richText" })),
+});
+
+/* A list of short lines per language (a position's responsibilities). */
+export const localeStringListType = defineType({
+  name: "localeStringList",
+  title: "Localized list",
+  type: "object",
+  fields: LANGUAGES.map(({ id, title }) =>
+    defineField({ name: id, title, type: "array", of: [defineArrayMember({ type: "string" })] }),
+  ),
+});
+
+/* A short note: paragraphs with bold, italic and links, nothing else (an
+   article's transparency box). */
+const noteBlock = defineArrayMember({
+  type: "block",
+  styles: [{ title: "Normal", value: "normal" }],
+  lists: [],
+  marks: {
+    decorators: [
+      { title: "Bold", value: "strong" },
+      { title: "Italic", value: "em" },
+    ],
+    annotations: [
+      defineArrayMember({
+        name: "link",
+        type: "object",
+        fields: [defineField({ name: "href", type: "string" })],
+      }),
+    ],
+  },
+});
+
+export const localeNoteType = defineType({
+  name: "localeNote",
+  title: "Localized note",
+  type: "object",
+  fields: LANGUAGES.map(({ id, title }) =>
+    defineField({ name: id, title, type: "array", of: [noteBlock] }),
+  ),
 });
 
 /* A button whose label and link both change with the language (the English
@@ -116,9 +118,8 @@ export const localeSeoType = defineType({
   ],
 });
 
-/* One value per language of any field type — for picks that differ by
-   language, like the home page's lead story (French and English articles are
-   separate documents). `field` gets the language to filter references by. */
+/* One value per language of any field type that isn't text, like an
+   article's audio version. */
 export const perLanguage = (
   name: string,
   field: (lang: string) => Omit<FieldDefinition, "name"> | FieldDefinition,
@@ -133,9 +134,27 @@ export const perLanguage = (
     ),
   });
 
+/* Whether another document of the type already uses `slug` in `lang`. Also
+   used by Auto-translate when it makes a slug from a translated title. */
+export const slugTaken = (
+  client: { fetch: <T>(query: string, params: Record<string, unknown>) => Promise<T> },
+  { type, lang, slug, id }: { type?: string; lang: string; slug: string; id?: string },
+) =>
+  client
+    .fetch<number>(
+      `count(*[_type == $type && slug[$lang].current == $slug && !(_id in [$id, "drafts." + $id])])`,
+      { type, lang, slug, id: id?.replace(/^drafts\./, "") ?? "" },
+    )
+    .then((count) => count > 0);
+
+type SlugValue = Partial<Record<string, { current?: string }>>;
+
 /* A French and an English slug, each generated from its own title and unique
-   among documents of the same type in that language. */
-export const localeSlugField = (source = "title") =>
+   among documents of the same type in that language. `require: "fr"`
+   (sections, topics, series) always needs the French one; `"any"` (articles
+   and the other editorial types) needs at least one, and a slug only in a
+   language whose title is filled in. */
+export const localeSlugField = (source = "title", { require = "fr" as "fr" | "any" } = {}) =>
   defineField({
     name: "slug",
     type: "object",
@@ -148,20 +167,29 @@ export const localeSlugField = (source = "title") =>
         options: {
           source: `${source}.${id}`,
           maxLength: 120,
-          isUnique: async (slug, context) => {
-            const { document, getClient } = context;
-            const client = getClient({ apiVersion: "2026-09-01" });
-            const docId = document?._id.replace(/^drafts\./, "");
-            const count = await client.fetch<number>(
-              `count(*[_type == $type && slug[$lang].current == $slug && !(_id in [$id, "drafts." + $id])])`,
-              { type: document?._type, lang: id, slug, id: docId },
-            );
-            return count === 0;
-          },
+          isUnique: async (slug, { document, getClient }) =>
+            !(await slugTaken(getClient({ apiVersion: "2026-09-01" }), {
+              type: document?._type,
+              lang: id,
+              slug,
+              id: document?._id,
+            })),
         },
-        validation: id === "fr" ? (rule) => rule.required() : undefined,
+        validation: require === "fr" && id === "fr" ? (rule) => rule.required() : undefined,
       }),
     ),
+    validation:
+      require === "any"
+        ? (rule) =>
+            rule.custom((value: SlugValue | undefined, { document }) => {
+              const langs = LANGUAGES.filter(({ id }) => value?.[id]?.current);
+              if (!langs.length) return "Give the document a French or an English slug.";
+              const titles = (document as Record<string, SlugValue> | undefined)?.[source] as
+                Partial<Record<string, string>> | undefined;
+              const missing = langs.find(({ id }) => !titles?.[id]);
+              return missing ? `The ${missing.title} slug needs a ${missing.title} title.` : true;
+            })
+        : undefined,
   });
 
 /* For `rule.custom()`: the French side is the one every page needs. */

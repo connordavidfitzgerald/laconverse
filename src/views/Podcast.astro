@@ -37,7 +37,7 @@ const latestSpotify = spotify(latest?.src);
   seo={podcast.seo}
   alternate={translation ? href(other, "podcast", translation.slug) : href(other, "podcasts")}
 >
-  <podcast-player class="block px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-10">
+  <podcast-player class="block px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
     <audio preload="none"></audio>
     <div class="lg:col-span-8 lg:col-start-3">
       <div class="w-full flex justify-center lg:pb-20 pt-20">
@@ -45,7 +45,7 @@ const latestSpotify = spotify(latest?.src);
       </div>
 
       <h1 class="display mt-5 text-mega tracking-[-0.02em] text-center">{podcast.title}</h1>
-      <div class="flex flex-col p-40">
+      <div class="flex flex-col lg:p-40">
         <Picture
           img={podcast.image ?? podcast.cover}
           ratio={353 / 290}
@@ -98,7 +98,6 @@ const latestSpotify = spotify(latest?.src);
             {podcast.episodes.map((e, i) => (
               <li
                 class="grid grid-cols-[44px_1fr] gap-x-2 border-t border-ink py-4 lg:grid-cols-[80px_1fr]"
-                data-reveal
               >
                 <span class="display text-2xl leading-[0.95] lg:text-4xl">{pad(i + 1)}</span>
                 <div class="flex flex-col gap-2.5">
@@ -160,11 +159,11 @@ const latestSpotify = spotify(latest?.src);
   </podcast-player>
 
   {others.length > 0 && (
-    <section class="overflow-hidden px-5 py-16 lg:px-10 lg:py-24" aria-labelledby="others">
+    <section class="overflow-hidden px-5 py-16 lg:px-5 lg:py-24" aria-labelledby="others">
       <h2 id="others" class="display text-section">
         {s.otherPodcasts}
       </h2>
-      <ul class="rail -mr-5 mt-5 gap-2.5 pr-5 lg:-mr-10 lg:gap-5 lg:pr-10">
+      <ul class="rail -mr-5 mt-5 gap-2.5 pr-5 lg:-mr-5 lg:gap-5 lg:pr-5">
         {others.map((p) => (
           <li class="w-[207px] lg:w-[351px]">
             <PodcastCard podcast={p} lang={lang} />
