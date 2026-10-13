@@ -1,0 +1,53 @@
+---
+/* One "way to help" on the Engagez-vous page: a wide image beside a narrow,
+   bottom-aligned text column on desktop, swapping sides with `flip` so the
+   page alternates; stacked and left-aligned on mobile. */
+import Picture from "./Picture.astro";
+import type { Card } from "../lib/types";
+
+interface Props {
+  card: Card;
+  id: string;
+  num: string;
+  flip?: boolean;
+}
+const { card: c, id, num, flip = false } = Astro.props;
+const voice = c.cta?.url === "#voice" ? "" : undefined;
+---
+
+<section id={id} class="mt-20 scroll-mt-24 lg:mt-32 lg:grid lg:grid-cols-12 lg:gap-x-5">
+  <Picture
+    img={c.image}
+    ratio={353 / 250}
+    class:list={["lg:col-span-7 lg:row-start-1", flip && "lg:col-start-6"]}
+    sizes="(min-width: 1024px) 58vw, 100vw"
+  />
+  <div
+    class:list={[
+      "mt-5 lg:row-start-1 lg:mt-0 lg:self-end lg:col-span-4",
+      flip ? "lg:col-start-1" : "lg:col-start-9",
+    ]}
+  >
+    <p class="label text-xs lg:text-sm">{num}</p>
+    <h2 class="display mt-2 text-section-lg tracking-[-0.02em]">{c.title}</h2>
+    {c.text && <p class="mt-5 text-dek font-extrabold leading-[0.95]">{c.text}</p>}
+    {c.cta?.url &&
+      (c.ctaStyle === "button" ? (
+        <a
+          href={c.cta.url}
+          data-voice-open={voice}
+          class="label press mt-8 inline-block bg-yellow px-6 py-4 text-base hover:bg-ink hover:text-yellow lg:text-xl"
+        >
+          {c.cta.label}
+        </a>
+      ) : (
+        <a
+          href={c.cta.url}
+          data-voice-open={voice}
+          class="label link-line mt-8 inline-block text-base decoration-2 lg:text-xl"
+        >
+          {c.cta.label} <span class="nudge-x">→</span>
+        </a>
+      ))}
+  </div>
+</section>

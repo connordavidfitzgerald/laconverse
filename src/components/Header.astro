@@ -1,9 +1,9 @@
 ---
 /* Top bar + the full-screen yellow menu (Figma: MOBILE MENU BAR, MENU,
-   HOMEPAGE — DESKTOP). The bar is fixed and, from `lg`, shrinks once the page
-   scrolls. Phones and tablets get the hamburger; from `lg` the bar carries the
-   primary nav inline, with Articles and Media opening a yellow panel that
-   wipes down behind the bar (motion after the Energy Club navbar).
+   HOMEPAGE — DESKTOP). The bar is fixed and stays minimal at every size:
+   logo, language, Je donne, search and the hamburger. All navigation lives in
+   the menu, which drops in like a curtain and repeats the bar along its top,
+   so opening it reads as the bar turning yellow.
 
    Tones: `light` (paper bar), `dark` (ink bar, videos), `overlay`
    (transparent over a `[data-header-hero]`, turning light once the hero has
@@ -29,33 +29,20 @@ const s = t(lang);
 const other = otherLang(lang);
 const donate = settings.donateUrl ?? `${href(lang, "getInvolved")}#donate`;
 
-/* Articles is also a link to search: hover opens its panel, a click goes
-   straight to the full list. Media has no page of its own, so it stays a
-   button. */
-const drops: { id: string; label: string; url?: string }[] = [
-  { id: "articles", label: s.articles, url: href(lang, "search") },
-  { id: "media", label: s.media },
-];
-
 const primary = [
-  { label: s.laReleve, url: href(lang, "laReleve") },
-  { label: s.about, url: href(lang, "about") },
-  { label: s.getInvolved, url: href(lang, "getInvolved") },
-  { label: s.contact, url: href(lang, "contact") },
-];
-
-const actionLinks = [
-  { label: s.getInvolved, url: href(lang, "getInvolved") },
-  {
-    label: lang === "en" ? "Give your voice" : "Donnez votre voix",
-    url: href(lang, "giveYourVoice"),
-  },
-  { label: s.podcasts, url: href(lang, "podcasts") },
-];
-
-const media = [
-  { label: s.podcasts, url: href(lang, "podcasts") },
   { label: s.videos, url: href(lang, "videos") },
+  { label: s.podcasts, url: href(lang, "podcasts") },
+  { label: s.resources, url: href(lang, "resources") },
+  { label: s.events, url: href(lang, "events") },
+  { label: s.involve, url: href(lang, "involve") },
+  { label: s.ecole, url: href(lang, "ecole") },
+  // Studio has no page yet.
+  { label: s.studio, url: href(lang, "contact") },
+];
+
+const secondary = [
+  { label: s.about, url: href(lang, "about") },
+  { label: s.contact, url: href(lang, "contact") },
 ];
 ---
 
@@ -74,206 +61,118 @@ const media = [
 
     <div
       data-hdr-bar
-      class="relative z-10 flex items-center justify-between gap-6 px-5 py-5 transition-[padding] duration-500 ease-power3-out lg:px-5 lg:py-5 lg:group-data-compact/hdr:py-5"
+      class="relative z-10 flex items-center justify-between gap-6 px-5 py-5 transition-[padding] duration-500 ease-power3-out"
     >
       <a href={href(lang, "home")} class="block shrink-0" aria-label="La Converse — accueil">
         <Logo class="h-[18px] w-auto" />
       </a>
 
-      <div class="gap-10 justify-end flex">
-        <nav aria-label={s.menu} class="hidden lg:block">
-          <ul class="label flex gap-5 text-md pt-2 font-black tracking-[-0.01em]">
-            {drops.map(({ id, label, url }) => {
-              const Tag = url ? "a" : "button";
-              return (
-                <li>
-                  <Tag
-                    href={url}
-                    type={url ? undefined : "button"}
-                    data-drop={id}
-                    aria-expanded="false"
-                    aria-controls="nav-drop"
-                    class="link-line decoration-2 uppercase aria-expanded:decoration-current aria-expanded:underline-offset-[0.12em]"
-                  >
-                    {label}
-                  </Tag>
-                </li>
-              );
-            })}
-            {primary.map(({ label, url }) => (
-              <li>
-                <a href={url} class="link-line decoration-2" data-drop-away>
-                  {label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <div class="flex items-center gap-[17px] lg:gap-5">
-          <!-- Language: the current one as plain text, the other a link to
-               this page in that language. -->
-          <p
-            class="label hidden items-center gap-1 pt-0.5 text-sm font-black lg:flex"
-            aria-label={s.language}
-            data-drop-away
-          >
-            {langs.map((l, i) => (
-              <>
-                {i > 0 && (
-                  <span aria-hidden="true" class="opacity-40">
-                    /
-                  </span>
-                )}
-                {l === lang ? (
-                  <span aria-current="true">{l.toUpperCase()}</span>
-                ) : (
-                  <a
-                    href={alternate}
-                    hreflang={l}
-                    lang={l}
-                    class="link-line decoration-2 opacity-55 transition-opacity hover:opacity-100"
-                  >
-                    {l.toUpperCase()}
-                  </a>
-                )}
-              </>
-            ))}
-          </p>
-          <a
-            href={alternate}
-            hreflang={other}
-            lang={other}
-            aria-label={s.language}
-            class="label text-sm font-black lg:hidden"
-          >
-            {other.toUpperCase()}
-          </a>
-          <!-- Search:the round pill grows leftwards into a field, pushing
-                 the nav along ahead of it. -->
-          <div class="hidden lg:block" data-drop-away>
-            <form
-              role="search"
-              action={href(lang, "search")}
-              method="get"
-              data-hdr-search
-              class="hdr-pill hdr-search flex h-[30px] items-center overflow-hidden rounded-full"
-            >
-              <label for="hdr-q" class="sr-only">
-                {s.search}
-              </label>
-              <input
-                id="hdr-q"
-                name="q"
-                type="search"
-                autocomplete="off"
-                enterkeyhint="search"
-                placeholder={s.searchPlaceholder}
-                tabindex="-1"
-                data-hdr-search-input
-                class="label min-w-0 flex-1 bg-transparent text-base outline-none [&::-webkit-search-cancel-button]:hidden"
-              />
-              <button
-                type="button"
-                data-hdr-search-toggle
-                aria-expanded="false"
-                aria-controls="hdr-q"
-                aria-label={s.search}
-                class="grid size-[30px] shrink-0 place-items-center rounded-full"
-              >
-                <span data-hdr-search-icon class="grid place-items-center">
-                  <Icon name="search" class="size-2.5" />
+      <div class="flex items-center gap-5">
+        <!-- Language: the current one as plain text, the other a link to
+             this page in that language. Phones show only the other one. -->
+        <p
+          class="label hidden items-center gap-1 text-lg leading-[100%] font-black lg:flex"
+          aria-label={s.language}
+        >
+          {langs.map((l, i) => (
+            <>
+              {i > 0 && (
+                <span aria-hidden="true" class="opacity-40">
+                  /
                 </span>
-              </button>
-            </form>
-          </div>
-          <a
-            href={donate}
-            aria-label={s.favourites}
-            class="press block hover:scale-110"
-            data-drop-away
-          >
-            <Icon name="heart" class="h-4 w-[18px]" />
-          </a>
-          <button
-            type="button"
-            data-menu-toggle
-            aria-expanded="false"
-            aria-controls="site-menu"
-            class="group grid h-4 w-7 place-items-center lg:hidden"
-            aria-label={s.menu}
-          >
-            <span class="flex w-7 flex-col items-end gap-[5px]" aria-hidden="true">
-              <span class="h-px w-full bg-current"></span>
-              <span class="h-px w-full bg-current transition-[width] duration-300 ease-out group-hover:w-2/3"></span>
-              <span class="h-px w-full bg-current transition-[width] duration-300 ease-out group-hover:w-1/3"></span>
-            </span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- The yellow dropdown. It starts at the very top, under the bar, so the
-         bar reads as part of it once it's open. Closed, it is clipped away and
-         `inert` (not `visibility`, which the reduced-motion transition rule
-         would delay, keeping focus out for a beat). -->
-    <div
-      id="nav-drop"
-      data-drop-panel
-      inert
-      class="absolute inset-x-0 top-0 hidden max-h-svh overflow-y-auto overflow-x-hidden bg-yellow text-ink lg:block"
-      style="clip-path: inset(0% 0% 100% 0%)"
-    >
-      <Spray class="left-[35%] top-[-10%] w-[80%] -rotate-[18deg] opacity-70" seed={17} />
-      <div class="relative px-5 pt-[calc(var(--header-h)-0.5rem)] pb-20">
-        <div data-drop-group="articles" data-menu-nav class="grid grid-cols-12 gap-x-5" hidden>
-          <div class="col-span-3 flex flex-col items-start gap-4">
-            <p class="label text-sm" data-drop-item>
-              {s.articles}
-            </p>
-            <a
-              href={href(lang, "search")}
-              class="label group inline-flex items-center gap-1.5 text-xl"
-              data-drop-item
-            >
-              {s.seeAllStories}
-              <span class="nudge-x" aria-hidden="true">
-                →
-              </span>
-            </a>
-          </div>
-          <ul class="display col-span-9 columns-3 gap-x-5 text-[clamp(2rem,2.9vw,3.25rem)]">
-            {settings.menuCategories.map((c) => (
-              <li class="break-inside-avoid pb-2" data-drop-item>
+              )}
+              {l === lang ? (
+                <span aria-current="true">{l.toUpperCase()}</span>
+              ) : (
                 <a
-                  href={href(lang, "category", c.slug)}
-                  class="link-line decoration-2"
-                  data-menu-line
+                  href={alternate}
+                  hreflang={l}
+                  lang={l}
+                  class="link-line decoration-2 opacity-55 transition-opacity hover:opacity-100"
                 >
-                  {c.title}
+                  {l.toUpperCase()}
                 </a>
-              </li>
-            ))}
-          </ul>
+              )}
+            </>
+          ))}
+        </p>
+        <a
+          href={alternate}
+          hreflang={other}
+          lang={other}
+          aria-label={s.language}
+          class="label text-xl leading-none font-black lg:hidden"
+        >
+          {other.toUpperCase()}
+        </a>
+
+        <a href={donate} aria-label={s.favourites} class="press flex hover:scale-110">
+          <span class="flex items-center gap-2">
+            <Icon name="heart" class="h-4 w-[18px] text-[#F92F7B]" />
+            <span class="display text-md hidden leading-none font-black sm:block">{s.giveNow}</span>
+          </span>
+        </a>
+
+        <!-- Search: the round pill grows leftwards into a field. Phones search
+             from the menu instead. -->
+        <div class="hidden md:block">
+          <form
+            role="search"
+            action={href(lang, "search")}
+            method="get"
+            data-hdr-search
+            class="hdr-pill hdr-search flex h-[30px] items-center overflow-hidden rounded-full"
+          >
+            <label for="hdr-q" class="sr-only">
+              {s.search}
+            </label>
+            <input
+              id="hdr-q"
+              name="q"
+              type="search"
+              autocomplete="off"
+              enterkeyhint="search"
+              placeholder={s.searchPlaceholder}
+              tabindex="-1"
+              data-hdr-search-input
+              class="label min-w-0 flex-1 bg-transparent text-base font-black outline-none [&::-webkit-search-cancel-button]:hidden"
+            />
+            <button
+              type="button"
+              data-hdr-search-toggle
+              aria-expanded="false"
+              aria-controls="hdr-q"
+              aria-label={s.search}
+              class="grid size-[30px] shrink-0 place-items-center rounded-full"
+            >
+              <span data-hdr-search-icon class="grid place-items-center">
+                <Icon name="search" class="size-2.5" />
+              </span>
+            </button>
+          </form>
         </div>
-        <div data-drop-group="media" data-menu-nav class="grid grid-cols-12 gap-x-5" hidden>
-          <ul class="display col-span-12 justify-center flex gap-x-16 text-[clamp(3.5rem,6vw,6.5rem)] leading-[0.95]">
-            {media.map(({ label, url }) => (
-              <li data-drop-item>
-                <a href={url} class="link-line decoration-4" data-menu-line>
-                  {label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
+
+        <button
+          type="button"
+          data-menu-toggle
+          aria-expanded="false"
+          aria-controls="site-menu"
+          class="group grid h-4 w-7 place-items-center"
+          aria-label={s.openMenu}
+        >
+          <span class="flex w-7 flex-col items-end gap-[5px]" aria-hidden="true">
+            <span class="h-px w-full bg-current"></span>
+            <span class="h-px w-full bg-current transition-[width] duration-300 ease-out group-hover:w-2/3"></span>
+            <span class="h-px w-full bg-current transition-[width] duration-300 ease-out group-hover:w-1/3"></span>
+          </span>
+        </button>
       </div>
     </div>
   </header>
 
   <div
     id="site-menu"
-    class="fixed inset-0 z-50 flex flex-col overflow-y-auto overflow-x-hidden bg-yellow"
+    class="fixed inset-0 z-50 flex flex-col overflow-y-auto overflow-x-hidden bg-yellow text-ink"
     role="dialog"
     aria-modal="true"
     aria-label={s.menu}
@@ -281,20 +180,54 @@ const media = [
   >
     <Spray class="left-[-40%] top-[52%] w-[180%] -rotate-[28deg] md:left-[10%] md:top-[30%] md:w-[110%]" />
 
-    <div class="relative flex items-center justify-between px-5 py-4" data-menu-fade>
-      <a href={href(lang, "home")} aria-label="La Converse">
+    <!-- The bar again, in ink on yellow, with the hamburger turned into a
+         close button. -->
+    <div class="relative flex items-center justify-between gap-6 px-5 py-5" data-menu-fade>
+      <a href={href(lang, "home")} class="block shrink-0" aria-label="La Converse — accueil">
         <Logo class="h-[18px] w-auto" />
       </a>
-      <div class="flex items-center gap-[17px]">
-        <a
-          href={href(lang, "search")}
-          class="grid size-[30px] place-items-center rounded-full bg-ink text-paper"
-          aria-label={s.search}
+      <div class="flex items-center gap-5">
+        <p
+          class="label hidden items-center gap-1 text-lg leading-[100%] font-black lg:flex"
+          aria-label={s.language}
         >
-          <Icon name="search" class="size-2.5" />
+          {langs.map((l, i) => (
+            <>
+              {i > 0 && (
+                <span aria-hidden="true" class="opacity-40">
+                  /
+                </span>
+              )}
+              {l === lang ? (
+                <span aria-current="true">{l.toUpperCase()}</span>
+              ) : (
+                <a
+                  href={alternate}
+                  hreflang={l}
+                  lang={l}
+                  class="link-line decoration-2 opacity-55 transition-opacity hover:opacity-100"
+                >
+                  {l.toUpperCase()}
+                </a>
+              )}
+            </>
+          ))}
+        </p>
+        <a
+          href={alternate}
+          hreflang={other}
+          lang={other}
+          aria-label={s.language}
+          class="label text-xl leading-none font-black lg:hidden"
+        >
+          {other.toUpperCase()}
         </a>
-        <a href={donate} aria-label={s.favourites}>
-          <Icon name="heart" class="h-[19px] w-[21px]" />
+
+        <a href={donate} aria-label={s.favourites} class="press flex hover:scale-110">
+          <span class="flex items-center gap-2">
+            <Icon name="heart" class="h-4 w-[18px] text-[#F92F7B]" />
+            <span class="display text-md hidden leading-none font-black sm:block">{s.giveNow}</span>
+          </span>
         </a>
         <button
           type="button"
@@ -310,15 +243,45 @@ const media = [
       </div>
     </div>
 
-    <nav class="relative flex-1 px-5 pt-0" aria-label={s.menu} data-menu-nav>
-      <ul class="display text-[1.5rem] leading-[1.1] tracking-[-0.015em] md:text-5xl">
-        <li class="border-b border-ink py-2.5">
-          <ul>
+    <div class="relative grid flex-1 gap-y-8 px-5 pt-2 pb-5 lg:grid-cols-12 lg:gap-x-5 lg:pt-10">
+      <!-- Search, and from `lg` the article categories under it. -->
+      <div class="flex flex-col gap-12 lg:col-span-4 lg:col-start-9 lg:row-start-1">
+        <form
+          role="search"
+          action={href(lang, "search")}
+          method="get"
+          class="flex items-center gap-3 border-b border-ink pb-2"
+          data-menu-fade
+        >
+          <label for="menu-q" class="sr-only">{s.search}</label>
+          <input
+            id="menu-q"
+            name="q"
+            type="search"
+            autocomplete="off"
+            enterkeyhint="search"
+            placeholder={s.searchPlaceholder}
+            class="display min-w-0 flex-1 bg-transparent text-2xl font-black outline-none placeholder:text-ink/45 [&::-webkit-search-cancel-button]:hidden"
+          />
+          <button
+            type="submit"
+            class="grid size-[30px] shrink-0 place-items-center rounded-full bg-ink text-yellow"
+            aria-label={s.search}
+          >
+            <Icon name="search" class="size-2.5" />
+          </button>
+        </form>
+        <div
+          class="hidden lg:flex lg:flex-col lg:items-start lg:gap-4"
+          data-menu-nav
+        >
+          <p class="label text-sm" data-menu-fade>{s.articles}</p>
+          <ul class="display text-2xl leading-[1.1] font-black">
             {settings.menuCategories.map((c) => (
               <li>
                 <a
                   href={href(lang, "category", c.slug)}
-                  class="block link-line decoration-2 font-black"
+                  class="block link-line decoration-2"
                   data-menu-line
                 >
                   {c.title}
@@ -326,97 +289,104 @@ const media = [
               </li>
             ))}
           </ul>
-        </li>
-        <li class="pt-2.5">
-          <a href={href(lang, "laReleve")} class="block link-line decoration-2" data-menu-line>
-            {s.laReleve}
-          </a>
-        </li>
-        <li>
-          <button
-            type="button"
-            data-submenu
-            aria-expanded="false"
-            aria-controls="menu-action"
-            class="display flex w-full items-center justify-between text-left"
+          <a
+            href={href(lang, "search")}
+            class="label group inline-flex items-center gap-1.5 text-base"
             data-menu-line
           >
-            <span>{lang === "en" ? "Take action" : "Prends action"}</span>
-            <Icon
-              name="chevron"
-              class="h-2.5 w-5 transition-transform duration-300 ease-out [[aria-expanded=true]>&]:rotate-180"
-            />
-          </button>
-          <ul id="menu-action" class="leading-[105%] py-0.5 pl-4 text-2xl md:text-3xl" hidden>
-            {actionLinks.map(({ label, url }) => (
+            {s.seeAllStories}
+            <span class="nudge-x" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+
+      <nav
+        class="lg:col-span-7 lg:row-start-1"
+        aria-label={s.menu}
+        data-menu-nav
+      >
+        <ul
+          class="display text-[2rem] leading-[1.1] font-black tracking-[-0.015em] md:text-5xl lg:text-[clamp(2.5rem,4.5vw,4.5rem)] lg:leading-[0.98]"
+        >
+          <!-- Phones get the categories as an accordion; from `lg` they sit
+               in their own column. -->
+          <li class="lg:hidden">
+            <button
+              type="button"
+              data-submenu
+              aria-expanded="false"
+              aria-controls="menu-articles"
+              class="display flex w-full items-center justify-between text-left font-black"
+              data-menu-line
+            >
+              <span>{s.articles}</span>
+              <Icon
+                name="chevron"
+                class="h-2.5 w-5 transition-transform duration-300 ease-out [[aria-expanded=true]>&]:rotate-180"
+              />
+            </button>
+            <ul id="menu-articles" class="py-1 pl-4 text-2xl leading-[1.1] md:text-3xl" hidden>
+              {settings.menuCategories.map((c) => (
+                <li>
+                  <a
+                    href={href(lang, "category", c.slug)}
+                    class="block link-line decoration-2"
+                    data-menu-line
+                  >
+                    {c.title}
+                  </a>
+                </li>
+              ))}
               <li>
-                <a href={url} class="block link-line decoration-2" data-menu-line>
-                  {label}
+                <a href={href(lang, "search")} class="block link-line decoration-2" data-menu-line>
+                  {s.seeAllStories} →
                 </a>
               </li>
-            ))}
-          </ul>
-        </li>
-        <li>
-          <a href={href(lang, "videos")} class="block link-line decoration-2" data-menu-line>
-            {s.videos}
-          </a>
-        </li>
-        <li>
-          <a href={href(lang, "podcasts")} class="block link-line decoration-2" data-menu-line>
-            {s.podcasts}
-          </a>
-        </li>
-        <li class="pt-5">
-          <a href={href(lang, "about")} class="block link-line decoration-2" data-menu-line>
-            {s.about}
-          </a>
-        </li>
-        <li>
-          <a href={href(lang, "contact")} class="block link-line decoration-2" data-menu-line>
-            {s.contact}
-          </a>
-        </li>
-        <li>
-          <a href={donate} class="block link-line decoration-2" data-menu-line>
-            {s.donate}
-          </a>
-        </li>
-        <li class="pt-5 text-lg">
-          <a
-            href={alternate}
-            hreflang={lang === "en" ? "fr" : "en"}
-            class="label inline-block underline underline-offset-4"
-            data-menu-line
-          >
-            {s.language}
-          </a>
-        </li>
-      </ul>
-    </nav>
+            </ul>
+          </li>
+          {primary.map(({ label, url }) => (
+            <li>
+              <a href={url} class="block link-line decoration-2" data-menu-line>
+                {label}
+              </a>
+            </li>
+          ))}
+          {secondary.map(({ label, url }, i) => (
+            <li class:list={[i === 0 && "pt-5 lg:pt-8"]}>
+              <a href={url} class="block link-line decoration-2" data-menu-line>
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+
 
     <div
-      class="relative mx-5 mt-8 flex flex-col items-center gap-4 border-y border-ink py-4 text-center"
+      class="relative mx-5 mt-8 flex flex-col items-center gap-4 border-y border-ink py-4 text-center lg:flex-row lg:justify-end lg:gap-6 lg:text-right"
       data-menu-fade
     >
       <p class="display max-w-[22rem] text-lg leading-[0.95]">
         {settings.voicePrompt ?? s.vnTitle}
       </p>
-      <button
-        type="button"
-        data-voice-open
-        class="press grid size-[84px] place-items-center rounded-full bg-ink text-paper hover:scale-105"
-        aria-label={s.vnOpen}
-      >
-        <Icon name="mic" class="h-[23px] w-[22px]" />
-      </button>
-      <button
-        type="button"
-        data-voice-open="write"
-        class="label text-xs underline underline-offset-2"
-      >
-        {s.vnWrite}
-      </button>
+      <div class="flex flex-col items-center gap-4 lg:order-last">
+        <button
+          type="button"
+          data-voice-open
+          class="press grid size-[84px] place-items-center rounded-full bg-ink text-paper hover:scale-105"
+          aria-label={s.vnOpen}
+        >
+          <Icon name="mic" class="h-[23px] w-[22px]" />
+        </button>
+        <button
+          type="button"
+          data-voice-open="write"
+          class="label text-xs underline underline-offset-2"
+        >
+          {s.vnWrite}
+        </button>
+      </div>
     </div>
 
     <div class="relative flex items-center justify-between px-5 py-5" data-menu-fade>
@@ -442,9 +412,24 @@ const media = [
     --bg: var(--color-paper);
     color: var(--fg);
     background-color: var(--bg);
+  }
+  [data-hdr] {
+    translate: 0 0;
     transition:
       color 400ms var(--ease-power3-out),
-      background-color 400ms var(--ease-power3-out);
+      background-color 400ms var(--ease-power3-out),
+      translate 500ms var(--ease-power3-out);
+  }
+  [data-hdr][data-hidden] {
+    translate: 0 -100%;
+    transition:
+      color 400ms var(--ease-power3-out),
+      background-color 400ms var(--ease-power3-out),
+      translate 350ms cubic-bezier(0.55, 0, 0.75, 0.2);
+  }
+  /* Tabbing into the bar always brings it back. */
+  [data-hdr]:focus-within {
+    translate: 0 0;
   }
   [data-hdr][data-tone="dark"] {
     --fg: var(--color-paper);
@@ -457,16 +442,12 @@ const media = [
   [data-hdr][data-tone="yellow"]:not([data-scrolled]) {
     --bg: var(--color-yellow);
   }
-  /* The yellow panel shows through behind the bar while it's open. */
-  [data-hdr][data-drop-open] {
-    --fg: var(--color-ink);
-    --bg: var(--color-yellow);
-  }
   [data-hdr-scrim] {
     opacity: 0;
     transition: opacity 400ms var(--ease-power3-out);
   }
-  [data-hdr][data-tone="overlay"]:not([data-scrolled], [data-drop-open]) [data-hdr-scrim] {
+  [data-hdr][data-tone="overlay"]:not([data-scrolled], [data-hidden])
+    [data-hdr-scrim] {
     opacity: 1;
   }
   .hdr-pill {
@@ -477,7 +458,7 @@ const media = [
       background-color 400ms var(--ease-power3-out),
       scale 160ms ease-out;
   }
-  [data-hdr][data-tone="overlay"]:not([data-scrolled], [data-drop-open]) .hdr-pill {
+  [data-hdr][data-tone="overlay"]:not([data-scrolled]) .hdr-pill {
     color: var(--color-ink);
   }
 
@@ -555,11 +536,12 @@ const media = [
   import { collapse, d, expand, gsap } from "../lib/motion";
 
   const FOCUSABLE = "a[href], button:not([disabled]), input, [tabindex]:not([tabindex='-1'])";
-  const canHover = matchMedia("(hover: hover) and (pointer: fine)");
 
-  /** Scroll state for the fixed bar: compacts it past the first few pixels
-      and, over a hero (`overlay`, `yellow`), flips it to the light tone once
-      the hero has slid under the bar. */
+  /** Scroll state for the fixed bar: compacts it past the first few pixels,
+      slides it away while scrolling down and back on any scroll up, and, over
+      a hero (`overlay`, `yellow`), flips it to the light tone once the hero
+      has slid under the bar. It stays put while its search is open or it
+      holds focus, and on the video feed, which is sized around it. */
   function watchScroll(header: HTMLElement) {
     const bar = header.querySelector<HTMLElement>("[data-hdr-bar]")!;
     const hero =
@@ -568,9 +550,20 @@ const media = [
         : null;
     const always = header.dataset.compact === "always";
     let queued = false;
+    let lastY = scrollY;
     const update = () => {
       queued = false;
       if (!always) header.toggleAttribute("data-compact", scrollY > 24);
+      const y = Math.max(0, scrollY);
+      // A few pixels of slack so trackpad jitter doesn't flicker it.
+      if (Math.abs(y - lastY) > 6) {
+        const busy =
+          always ||
+          header.hasAttribute("data-search-open") ||
+          header.contains(document.activeElement);
+        header.toggleAttribute("data-hidden", !busy && y > lastY && y > bar.offsetHeight);
+        lastY = y;
+      }
       if (hero)
         header.toggleAttribute(
           "data-scrolled",
@@ -587,168 +580,6 @@ const media = [
       },
       { passive: true },
     );
-  }
-
-  /** Articles / Media: one yellow panel that wipes down behind the bar, with
-      the chosen group's links rising in just behind the wipe (after the
-      Energy Club navbar). Hover opens it with a mouse; taps and keys toggle. */
-  class NavDrop {
-    #header: HTMLElement;
-    #panel: HTMLElement;
-    #triggers: HTMLElement[];
-    #group: string | null = null;
-    #open = false;
-
-    constructor(header: HTMLElement) {
-      this.#header = header;
-      this.#panel = header.querySelector<HTMLElement>("[data-drop-panel]")!;
-      this.#triggers = [...header.querySelectorAll<HTMLElement>("[data-drop]")];
-
-      for (const b of this.#triggers) {
-        b.addEventListener("pointerenter", () => canHover.matches && this.open(b.dataset.drop!));
-        // A trigger that is a link just navigates when clicked.
-        if (b instanceof HTMLAnchorElement) continue;
-        // A mouse click keeps it open (hovering already opened it); a tap or
-        // a keypress toggles it.
-        b.addEventListener("click", (e) => {
-          const same = this.#open && this.#group === b.dataset.drop;
-          if (canHover.matches && e.detail > 0) this.open(b.dataset.drop!);
-          else if (same) this.close();
-          else {
-            this.open(b.dataset.drop!);
-            // From the keyboard, carry focus into the panel.
-            if (e.detail === 0)
-              this.#panel
-                .querySelector<HTMLElement>(`[data-drop-group="${b.dataset.drop}"] a`)
-                ?.focus();
-          }
-        });
-      }
-      // Heading for any other nav item closes it.
-      header
-        .querySelectorAll("[data-drop-away]")
-        .forEach((el) => el.addEventListener("pointerenter", () => this.close()));
-      header.addEventListener("pointerleave", () => canHover.matches && this.close());
-      header.addEventListener("focusout", (e) => {
-        if (!header.contains(e.relatedTarget as Node)) this.close();
-      });
-      this.#panel.addEventListener("click", (e) => {
-        if ((e.target as Element).closest("a")) this.close();
-      });
-      document.addEventListener("click", (e) => {
-        if (this.#open && !header.contains(e.target as Node)) this.close();
-      });
-      document.addEventListener("keydown", (e) => {
-        if (e.key !== "Escape" || !this.#open) return;
-        const trigger = this.#triggers.find((b) => b.dataset.drop === this.#group);
-        this.close();
-        trigger?.focus();
-      });
-    }
-
-    #items(group: string) {
-      return [
-        ...this.#panel.querySelectorAll<HTMLElement>(
-          `[data-drop-group="${group}"] [data-drop-item]`,
-        ),
-      ];
-    }
-
-    #show(group: string) {
-      this.#panel
-        .querySelectorAll<HTMLElement>("[data-drop-group]")
-        .forEach((g) => (g.hidden = g.dataset.dropGroup !== group));
-    }
-
-    #mark(group: string | null) {
-      this.#group = group;
-      this.#triggers.forEach((b) =>
-        b.setAttribute("aria-expanded", String(b.dataset.drop === group)),
-      );
-    }
-
-    /** Opacity only (no visibility), so keyboard focus can land on a link
-        while it is still rising in. */
-    #rise(group: string, delay: number) {
-      gsap.fromTo(
-        this.#items(group),
-        { y: 16, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: d(0.6),
-          stagger: d(0.06),
-          ease: "power3.out",
-          delay: d(delay),
-          clearProps: "transform,opacity",
-        },
-      );
-    }
-
-    open(group: string) {
-      if (this.#open && group === this.#group) return;
-      const all = this.#panel.querySelectorAll("[data-drop-item]");
-      gsap.killTweensOf(all);
-
-      // Already open on the other group: swap the links, don't re-wipe.
-      if (this.#open) {
-        this.#mark(group);
-        const shown = this.#panel.querySelector<HTMLElement>("[data-drop-group]:not([hidden])")!
-          .dataset.dropGroup!;
-        if (shown === group) return this.#rise(group, 0);
-        gsap.to(this.#items(shown), {
-          y: -8,
-          opacity: 0,
-          duration: d(0.2),
-          ease: "power2.in",
-          onComplete: () => {
-            gsap.set(all, { clearProps: "transform,opacity" });
-            this.#show(group);
-            this.#rise(group, 0);
-          },
-        });
-        return;
-      }
-
-      this.#open = true;
-      this.#mark(group);
-      this.#show(group);
-      this.#header.setAttribute("data-drop-open", "");
-      gsap.killTweensOf(this.#panel);
-      this.#panel.inert = false;
-      gsap.to(this.#panel, { clipPath: "inset(0% 0% 0% 0%)", duration: d(0.7), ease: "expo.out" });
-      this.#rise(group, 0.15);
-    }
-
-    close() {
-      if (!this.#open) return;
-      this.#open = false;
-      this.#header.removeAttribute("data-drop-open");
-      const items = [
-        ...this.#panel.querySelectorAll<HTMLElement>(
-          "[data-drop-group]:not([hidden]) [data-drop-item]",
-        ),
-      ];
-      this.#mark(null);
-      gsap.killTweensOf(this.#panel.querySelectorAll("[data-drop-item]"));
-      gsap.killTweensOf(this.#panel);
-      gsap.to(items, {
-        y: 16,
-        opacity: 0,
-        duration: d(0.3),
-        stagger: { each: d(0.03), from: "end" },
-        ease: "power3.in",
-      });
-      gsap.to(this.#panel, {
-        clipPath: "inset(0% 0% 100% 0%)",
-        duration: d(0.45),
-        ease: "expo.in",
-        onComplete: () => {
-          this.#panel.inert = true;
-          gsap.set(items, { clearProps: "transform,opacity" });
-        },
-      });
-    }
   }
 
   /** The pill that grows into a search field. First click opens it; with
@@ -854,7 +685,6 @@ const media = [
     connectedCallback() {
       const header = this.querySelector<HTMLElement>("[data-hdr]")!;
       watchScroll(header);
-      new NavDrop(header);
       new HeaderSearch(header);
 
       this.#menu = this.querySelector<HTMLElement>("#site-menu")!;
@@ -874,6 +704,13 @@ const media = [
       this.#menu
         .querySelectorAll("[data-voice-open]")
         .forEach((b) => b.addEventListener("click", () => this.close(false)));
+      // A link back to this same page (or an anchor on it) won't unload the
+      // page, so close the menu by hand.
+      this.#menu.addEventListener("click", (e) => {
+        const a = (e.target as Element).closest<HTMLAnchorElement>("a[href]");
+        if (a && a.pathname === location.pathname && a.origin === location.origin)
+          this.close(false);
+      });
       this.#menu.addEventListener("keydown", (e) => {
         if (e.key === "Escape") this.close();
         if (e.key === "Tab") this.#trap(e);

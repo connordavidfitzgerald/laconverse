@@ -57,6 +57,8 @@ export interface Article extends ArticleCard {
   body?: RichText | null;
   listen?: string | null;
   authorsNote?: RichText | null;
+  /** The question on the in-body call for readers' stories. */
+  storyPrompt?: string | null;
   photographers?: PersonRef[];
   illustrators?: PersonRef[];
   trending?: boolean | null;
@@ -164,6 +166,16 @@ export interface Program extends ProgramCard {
     attribution?: string | null;
     source?: string | null;
   } | null;
+  video?: {
+    title?: string | null;
+    text?: string | null;
+    url?: string | null;
+    moreUrl?: string | null;
+    moreLabel?: string | null;
+  } | null;
+  /** Latest articles from the program's series. */
+  articles: ArticleCard[];
+  support?: boolean | null;
   form?: { title?: string | null; text?: string | null } | null;
   translations: Translation[];
   seo?: Seo | null;
@@ -216,7 +228,6 @@ export interface HomeData {
     title?: string | null;
     image?: Img | null;
     text?: string | null;
-    program?: { slug: string } | null;
   } | null;
   seo?: Seo | null;
 }
@@ -227,21 +238,43 @@ export interface AboutData {
   intro?: RichText | null;
   team: Person[];
   collaborators: Person[];
-  sections: { _key: string; title: string; body?: RichText | null }[];
+  sections: {
+    _key: string;
+    title: string;
+    kind?: "text" | "series" | "positions" | null;
+    body?: RichText | null;
+    articles?: ArticleCard[] | null;
+    positions?: Position[] | null;
+  }[];
   partners: { name: string; logo?: Img | null; url?: string | null }[];
   seo?: Seo | null;
 }
 
-export interface LaReleveData {
+export interface EcoleData {
   title?: string | null;
+  kicker?: string | null;
+  image?: Img | null;
   intro?: RichText | null;
   cta?: Cta | null;
+  why?: { title?: string | null; body?: RichText | null } | null;
+  /** Key figures, e.g. { value: "50+", label: "alumni" }. */
+  stats: { value: string; label: string }[];
+  steps: { title: string; text?: string | null }[];
   programs: ProgramCard[];
+  cohorts: { year: number; track: string; count?: number | null }[];
+  support?: {
+    title?: string | null;
+    body?: RichText | null;
+    ctas: Cta[];
+    partners: { name: string; logo?: Img | null; url?: string | null }[];
+  } | null;
+  form?: { title?: string | null; text?: string | null } | null;
   seo?: Seo | null;
 }
 
 export interface GetInvolvedData {
   title?: string | null;
+  image?: Img | null;
   intro?: string | null;
   cards: Card[];
   donate?: { title?: string | null; text?: string | null; options: Cta[] } | null;

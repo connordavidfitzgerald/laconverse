@@ -1,0 +1,47 @@
+---
+/* Stand-in for a section that's on its way (S'outiller, Se réunir,
+   S'impliquer): the Contact page's title block and a pointer to the newsroom.
+   Each section swaps this for its own view once it has content. */
+import Icon from "../components/Icon.astro";
+import Layout from "../layouts/Layout.astro";
+import { href, otherLang, t, type Lang, type RouteKey } from "../i18n";
+import { getSettings } from "../lib/content";
+
+interface Props {
+  lang: Lang;
+  route: RouteKey;
+  title: string;
+  blurb: string;
+}
+const { lang, route, title, blurb } = Astro.props;
+const s = t(lang);
+const settings = await getSettings(lang);
+---
+
+<Layout lang={lang} title={title} alternate={href(otherLang(lang), route)}>
+  <div class="px-5 lg:px-5">
+    <header class="pt-5 lg:pt-10">
+      <h1 class="display text-mega tracking-[-0.02em]">{title}</h1>
+      <p
+        class="mt-2.5 max-w-[40rem] font-display text-2xl font-extrabold leading-[0.95] tracking-[-0.02em] lg:text-intro"
+      >
+        {blurb}
+      </p>
+    </header>
+
+    <div class="flex flex-col items-start gap-4 py-16 lg:py-24">
+      <p class="label text-xs">{s.comingSoon}</p>
+      <p class="max-w-[28rem] text-sm font-medium leading-[1.35] lg:text-base">{s.comingSoonText}</p>
+      <a
+        href={`mailto:${settings.email}`}
+        class="display link-line decoration-2 text-[2.25rem] leading-[0.95] tracking-[-0.01em] lg:text-section"
+      >
+        {settings.email}
+      </a>
+      <a href={href(lang, "contact")} class="label mt-2 inline-flex items-center gap-1 text-sm">
+        {s.contact}
+        <Icon name="arrow-ne" class="nudge-ne size-2" />
+      </a>
+    </div>
+  </div>
+</Layout>

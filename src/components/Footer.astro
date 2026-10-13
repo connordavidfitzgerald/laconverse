@@ -89,9 +89,7 @@ const year = new Date().getFullYear();
     </div>
 
     <!-- Socials -->
-    <div
-      class="order-4 flex flex-col items-center gap-2.5 lg:col-span-12 lg:-mt-10 lg:items-start"
-    >
+    <div class="order-4 flex flex-col items-center gap-2.5 lg:col-span-12 lg:-mt-10 lg:items-start">
       <p class="label text-sm font-medium lg:sr-only">{s.socials}</p>
       <Socials socials={settings.socials} />
     </div>
@@ -106,45 +104,6 @@ const year = new Date().getFullYear();
 
     <div class="order-6 mt-10 lg:col-span-12 lg:mt-0">
       <Logo class="h-auto w-full" />
-    </div>
-
-    <div class="label order-7 flex flex-col items-center gap-4 text-sm lg:col-span-12 lg:flex-row lg:justify-between lg:-mt-8">
-      <p>© {year} La Converse</p>
-      <ul class="flex flex-wrap justify-center gap-x-6 gap-y-2">
-        <li>
-          <a href={href(lang, "about")} class="link-line">
-            {s.about}
-          </a>
-        </li>
-        <li>
-          <a href={href(lang, "getInvolved")} class="link-line">
-            {s.getInvolved}
-          </a>
-        </li>
-        <li>
-          <a href={href(lang, "contact")} class="link-line">
-            {s.contact}
-          </a>
-        </li>
-        <li>
-          <a href={donate} class="link-line">
-            {s.donate}
-          </a>
-        </li>
-        <li>
-          <a href={alternate} class="link-line" hreflang={lang === "en" ? "fr" : "en"}>
-            {lang === "en" ? (
-              <>
-                FR / <u>EN</u>
-              </>
-            ) : (
-              <>
-                <u>FR</u> / EN
-              </>
-            )}
-          </a>
-        </li>
-      </ul>
     </div>
   </div>
 </footer>

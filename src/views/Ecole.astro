@@ -1,0 +1,142 @@
+---
+/* École Converse (formerly La Relève; Figma: "MacBook Pro 16" - 5" for the top,
+   LA RELEVE for the rest). The title over a full-bleed photo, the intro, the
+   why (title left, copy right under a rule), the apply button, then the
+   program cards and the sign-up form on a lilac panel. Lilac is the page's
+   accent in place of the site's yellow. Every block below the header is
+   optional. Favorit only, no motion beyond the site's hovers. */
+import AjaxForm from "../components/AjaxForm.astro";
+import FormFields from "../components/FormFields.astro";
+import Picture from "../components/Picture.astro";
+import Layout from "../layouts/Layout.astro";
+import { href, otherLang, t, type Lang } from "../i18n";
+import { getEcole } from "../lib/content";
+import { renderRichText } from "../lib/portableText";
+import { imageUrl } from "../lib/sanity";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+const page = await getEcole(lang);
+const title = page.title ?? s.ecole;
+const { why, form } = page;
+const programUrl = (p: { slug: string; linkTo?: string | null }) =>
+  p.linkTo === "podcasts" ? href(lang, "podcasts") : href(lang, "program", p.slug);
+
+const sectionTitle = "display text-section tracking-[-0.02em]";
+---
+
+<Layout lang={lang} title={title} seo={page.seo} alternate={href(otherLang(lang), "ecole")}>
+  <!-- Header: the title over a full-bleed photo -->
+  <header class="relative grid place-items-center lg:-mt-20">
+    <Picture
+      img={page.image}
+      ratio={1728 / 972}
+      sizes="100vw"
+      widths={[640, 960, 1280, 1920, 2560]}
+      eager
+      fill="var(--color-lilac)"
+      class="w-full max-md:aspect-[4/5]! min-h-dvh"
+    />
+    <h1 class="display absolute inset-x-5 text-center text-mega tracking-[-0.02em] text-paper [text-shadow:0_0_40px_rgb(0_0_0/0.35)] lg:text-[min(9.86vw,12rem)]">
+      {title}
+    </h1>
+  </header>
+
+  <!-- What it is: Favorit Medium, cols 3–10 -->
+  {page.intro && (
+    <div class="px-5 pt-16 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:pt-64">
+      <div
+        class="font-display lg:text-intro text-dek leading-[0.95] font-extrabold tracking-[-0.015em] lg:col-span-8 lg:col-start-3 prose-intro mx-auto mt-10 max-w-[31rem] lg:max-w-3xl"
+        set:html={renderRichText(page.intro)}
+      />
+    </div>
+  )}
+
+  <!-- Why: the title with the copy stacked under it, the title centred in cols 4–9, the copy inset in the same span to about five columns wide -->
+  {why?.title && (
+    <section class="px-5 pt-20 lg:py-64">
+      <div class="pt-8 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:pt-10">
+        <h2 class:list={[sectionTitle, "pb-15 text-center lg:col-span-6 lg:col-start-4"]}>{why.title}</h2>
+        <div
+          class="mt-5 font-display text-dek font-extrabold tracking-[-0.02em] lg:col-span-6 lg:col-start-4 lg:px-[8.5%] prose-intro"
+          set:html={renderRichText(why.body)}
+        />
+      </div>
+    </section>
+  )}
+
+  <!-- Apply, just ahead of the programs it applies to -->
+  {page.cta?.url && (
+    <p class="px-5 pt-20 text-center lg:pt-0 lg:pb-32">
+      <a
+        href={page.cta.url}
+        class="label press inline-block bg-lilac px-6 py-4 text-base hover:bg-ink hover:text-lilac lg:text-2xl"
+      >
+        {page.cta.label ?? s.applyCohort}
+      </a>
+    </p>
+  )}
+
+  <!-- Programs: the La Relève cards, three across -->
+  {page.programs.length > 0 && (
+    <section id="programs" class="scroll-mt-10 pt-20 lg:pt-32" aria-labelledby="programs-title">
+      <h2 id="programs-title" class:list={[sectionTitle, "px-5"]}>
+        {s.ourPrograms}
+      </h2>
+      <ul class="mt-5 grid gap-5 px-5 md:grid-cols-3 lg:gap-5 lg:px-5">
+        {page.programs.map((p) => (
+          <li>
+            <a href={programUrl(p)} class="group relative block">
+              <Picture
+                img={p.image}
+                ratio={373 / 504}
+                sizes="(min-width: 768px) 33vw, 100vw"
+                fill="var(--color-lilac)"
+                class="media-inset [--inset:var(--color-lilac)]"
+                imgClass="group-hover:brightness-75"
+              />
+              <span class="display absolute inset-0 grid place-items-center p-5 text-center text-[3rem] leading-[0.95] tracking-[-0.02em] text-paper [text-shadow:0_0_40px_rgb(0_0_0/0.35)] lg:text-6xl">
+                {p.title}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <!-- Sign-up form: a lilac card centred in cols 4–9, taller than wide -->
+  {form && (
+    <div class="px-5 pt-20 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:pt-32 lg:pb-32">
+      <section
+        id="form"
+        class="mx-auto max-w-md scroll-mt-10 bg-lilac px-5 py-16 lg:col-span-6 lg:col-start-4 lg:max-w-none lg:px-16 lg:py-24"
+        aria-labelledby="form-title"
+      >
+        <h2 id="form-title" class="display text-section tracking-[-0.02em] text-center pb-5">
+          {form.title}
+        </h2>
+        {form.text && (
+          <p class="mt-2.5 font-display text-lg font-bold leading-[1.1] lg:text-2xl text-center tracking-[-0.02em]">
+            {form.text}
+          </p>
+        )}
+        <AjaxForm action="/api/contact" lang={lang} class="mt-8 lg:mt-10 font-medium">
+          <input type="hidden" name="kind" value="program" />
+          <input type="hidden" name="context" value={title} />
+          <FormFields lang={lang}>
+            <button
+              type="submit"
+              class="label press mx-auto mt-4 h-[46px] w-[60%] bg-ink text-sm text-lilac hover:bg-paper hover:text-ink disabled:opacity-60"
+            >
+              {s.submit}
+            </button>
+          </FormFields>
+        </AjaxForm>
+      </section>
+    </div>
+  )}
+</Layout>

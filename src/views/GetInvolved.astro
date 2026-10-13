@@ -1,8 +1,11 @@
 ---
-/* Figma: 8 ENGAGEZ-VOUS — UI, pared back to one centred column (the About
-   page's cols 3–10): title and intro, a quiet index of the ways to help, then
-   each section stacked and centred, the donate options in a yellow panel.
-   Favorit only: the wrapper sets `font-display` so no Inter shows through. */
+/* Figma: 8 ENGAGEZ-VOUS — UI (mobile only; desktop extrapolates the homepage
+   12-column grid). The hero mirrors About: mega title, wide image, indented
+   intro. Then a numbered index of the ways to help, each card as an
+   image/text split that alternates sides, the donate options in a full-bleed
+   yellow band, and volunteering as a two-column list. Favorit only: the
+   wrappers set `font-display` so no Inter shows through. */
+import InvolvedCard from "../components/InvolvedCard.astro";
 import Picture from "../components/Picture.astro";
 import Spray from "../components/Spray.astro";
 import Layout from "../layouts/Layout.astro";
@@ -28,7 +31,7 @@ const slug = (text: string) =>
 /* Sections in page order, shared by the index and the anchors. `#donate` is
    fixed: the footer and support bands link to it. */
 type Block = { kind: "card"; card: Card } | { kind: "donate" } | { kind: "volunteer" };
-const blocks: (Block & { id: string; title: string })[] = [
+const blocks: (Block & { id: string; title: string; num: string })[] = [
   ...page.cards.map((card): Block => ({ kind: "card", card })),
   ...(page.donate ? [{ kind: "donate" } as Block] : []),
   ...page.cardsAfter.map((card): Block => ({ kind: "card", card })),
@@ -43,9 +46,20 @@ const blocks: (Block & { id: string; title: string })[] = [
   return {
     ...b,
     title,
+    num: String(i + 1).padStart(2, "0"),
     id: b.kind === "donate" ? "donate" : slug(title) || `section-${i + 1}`,
   };
 });
+
+/* Donate breaks out to full bleed, so the contained blocks render either side
+   of it. Cards alternate image side across the whole page. */
+const split = blocks.findIndex((b) => b.kind === "donate");
+const before = split < 0 ? blocks : blocks.slice(0, split);
+const after = split < 0 ? [] : blocks.slice(split + 1);
+const donate = split < 0 ? null : blocks[split];
+const cardIndex = new Map(
+  blocks.filter((b) => b.kind === "card").map((b, i) => [b.id, i] as const),
+);
 ---
 
 <Layout
@@ -54,123 +68,133 @@ const blocks: (Block & { id: string; title: string })[] = [
   seo={page.seo}
   alternate={href(otherLang(lang), "getInvolved")}
 >
-  <div class="px-5 pb-20 text-center font-display lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5 lg:pb-32">
-    <div class="lg:col-span-8 lg:col-start-3">
-      <header class="pt-10 lg:pt-16">
-        <h1 class="display text-mega tracking-[-0.02em]">{page.title ?? s.getInvolved}</h1>
-        {page.intro && (
-          <p class="mx-auto mt-5 max-w-2xl text-dek font-black leading-[0.95] tracking-[-0.01em] lg:mt-10 lg:text-intro">
-            {page.intro}
+  <div class="px-5 font-display">
+    <header>
+      <h1 class="display pt-10 pb-16 text-center text-mega tracking-[-0.02em] lg:pt-16">
+        {page.title ?? s.getInvolved}
+      </h1>
+      <Picture img={page.image} ratio={7 / 5} eager sizes="100vw" />
+      {page.intro && (
+        <div class="prose-intro mx-auto mt-10 max-w-[31rem] lg:max-w-3xl">
+          <p>{page.intro}</p>
+        </div>
+      )}
+    </header>
+
+    {blocks.length > 1 && (
+      <nav aria-label={page.title ?? s.getInvolved} class="mt-16 lg:mt-24">
+        <ol class="border-b-2 border-ink lg:grid lg:auto-cols-fr lg:grid-flow-col lg:border-t-2">
+          {blocks.map((b) => (
+            <li class="border-t-2 border-ink lg:border-t-0 lg:border-l-2 lg:first:border-l-0 lg:first:*:pl-0">
+              <a
+                href={`#${b.id}`}
+                class="group flex items-baseline gap-4 py-4 lg:h-full lg:flex-col lg:justify-between lg:gap-8 lg:px-5 lg:py-6"
+              >
+                <span class="label text-xs lg:text-sm">{b.num}</span>
+                <span class="display flex w-full items-baseline justify-between gap-4 text-2xl lg:text-3xl">
+                  <span class="link-line decoration-2 group-hover:decoration-current">{b.title}</span>
+                  <span class="nudge-x text-xl lg:text-2xl" aria-hidden="true">↓</span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    )}
+
+    {before.map((b) =>
+      b.kind === "card" ? (
+        <InvolvedCard card={b.card} id={b.id} num={b.num} flip={cardIndex.get(b.id)! % 2 === 1} />
+      ) : null,
+    )}
+  </div>
+
+  {donate && page.donate && (
+    <section
+      id="donate"
+      class="relative mt-20 scroll-mt-24 overflow-hidden bg-yellow px-5 py-16 font-display lg:mt-32 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:py-28"
+    >
+      <Spray
+        class="-left-[55%] top-[45%] w-[190%] -rotate-[25deg] lg:-left-[10%] lg:top-[20%] lg:w-[90%]"
+        seed={31}
+      />
+      <div class="relative lg:col-span-6">
+        <p class="label text-xs lg:text-sm">{donate.num}</p>
+        <h2 class="display mt-2 text-mega tracking-[-0.02em]">{donate.title}</h2>
+        {page.donate.text && (
+          <p class="mt-5 max-w-lg text-dek font-extrabold leading-[0.95] lg:mt-8">
+            {page.donate.text}
           </p>
         )}
-        <nav aria-label={lang === "en" ? "On this page" : "Sur cette page"} class="mt-10">
-          <ul class="label flex flex-wrap justify-center gap-x-5 gap-y-2.5 text-sm lg:text-lg">
-            {blocks.map((b) => (
-              <li>
-                <a href={`#${b.id}`} class="link-line decoration-2">
-                  {b.title}
-                </a>
+      </div>
+      <ul class="relative mt-10 flex flex-col gap-2.5 lg:col-span-5 lg:col-start-8 lg:mt-0 lg:self-end">
+        {page.donate.options.map((o) => (
+          <li>
+            <a
+              href={o.url ?? settings.donateUrl ?? "#"}
+              class="display press group flex items-baseline justify-between gap-5 bg-ink px-5 py-4 text-[2.25rem] text-yellow hover:bg-paper hover:text-ink lg:px-6 lg:py-5 lg:text-6xl"
+            >
+              {o.label}
+              <span class="nudge-x text-2xl lg:text-4xl" aria-hidden="true">→</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <div class="px-5 pb-20 font-display lg:pb-32">
+    {after.map((b) => {
+      if (b.kind === "card") {
+        return (
+          <InvolvedCard
+            card={b.card}
+            id={b.id}
+            num={b.num}
+            flip={cardIndex.get(b.id)! % 2 === 1}
+          />
+        );
+      }
+      if (b.kind !== "volunteer" || !page.volunteer) return null;
+      const v = page.volunteer;
+      return (
+        <section id={b.id} class="mt-20 scroll-mt-24 lg:mt-32 lg:grid lg:grid-cols-12 lg:gap-x-5">
+          <div class="lg:col-span-5">
+            <p class="label text-xs lg:text-sm">{b.num}</p>
+            <h2 class="display mt-2 text-section-lg tracking-[-0.02em]">{b.title}</h2>
+            {v.intro && (
+              <p class="mt-5 max-w-md text-dek font-extrabold leading-[0.95]">{v.intro}</p>
+            )}
+            {v.cta?.url && (
+              <a
+                href={v.cta.url}
+                class="label press mt-8 hidden bg-yellow px-6 py-4 text-base hover:bg-ink hover:text-yellow lg:inline-block lg:text-xl"
+              >
+                {v.cta.label}
+              </a>
+            )}
+          </div>
+          <ol class="mt-10 lg:col-span-6 lg:col-start-7 lg:mt-0">
+            {v.items.map((it, i) => (
+              <li class="grid grid-cols-[2.5rem_1fr] border-t-2 border-ink py-5 last:border-b-2 lg:grid-cols-[4rem_1fr] lg:py-6">
+                <span class="label pt-1 text-xs lg:text-sm">{String(i + 1).padStart(2, "0")}</span>
+                <div>
+                  <h3 class="display text-card">{it.title}</h3>
+                  {it.text && <p class="mt-1.5 text-lg font-bold leading-[1.1]">{it.text}</p>}
+                </div>
               </li>
             ))}
-          </ul>
-        </nav>
-      </header>
-
-      {blocks.map((b) => {
-        if (b.kind === "donate" && page.donate) {
-          return (
-            <section id="donate" class="relative mt-20 overflow-hidden bg-yellow px-5 py-12 lg:mt-32 lg:px-20 lg:py-20">
-              <Spray
-                class="-left-[55%] top-[45%] w-[190%] -rotate-[25deg] lg:-left-[10%] lg:top-[30%] lg:w-[120%]"
-                seed={31}
-              />
-              <h2 class="display relative text-section-lg tracking-[-0.02em]">{b.title}</h2>
-              {page.donate.text && (
-                <p class="relative mx-auto mt-5 max-w-lg text-dek font-extrabold leading-[0.95]">
-                  {page.donate.text}
-                </p>
-              )}
-              <ul class="relative mt-10 flex flex-wrap justify-center gap-2.5">
-                {page.donate.options.map((o) => (
-                  <li>
-                    <a
-                      href={o.url ?? settings.donateUrl ?? "#"}
-                      class="display press inline-block bg-ink px-4 py-2 text-[2.25rem] leading-[0.95] text-yellow hover:bg-paper hover:text-ink lg:px-5 lg:text-6xl"
-                    >
-                      {o.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          );
-        }
-
-        if (b.kind === "volunteer" && page.volunteer) {
-          const v = page.volunteer;
-          return (
-            <section id={b.id} class="mt-20 lg:mt-32">
-              <h2 class="display text-section-lg tracking-[-0.02em]">{b.title}</h2>
-              {v.intro && (
-                <p class="mx-auto mt-5 max-w-lg text-dek font-extrabold leading-[0.95]">{v.intro}</p>
-              )}
-              <ul class="mx-auto mt-10 max-w-xl">
-                {v.items.map((it) => (
-                  <li class="border-t-2 border-ink py-5 last:border-b-2">
-                    <h3 class="display text-card leading-[0.95]">{it.title}</h3>
-                    {it.text && <p class="mt-1.5 text-lg font-bold leading-[1.1]">{it.text}</p>}
-                  </li>
-                ))}
-              </ul>
-              {v.cta?.url && (
-                <a
-                  href={v.cta.url}
-                  class="label press mt-10 inline-block bg-yellow px-6 py-4 text-base hover:bg-ink hover:text-yellow lg:text-2xl"
-                >
-                  {v.cta.label}
-                </a>
-              )}
-            </section>
-          );
-        }
-
-        if (b.kind !== "card") return null;
-        const c = b.card;
-        return (
-          <section id={b.id} class="mt-20 lg:mt-32">
-            <h2 class="display text-section-lg tracking-[-0.02em]">{c.title}</h2>
-            <Picture
-              img={c.image}
-              ratio={353 / 250}
-              class="mt-5 lg:mt-10"
-              sizes="(min-width: 1024px) 66vw, 100vw"
-            />
-            {c.text && (
-              <p class="mx-auto mt-5 max-w-lg text-dek font-extrabold leading-[0.95] lg:mt-10">
-                {c.text}
-              </p>
-            )}
-            {c.cta?.url &&
-              (c.ctaStyle === "button" ? (
-                <a
-                  href={c.cta.url}
-                  data-voice-open={c.cta.url === "#voice" ? "" : undefined}
-                  class="label press mt-5 inline-block bg-yellow px-6 py-4 text-base hover:bg-ink hover:text-yellow lg:mt-10 lg:text-2xl"
-                >
-                  {c.cta.label}
-                </a>
-              ) : (
-                <a
-                  href={c.cta.url}
-                  data-voice-open={c.cta.url === "#voice" ? "" : undefined}
-                  class="label link-line mt-5 inline-block text-base decoration-2 lg:mt-10 lg:text-2xl"
-                >
-                  {c.cta.label} <span class="nudge-x">→</span>
-                </a>
-              ))}
-          </section>
-        );
-      })}
-    </div>
+          </ol>
+          {v.cta?.url && (
+            <a
+              href={v.cta.url}
+              class="label press mt-8 inline-block bg-yellow px-6 py-4 text-base hover:bg-ink hover:text-yellow lg:hidden"
+            >
+              {v.cta.label}
+            </a>
+          )}
+        </section>
+      );
+    })}
   </div>
 </Layout>

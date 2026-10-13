@@ -38,11 +38,11 @@ const blank: Card = {
   data-managed={managed ? "" : undefined}
 >
   <div class="flex items-center justify-between border-b border-ink py-2.5">
-    <p class="label inline-flex items-center gap-1.5 text-sm font-black">
+    <p class="label inline-flex items-center gap-1.5 text-sm font-extrabold">
       {s.sortLatest}
       <Icon name="chevron" class="h-1.5 w-2.5" />
     </p>
-    <p class="label text-sm font-black" data-count>
+    <p class="label text-sm font-extrabold" data-count>
       {total} {countLabel ?? s.results}
     </p>
   </div>
@@ -56,7 +56,7 @@ const blank: Card = {
       <button
         type="button"
         data-more
-        class="label font-black text-xl disabled:opacity-40 text-ink hover:bg-ink hover:text-yellow hover:shadow-[0_0_0_0.4em_var(--color-ink)]"
+        class="label bg-yellow px-5 py-3 font-extrabold text-xl text-ink hover:bg-ink hover:text-yellow disabled:opacity-40"
       >
         {s.loadMore}
       </button>

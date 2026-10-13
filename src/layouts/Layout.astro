@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
+import PageTransition from "../components/PageTransition.astro";
 import VoiceNote from "../components/VoiceNote.astro";
 import { href, htmlLang, otherLang, t, type Lang } from "../i18n";
 import { getSettings } from "../lib/content";
@@ -29,6 +30,8 @@ interface Props {
   compactHeader?: boolean;
   /** The corner mic button. Defaults to on, except on bare pages. */
   voiceLauncher?: boolean;
+  /** Lenis smooth wheel scrolling. Off for scroll-snapped pages. */
+  smoothScroll?: boolean;
 }
 
 const {
@@ -44,6 +47,7 @@ const {
 const tone = Astro.props.header ?? (dark ? "dark" : "light");
 const compactHeader = Astro.props.compactHeader ?? false;
 const voiceLauncher = Astro.props.voiceLauncher ?? !bare;
+const smoothScroll = Astro.props.smoothScroll ?? true;
 const settings = await getSettings(lang);
 const other = otherLang(lang);
 const alternate = alt ?? href(other, "home");
@@ -56,7 +60,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
-<html lang={htmlLang[lang]}>
+<html lang={htmlLang[lang]} data-smooth-scroll={smoothScroll ? undefined : "off"}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -82,6 +86,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <slot name="head" />
   </head>
   <body class:list={["min-h-dvh", dark && "bg-ink! text-paper"]}>
+    <PageTransition />
     <a
       href="#main"
       class="label sr-only z-[60] bg-ink px-4 py-3 text-paper focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
@@ -114,6 +119,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 
 <script>
   import { fadeImages } from "../lib/motion";
+  import { smoothScroll } from "../lib/smoothScroll";
 
+  smoothScroll();
   fadeImages(document.getElementById("main") ?? document);
 </script>

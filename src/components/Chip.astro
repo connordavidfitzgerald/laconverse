@@ -16,7 +16,7 @@ const { category, lang, size = "sm", class: className, ...rest } = Astro.props;
 <a
   href={href(lang, "category", category.slug)}
   class:list={[
-    "label inline-flex items-baseline gap-[0.45em] whitespace-nowrap text-ink hover:bg-ink hover:text-yellow hover:shadow-[0_0_0_0.4em_var(--color-ink)] font-black",
+    "label inline-flex items-baseline gap-[0.45em] whitespace-nowrap text-ink hover:bg-ink hover:text-yellow hover:shadow-[0_0_0_0.4em_var(--color-ink)] font-extrabold",
     size === "sm" ? " text-sm " : " text-md",
     className,
   ]}

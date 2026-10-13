@@ -2,6 +2,7 @@
 /* Figma: ABOUT (+ PARTNERS block). */
 import Icon from "../components/Icon.astro";
 import Picture from "../components/Picture.astro";
+import StoryRow from "../components/StoryRow.astro";
 import Layout from "../layouts/Layout.astro";
 import { href, otherLang, t, type Lang } from "../i18n";
 import { getAbout } from "../lib/content";
@@ -35,7 +36,7 @@ const groups: [string, Person[]][] = [
       <Picture img={page.image} ratio={7 / 5} eager sizes="(min-width: 1024px) 66vw, 100vw" />
 
       <div
-        class="prose-intro mx-auto mt-10 max-w-[31rem] lg:max-w-3xl"
+        class="prose-intro mx-auto mt-20 max-w-[31rem] lg:max-w-3xl"
         set:html={renderRichText(page.intro)}
       />
     </div>
@@ -111,11 +112,48 @@ const groups: [string, Person[]][] = [
               class="size-3 shrink-0 transition-transform duration-300 ease-out group-open:rotate-45 group-[.is-closing]:rotate-0! lg:size-5"
             />
           </summary>
-          <div
-            class="prose-article max-w-2xl py-5"
-            data-accordion-body
-            set:html={renderRichText(sec.body)}
-          />
+          <div class="py-5" data-accordion-body>
+            {sec.body?.length ? (
+              <div class="prose-article max-w-2xl" set:html={renderRichText(sec.body)} />
+            ) : null}
+            {sec.articles?.length ? (
+              <div class:list={["lg:grid lg:grid-cols-2 lg:gap-x-5", sec.body?.length && "mt-5"]}>
+                {sec.articles.map((a) => (
+                  <StoryRow article={a} lang={lang} />
+                ))}
+              </div>
+            ) : null}
+            {sec.positions?.length ? (
+              <ul class:list={[sec.body?.length && "mt-5"]}>
+                {sec.positions.map((p) => (
+                  <li class="border-t border-ink">
+                    <a
+                      href={href(lang, "position", p.slug)}
+                      class="group flex items-center justify-between gap-5 py-5"
+                    >
+                      <span>
+                        <span class="display block text-2xl leading-[0.95] group-hover:underline lg:text-3xl">
+                          {p.title}
+                        </span>
+                        {p.meta && <span class="label mt-2 block text-xs">{p.meta}</span>}
+                      </span>
+                      <Icon name="arrow" class="size-4 shrink-0" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {sec.kind === "positions" && (
+              <p class="border-t border-ink pt-5">
+                <a
+                  href={href(lang, "giveYourVoice")}
+                  class="label text-xs underline hover:no-underline"
+                >
+                  {s.learnMore}
+                </a>
+              </p>
+            )}
+          </div>
         </details>
       ))}
     </section>

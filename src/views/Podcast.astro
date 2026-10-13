@@ -48,7 +48,7 @@ const latestSpotify = spotify(latest?.src);
       <div class="flex flex-col lg:p-40">
         <Picture
           img={podcast.image ?? podcast.cover}
-          ratio={353 / 290}
+          ratio={1 / 1}
           class="mt-5"
           eager
           sizes="(min-width: 1024px) 66vw, 100vw"
@@ -96,9 +96,7 @@ const latestSpotify = spotify(latest?.src);
           </h2>
           <ol>
             {podcast.episodes.map((e, i) => (
-              <li
-                class="grid grid-cols-[44px_1fr] gap-x-2 border-t border-ink py-4 lg:grid-cols-[80px_1fr]"
-              >
+              <li class="grid grid-cols-[44px_1fr] gap-x-2 border-t border-ink py-4 lg:grid-cols-[80px_1fr]">
                 <span class="display text-2xl leading-[0.95] lg:text-4xl">{pad(i + 1)}</span>
                 <div class="flex flex-col gap-2.5">
                   <h3 class="display text-2xl leading-[0.95] lg:text-4xl">{e.title}</h3>

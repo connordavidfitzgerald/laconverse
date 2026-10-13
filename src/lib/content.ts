@@ -17,7 +17,7 @@ import type {
   GiveYourVoiceData,
   HomeData,
   IndexEntry,
-  LaReleveData,
+  EcoleData,
   PartnerStory,
   Person,
   Podcast,
@@ -115,8 +115,7 @@ export const getHome = (lang: Lang) =>
       ),
       "support": page.support{ "title": title[$lang], "text": text[$lang], "cta": ${CTA()} },
       "ecole": page.ecole{
-        "title": title[$lang], "text": text[$lang], image ${IMG},
-        "program": program->{ ${SLUG} }
+        "title": title[$lang], "text": text[$lang], image ${IMG}
       },
       "seo": ${SEO("page.seo")},
       "videos": *[_type == "video" && ${PUB}] | order(publishedAt desc)[0...8] ${VIDEO_CARD},
@@ -145,6 +144,7 @@ export const getArticle = (lang: Lang, slug: string) =>
       "machineTranslated": machineTranslated == $lang,
       "series": series->${TAX},
       "authorsNote": authorsNote[$lang],
+      "storyPrompt": storyPrompt[$lang],
       "photographers": coalesce(photographers[]->{ name, "slug": slug.current }, []),
       "illustrators": coalesce(illustrators[]->{ name, "slug": slug.current }, []),
       "authorsFull": coalesce(authors[]->${PERSON}, [])
@@ -270,28 +270,44 @@ export const getPodcast = (lang: Lang, slug: string) =>
     () => fx.podcast(lang, slug),
   );
 
-/* ---- La Relève / programs ---------------------------------------------- */
+/* ---- École Converse / programs ----------------------------------------- */
 
-export const getLaReleve = (lang: Lang) =>
-  load<LaReleveData>(
+/* École Converse is the page the programs hang off, not one of them: its old
+   program document (from the La Relève days) is skipped everywhere. */
+const ECOLE_SLUG = "ecole-converse";
+const IS_PROGRAM = `_type == "program" && ${PUB} && slug.fr.current != "${ECOLE_SLUG}"`;
+
+/* The singleton keeps its La Relève-era ID so existing content carries over. */
+export const getEcole = (lang: Lang) =>
+  load<EcoleData>(
     `{
       "page": *[_id == "laRelevePage"][0]
     }{
-      "title": page.title[$lang], "intro": page.${RICH("intro")},
+      "title": page.title[$lang], "kicker": page.kicker[$lang], "image": page.image ${IMG}, "intro": page.${RICH("intro")},
       "cta": ${CTA("page.cta")}, "seo": ${SEO("page.seo")},
+      "why": page.why{ "title": title[$lang], "body": ${RICH("body")} },
+      "stats": coalesce(page.stats[defined(value) && defined(label[$lang])]{ value, "label": label[$lang] }, []),
+      "steps": coalesce(page.steps[defined(title[$lang])]{ "title": title[$lang], "text": text[$lang] }, []),
       "programs": select(
-        count((page.programs[]->)[${PUB}]) > 0 => (page.programs[]->)[${PUB}]${PROGRAM_CARD},
-        *[_type == "program" && ${PUB}] | order(order asc) ${PROGRAM_CARD}
-      )
+        count((page.programs[]->)[${IS_PROGRAM}]) > 0 => (page.programs[]->)[${IS_PROGRAM}]${PROGRAM_CARD},
+        *[${IS_PROGRAM}] | order(order asc) ${PROGRAM_CARD}
+      ),
+      "cohorts": coalesce(page.cohorts[defined(year) && defined(track[$lang])]{ year, "track": track[$lang], count } | order(year desc), []),
+      "support": page.support{
+        "title": title[$lang], "body": ${RICH("body")},
+        "ctas": coalesce(ctas[defined(url[$lang])]${CTA("")}, []),
+        "partners": coalesce(partners[]{ name, url, logo ${IMG} }, [])
+      },
+      "form": select(defined(page.form.title[$lang]) => page.form{ "title": title[$lang], "text": text[$lang] })
     }`,
     { lang },
-    () => fx.laReleve(lang),
+    () => fx.ecole(lang),
   );
 
 /* Only programs that link to their own page have one. */
 export const getProgramSlugs = (lang: Lang) =>
   load<string[]>(
-    `*[_type == "program" && ${PUB} && coalesce(linkTo, "self") == "self"]{ ${SLUG} }.slug`,
+    `*[${IS_PROGRAM} && coalesce(linkTo, "self") == "self"]{ ${SLUG} }.slug`,
     { lang },
     () =>
       fx
@@ -302,10 +318,13 @@ export const getProgramSlugs = (lang: Lang) =>
 
 export const getProgram = (lang: Lang, slug: string) =>
   load<Program | null>(
-    `*[_type == "program" && slug[$lang].current == $slug && coalesce(linkTo, "self") == "self"][0]{
+    `*[${IS_PROGRAM} && slug[$lang].current == $slug && coalesce(linkTo, "self") == "self"][0]{
       ...${PROGRAM_CARD}, "tagline": tagline[$lang], ${BODY}, "cta": ${CTA()}, "seo": ${SEO()}, ${TRANSLATIONS},
       "form": select(defined(form.title[$lang]) || defined(form.text[$lang]) => form{ "title": title[$lang], "text": text[$lang] }),
-      quote { image ${IMG}, "text": text[$lang], attribution, "source": source[$lang] }
+      quote { image ${IMG}, "text": text[$lang], attribution, "source": source[$lang] },
+      "video": select(defined(video.url) => video{ "title": title[$lang], "text": text[$lang], url, moreUrl, "moreLabel": moreLabel[$lang] }),
+      "articles": select(defined(series) => *[_type == "article" && ${PUB} && series._ref == ^.series._ref] | order(publishedAt desc)[0...3] ${ARTICLE_CARD}, []),
+      support
     }`,
     { lang, slug },
     () => {
@@ -322,7 +341,11 @@ export const getAbout = (lang: Lang) =>
       "title": title[$lang], image ${IMG}, "intro": ${RICH("intro")}, "seo": ${SEO()},
       "team": coalesce(team[]->${PERSON}, []),
       "collaborators": coalesce(collaborators[]->${PERSON}, []),
-      "sections": coalesce(sections[]{ _key, "title": title[$lang], "body": ${RICH("body")} }, []),
+      "sections": coalesce(sections[defined(title[$lang])]{
+        _key, "title": title[$lang], kind, "body": ${RICH("body")},
+        "articles": select(kind == "series" => *[_type == "article" && ${PUB} && series._ref == ^.series._ref] | order(publishedAt desc) ${ARTICLE_CARD}),
+        "positions": select(kind == "positions" => *[_type == "position" && ${PUB} && open != false] | order(order asc) ${POSITION})
+      }, []),
       "partners": coalesce(partners[]{ name, url, logo ${IMG} }, [])
     }`,
     { lang },
@@ -334,7 +357,7 @@ const CARD = `{ "title": title[$lang], "text": text[$lang], "cta": ${CTA()}, cta
 export const getGetInvolved = (lang: Lang) =>
   load<GetInvolvedData>(
     `*[_id == "getInvolvedPage"][0]{
-      "title": title[$lang], "intro": intro[$lang], "seo": ${SEO()},
+      "title": title[$lang], image ${IMG}, "intro": intro[$lang], "seo": ${SEO()},
       "cards": coalesce(cards[]${CARD}, []),
       "cardsAfter": coalesce(cardsAfter[]${CARD}, []),
       donate {

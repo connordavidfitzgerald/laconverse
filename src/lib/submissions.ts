@@ -1,5 +1,7 @@
 /* Shared by the /api routes: validate a posted form and store it as a
-   `submission` document (with any uploaded file) in Sanity. */
+   `submission` document (with any uploaded file) in Sanity, then notify the
+   newsroom of voice notes and written stories (notify.ts). */
+import { notifySubmission, type Notice } from "./notify";
 import { writeClient } from "./sanity";
 
 const MB = 1024 * 1024;
@@ -68,15 +70,19 @@ export async function handleSubmission(request: Request, allowed: string[]) {
     return json({ error: "Submissions are not configured" }, 503);
   }
 
+  let notice: Notice["audio"];
   try {
     if (audio instanceof File && audio.size) {
       if (audio.size > LIMITS.audio || !audio.type.startsWith("audio/"))
         return json({ error: "Recording too large or not audio" }, 413);
-      const asset = await client.assets.upload("file", Buffer.from(await audio.arrayBuffer()), {
-        filename: audio.name || "voice-note.webm",
+      const data = Buffer.from(await audio.arrayBuffer());
+      const filename = audio.name || "voice-note.webm";
+      const asset = await client.assets.upload("file", data, {
+        filename,
         contentType: audio.type,
       });
       doc.audio = { _type: "file", asset: { _type: "reference", _ref: asset._id } };
+      notice = { url: asset.url, filename, type: audio.type, data };
     }
     if (cv instanceof File && cv.size) {
       if (cv.size > LIMITS.cv) return json({ error: "CV too large" }, 413);
@@ -86,7 +92,13 @@ export async function handleSubmission(request: Request, allowed: string[]) {
       });
       doc.cv = { _type: "file", asset: { _type: "reference", _ref: asset._id } };
     }
-    await client.create(doc as { _type: string });
+    const created = await client.create(doc as { _type: string });
+    if (kind === "voice" || kind === "text")
+      await notifySubmission({
+        ...(doc as Omit<Notice, "id" | "audio">),
+        id: created._id,
+        audio: notice,
+      });
     return json({ ok: true });
   } catch (error) {
     console.error("[submission failed]", error);

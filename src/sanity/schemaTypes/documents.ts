@@ -137,9 +137,17 @@ export const articleType = defineType({
     }),
     defineField({
       name: "authorsNote",
-      title: "Transparency box",
-      description: "A note from the journalist on how the story came about.",
+      title: "Transparency note",
+      description:
+        "A note from the journalist on how the story came about (“Salut, c’est Nouri !…”). Opens in an overlay from the line under the byline.",
       type: "localeNote",
+    }),
+    defineField({
+      name: "storyPrompt",
+      title: "Story prompt",
+      description:
+        "The question on the black call-out in the article body that asks readers for their story (“Have you ever been racially profiled?”). Leave empty for the generic “Got a story to tell?”.",
+      type: "localeString",
     }),
     defineField({ name: "trending", type: "boolean", initialValue: false }),
     defineField({
@@ -378,7 +386,7 @@ export const podcastType = defineType({
   preview: bilingualPreview({ media: "cover" }),
 });
 
-/* La Relève programs: École Converse, MC Converse, Podcasts, Events… */
+/* École Converse programs: MC Converse, Podcasts, Events… */
 export const programType = defineType({
   name: "program",
   title: "Program",
@@ -406,6 +414,31 @@ export const programType = defineType({
       ],
     }),
     defineField({
+      name: "video",
+      type: "object",
+      description: "A featured video under the quote.",
+      fields: [
+        defineField({ name: "title", type: "localeString" }),
+        defineField({ name: "text", type: "localeText" }),
+        defineField({ name: "url", title: "Video URL (YouTube, Vimeo)", type: "url" }),
+        defineField({ name: "moreUrl", title: "“See all” link", type: "url" }),
+        defineField({ name: "moreLabel", title: "“See all” label", type: "localeString" }),
+      ],
+    }),
+    defineField({
+      name: "series",
+      type: "reference",
+      to: [{ type: "series" }],
+      description: "Lists this series' latest articles on the page.",
+    }),
+    defineField({
+      name: "support",
+      title: "Show “Support projects like this one”",
+      description: "A donate button under the video.",
+      type: "boolean",
+      initialValue: false,
+    }),
+    defineField({
       name: "form",
       title: "Sign-up form",
       type: "object",
@@ -419,7 +452,7 @@ export const programType = defineType({
       name: "linkTo",
       title: "Card links to",
       type: "string",
-      description: "Where the La Relève card goes. Defaults to this program's own page.",
+      description: "Where the École Converse card goes. Defaults to this program's own page.",
       options: {
         list: [
           { title: "This program page", value: "self" },

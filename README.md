@@ -35,7 +35,7 @@ are shared. Articles, videos, podcasts, programs, positions, sections, topics
 and series have a slug per language, and are on the site in each language
 they have a slug in, so a story can go out in French first and get its
 English side later. Partner stories show in each language whose title is
-filled in. The page singletons (Home, About, La Relève, Get involved, Give your
+filled in. The page singletons (Home, About, École Converse, Get involved, Give your
 voice, Contact, Site settings) are one fixed document each (`homePage`, …);
 their picks of articles and programs skip any that aren't published in the
 page's language.
@@ -117,6 +117,36 @@ Everything lands in **Inbox** in the Studio as a `submission` document. The
 newsletter form posts to the mailing-list provider instead once
 `newsletterAction` is set in Site settings. There is a honeypot field but no
 rate limiting yet. If spam shows up, add Vercel's firewall rule or a captcha.
+
+### Notifications
+
+Voice notes and written stories are also sent to the newsroom
+(`src/lib/notify.ts`): an email to `NOTIFY_EMAIL`, with the recording attached
+and linked, and a WhatsApp message to `WHATSAPP_TO`, with a link to the
+recording. A channel is skipped while its keys are missing, and a failed
+notification is only logged (the submission is still saved in the Inbox).
+
+One-time setup, then put the keys in Vercel (Production) and redeploy:
+
+1. **Email (Resend).** At https://resend.com add the domain `laconverse.com`
+   and add the DNS records it lists. Then create an API key
+   → `RESEND_API_KEY`. Replies go straight to the sender when they left an
+   email address.
+2. **WhatsApp (Meta Cloud API).** In Meta Business Suite, create a business
+   portfolio. At https://developers.facebook.com create an app with the
+   WhatsApp product, then add a phone number that isn't already on WhatsApp
+   → `WHATSAPP_PHONE_NUMBER_ID`. Create a system user with a permanent token
+   that has `whatsapp_business_messaging` → `WHATSAPP_TOKEN`. Then create a
+   message template named `nouvelle_soumission` (category Utility, French)
+   with this body:
+
+   > La Converse — {{1}} de {{2}} ({{3}}) : {{4}}. Aussi envoyé à info@laconverse.com.
+
+   Once Meta approves it, set `WHATSAPP_TO` to the recipient's number
+   (international format, digits only; comma-separate several).
+
+Chrome and Android record WebM. The link plays in any browser, but the email
+attachment may not open in iPhone Mail. Safari recordings (MP4) play everywhere.
 
 ## Webflow → Sanity migration
 

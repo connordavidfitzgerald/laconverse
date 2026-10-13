@@ -37,6 +37,7 @@
 @theme {
   --color-yellow: #eaeb47;
   --color-lilac: #ccb1e2;
+  --color-pink: #f92f7b;
   --color-ink: #000000;
   --color-paper: #ffffff;
 
@@ -67,6 +68,8 @@
   --text-poster: min(12.5vw, 15rem);
   --text-poster--line-height: 0.82;
   --text-poster--letter-spacing: -0.03em;
+  --text-rail: 3.5rem; /* 48 → 72 */
+  --text-rail--line-height: 0.95;
   --text-section-lg: 3rem; /* 36 → 120 */
   --text-section-lg--line-height: 1;
   --text-section: clamp(2.25rem, 1.256rem + 4.045vw, 5.625rem); /* 36 → 90 */
@@ -215,10 +218,11 @@
 /* Card images settle back toward their centre on hover, opening a yellow
    border inside the frame. Same curve and length as the menu links rising in
    (power3.out, 0.6s). Put on the Picture frame (which already clips) inside a
-   `.group`; `&&` outranks the frame's grey placeholder background. */
+   `.group`; `&&` outranks the frame's grey placeholder background. Set
+   `--inset` to change the colour (École Converse uses lilac). */
 @utility media-inset {
   && {
-    background-color: var(--color-yellow);
+    background-color: var(--inset, var(--color-yellow));
   }
   & img {
     transition: transform 600ms var(--ease-power3-out);
@@ -397,7 +401,7 @@
   }
 }
 
-/* Intro copy on editorial pages (About, La Relève, programs): Favorit
+/* Intro copy on editorial pages (About, École Converse, programs): Favorit
    Extrabold, first line indented, as in the Figma frames. */
 @utility prose-intro {
   font-family: var(--font-display);

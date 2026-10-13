@@ -30,6 +30,7 @@ const videos = await getVideos(lang);
   dark
   compactHeader
   voiceLauncher={false}
+  smoothScroll={false}
 >
   <video-feed class="flex flex-col items-center gap-(--feed-gap) py-(--feed-gap) [--feed-gap:1.25rem] lg:[--feed-gap:2rem]">
     {videos.map((v, i) => {

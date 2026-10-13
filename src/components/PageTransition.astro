@@ -1,0 +1,103 @@
+---
+/* The yellow page wipe. Clicking an internal link slides the panel up over
+   the page, then navigates; the next page paints already covered (the inline
+   script flags <html> before first paint), holds a beat, and the panel drops
+   back down to reveal it. Skipped entirely for reduced motion. Opt a link out
+   with `data-no-transition`. */
+---
+
+<div class="page-wipe" aria-hidden="true"></div>
+
+<script is:inline>
+  try {
+    const t = Number(sessionStorage.getItem("page-wipe"));
+    if (t && Date.now() - t < 5000) document.documentElement.classList.add("wipe-in");
+  } catch {}
+</script>
+
+<script>
+  import { gsap, reduced } from "../lib/motion";
+
+  const KEY = "page-wipe";
+  const wipe = document.querySelector<HTMLElement>(".page-wipe")!;
+  const root = document.documentElement;
+  let leaving = false;
+
+  // Take over from the CSS starting position (GSAP must own the transform).
+  gsap.set(wipe, { y: 0, yPercent: root.classList.contains("wipe-in") ? 0 : 100 });
+  root.classList.remove("wipe-in");
+
+  function reveal() {
+    leaving = false;
+    try {
+      sessionStorage.removeItem(KEY);
+    } catch {}
+    gsap.killTweensOf(wipe);
+    if (reduced() || gsap.getProperty(wipe, "yPercent") === 100) {
+      gsap.set(wipe, { yPercent: 100 });
+      return;
+    }
+    gsap.to(wipe, { yPercent: 100, duration: 0.55, ease: "power3.inOut", delay: 0.2 });
+  }
+
+  function cover(url: string) {
+    leaving = true;
+    try {
+      sessionStorage.setItem(KEY, String(Date.now()));
+    } catch {}
+    gsap.killTweensOf(wipe);
+    gsap.fromTo(
+      wipe,
+      { yPercent: 100 },
+      {
+        yPercent: 0,
+        duration: 0.5,
+        ease: "power3.inOut",
+        onComplete: () => location.assign(url),
+      },
+    );
+  }
+
+  function wipeTarget(e: MouseEvent): URL | null {
+    if (e.defaultPrevented || e.button !== 0) return null;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return null;
+    const a = (e.target as Element | null)?.closest?.("a");
+    if (!a || !a.href || a.hasAttribute("download") || a.hasAttribute("data-no-transition"))
+      return null;
+    if (a.target && a.target !== "_self") return null;
+    const url = new URL(a.href, location.href);
+    if (url.origin !== location.origin) return null;
+    // Same page (incl. #hash links): let the browser scroll.
+    if (url.pathname === location.pathname && url.search === location.search) return null;
+    // Sanity Studio and other non-site routes don't carry the wipe.
+    if (url.pathname.startsWith("/admin")) return null;
+    return url;
+  }
+
+  // Bubble phase, so components that preventDefault on their links win.
+  document.addEventListener("click", (e) => {
+    if (reduced() || leaving) return;
+    const url = wipeTarget(e);
+    if (!url) return;
+    e.preventDefault();
+    cover(url.href);
+  });
+
+  reveal();
+  // Back/forward restores the page from bfcache mid-wipe; lift it again.
+  addEventListener("pageshow", (e) => e.persisted && reveal());
+</script>
+
+<style>
+  .page-wipe {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: var(--color-yellow);
+    pointer-events: none;
+    transform: translateY(100%);
+  }
+  :global(html.wipe-in) .page-wipe {
+    transform: none;
+  }
+</style>

@@ -1,101 +1,95 @@
 ---
 /* Calls to action woven into the article body: after roughly every two
-   screens of reading, the next one of newsletter → donate → share your story
+   screens of reading, the next one of donate → newsletter → share your story
    drops in after a paragraph (never after a heading, never in the last half
    screen). Screens differ per device, so placement is measured in the browser;
    without JS the article simply reads uninterrupted. Wraps the prose element,
    which must carry `data-cta-body`. */
 import AjaxForm from "./AjaxForm.astro";
-import Spray from "./Spray.astro";
+import Icon from "./Icon.astro";
 import { href, t, type Lang } from "../i18n";
 import { getSettings } from "../lib/content";
 
 interface Props {
   lang: Lang;
+  /** The question on the story panel; the article's own, else the generic. */
+  storyPrompt?: string | null;
   /** Screens of reading between two calls to action. */
   every?: number;
 }
-const { lang, every = 2 } = Astro.props;
+const { lang, storyPrompt, every = 2 } = Astro.props;
 const s = t(lang);
 const settings = await getSettings(lang);
 const donate = settings.donateUrl ?? `${href(lang, "getInvolved")}#donate`;
 
-/* Set entirely in Favorit, inset from the text column, with the spray mark
-   bleeding off a corner like the SupportBand. The prose styles reach into
-   anything inside the body, so the panels reset what would leak (link
-   underline, spacing). */
-const panel =
-  "relative mx-3 my-14! overflow-hidden bg-yellow px-6 py-8 font-display sm:mx-8 lg:mx-12 lg:px-5 lg:py-10";
-const title = "display text-4xl/[0.92] tracking-[-0.015em]";
-const text = "mt-4 text-xl/[1.1] font-extrabold tracking-[-0.01em]";
+/* Figma: the three article CTAs (pink donate, yellow newsletter, black story).
+   Flat colour blocks, set entirely in Favorit and centred, with square
+   outlined buttons. The prose styles reach into anything inside the body, so
+   the panels reset what would leak (link underline, spacing). */
+const panel = "my-14! px-5 py-12 text-center font-display sm:px-10 sm:py-14";
+const title = "display font-black text-[1.75rem] tracking-[-0.02em] sm:text-[2.5rem]";
 const button =
-  "press label inline-grid place-items-center rounded-[10px] border border-ink bg-yellow px-6 py-4 text-lg no-underline! hover:bg-ink hover:text-yellow";
-const spray = "-right-[35%] top-[40%] w-[130%] -rotate-[20deg] lg:top-[30%] lg:w-[110%]";
+  "press label font-black inline-grid place-items-center border border-current px-5 py-2.5 text-[0.95rem] no-underline! hover:bg-ink hover:text-[var(--panel)]";
 ---
 
 <article-ctas data-every={every} class="block">
   <slot />
 
   <template>
-    <aside class={panel} aria-label={s.subscribe}>
-      <Spray class={spray} seed={11} />
-      <div class="relative">
-        <p class={title}>{s.newsletter}</p>
-        <AjaxForm
-          action={settings.newsletterAction ?? "/api/contact"}
-          external={!!settings.newsletterAction}
-          lang={lang}
-          class="mt-5"
-        >
-          <input type="hidden" name="kind" value="newsletter" />
-          <input type="hidden" name="context" value="article" />
-          <div class="flex items-end gap-2.5 border-b border-ink pb-3">
-            <input
-              name="email"
-              type="email"
-              required
-              autocomplete="email"
-              placeholder={s.email}
-              aria-label={s.email}
-              class="display min-w-0 flex-1 bg-transparent text-3xl tracking-[-0.02em] placeholder:text-ink/40 outline-none"
-            />
-            <button type="submit" class:list={[button, "shrink-0 disabled:opacity-50"]}>
-              {s.subscribe}
-            </button>
-          </div>
-        </AjaxForm>
-      </div>
+    <aside class:list={[panel, "bg-pink [--panel:var(--color-pink)]"]} aria-label={s.donate}>
+      <p class={title}>{s.ctaDonateTitle}</p>
+      <a href={donate} class:list={[button, "mt-7"]}>
+        {s.supportUs}
+      </a>
     </aside>
   </template>
 
   <template>
-    <aside class={panel} aria-label={s.donate}>
-      <Spray class={spray} seed={21} />
-      <div class="relative">
-        <p class={title}>{s.ctaDonateTitle}</p>
-        <p class={text}>{s.ctaDonateText}</p>
-        <a href={donate} class:list={[button, "mt-6"]}>
-          {s.supportUs}
-        </a>
-      </div>
-    </aside>
-  </template>
-
-  <template>
-    <aside class={panel} aria-label={s.vnFab}>
-      <Spray class={spray} seed={4} />
-      <div class="relative">
-        <p class={title}>{s.vnTitle}</p>
-        <p class={text}>{s.ctaStoryText}</p>
-        <div class="mt-6 flex flex-wrap gap-2.5">
-          <button type="button" data-voice-open class={button}>
-            {s.vnRecord}
-          </button>
-          <button type="button" data-voice-open="write" class={button}>
-            {s.vnWrite}
+    <aside class:list={[panel, "bg-yellow [--panel:var(--color-yellow)]"]} aria-label={s.subscribe}>
+      <p class={title}>{s.ctaNewsletterTitle}</p>
+      <AjaxForm
+        action={settings.newsletterAction ?? "/api/contact"}
+        external={!!settings.newsletterAction}
+        lang={lang}
+        class="mt-10"
+      >
+        <input type="hidden" name="kind" value="newsletter" />
+        <input type="hidden" name="context" value="article" />
+        <div class="flex items-end gap-2.5 sm:gap-5">
+          <input
+            name="email"
+            type="email"
+            required
+            autocomplete="email"
+            placeholder={s.email}
+            aria-label={s.email}
+            class="display font-black min-w-0 flex-1 border-b border-ink bg-transparent pb-3 text-left text-2xl placeholder:text-ink outline-none focus:placeholder:text-ink/40"
+          />
+          <button type="submit" class:list={[button, "shrink-0 sm:w-[10.5rem] disabled:opacity-50"]}>
+            {s.subscribe}
           </button>
         </div>
+      </AjaxForm>
+    </aside>
+  </template>
+
+  <template>
+    <aside class:list={[panel, "bg-ink text-yellow"]} aria-label={s.vnFab}>
+      <p class={title}>{storyPrompt || s.vnTitle}</p>
+      <div class="mt-7 flex flex-col items-center gap-2.5">
+        <button
+          type="button"
+          data-voice-open
+          aria-label={s.vnOpen}
+          class="press grid size-[60px] place-items-center rounded-full bg-yellow text-ink hover:scale-105"
+        >
+          <Icon name="mic" class="h-4 w-4" />
+        </button>
+        <button type="button" data-voice-open="write" class="label font-black text-xs underline underline-offset-2">
+          {s.vnWrite}
+        </button>
       </div>
+      <p class="display font-black mt-7 text-lg/[0.95] tracking-[-0.02em]">{s.ctaStoryText}</p>
     </aside>
   </template>
 </article-ctas>

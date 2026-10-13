@@ -26,3 +26,5 @@ pnpm-debug.log*
 
 # migration cache
 .migration/
+
+*.tar.gz

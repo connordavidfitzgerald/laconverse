@@ -1,6 +1,7 @@
 ---
 /* Section heading with an optional “see all” link beside it (mobile) or under
-   it (desktop rails). */
+   it (desktop rails). `rail`: on desktop the link drops under the title at the
+   same size, greyed (homepage rails). */
 import { t, type Lang } from "../i18n";
 
 interface Props {
@@ -9,22 +10,36 @@ interface Props {
   href?: string;
   class?: string;
   stacked?: boolean;
+  rail?: boolean;
 }
-const { lang, title, href: link, class: className, stacked = false } = Astro.props;
+const { lang, title, href: link, class: className, stacked = false, rail = false } = Astro.props;
 ---
 
 <div
   class:list={[
     "flex items-baseline justify-between gap-2.5",
     stacked && "lg:flex-col lg:items-start lg:gap-5",
+    rail && "lg:flex-col lg:items-start lg:gap-0",
     className,
   ]}
 >
-  <h2 class="display text-section tracking-[-0.015em] lg:tracking-[-0.02em]">{title}</h2>
+  <h2
+    class:list={[
+      "display text-section tracking-[-0.015em] lg:tracking-[-0.02em]",
+      rail && "lg:text-rail",
+    ]}
+  >
+    {title}
+  </h2>
   {link && (
     <a
       href={link}
-      class="shrink-0 text-xs font-medium lg:label lg:text-base lg:font-extrabold lg:normal-case"
+      class:list={[
+        "shrink-0 text-xs font-medium",
+        rail
+          ? "lg:display lg:text-rail lg:tracking-[-0.02em] lg:opacity-30 lg:hover:opacity-100"
+          : "lg:label lg:text-base lg:font-extrabold lg:normal-case",
+      ]}
     >
       {t(lang).seeAll} <span class="nudge-x">→</span>
     </a>

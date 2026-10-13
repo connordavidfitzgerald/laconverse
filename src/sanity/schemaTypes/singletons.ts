@@ -100,7 +100,6 @@ export const homePageType = defineType({
         title,
         defineField({ name: "image", type: "figure" }),
         text,
-        defineField({ name: "program", type: "reference", to: [{ type: "program" }] }),
       ],
     }),
     seo,
@@ -129,14 +128,38 @@ export const aboutPageType = defineType({
     defineField({
       name: "sections",
       title: "Expanding sections",
-      description: "News, Careers, Policies, Funding, Alumni…",
+      description: "News, Careers, Funding…",
       type: "array",
       of: [
         defineArrayMember({
           name: "section",
           type: "object",
-          fields: [title, defineField({ name: "body", type: "localeRichText" })],
-          preview: { select: { title: "title.fr" } },
+          fields: [
+            title,
+            defineField({
+              name: "kind",
+              title: "Lists",
+              type: "string",
+              description: "What the section lists under its text.",
+              options: {
+                list: [
+                  { title: "Nothing (text only)", value: "text" },
+                  { title: "A series' articles", value: "series" },
+                  { title: "Open positions", value: "positions" },
+                ],
+                layout: "radio",
+              },
+              initialValue: "text",
+            }),
+            defineField({
+              name: "series",
+              type: "reference",
+              to: [{ type: "series" }],
+              hidden: ({ parent }) => parent?.kind !== "series",
+            }),
+            defineField({ name: "body", type: "localeRichText" }),
+          ],
+          preview: { select: { title: "title.fr", subtitle: "kind" } },
         }),
       ],
     }),
@@ -160,22 +183,142 @@ export const aboutPageType = defineType({
   ],
 });
 
+/* École Converse. The type and ID are still `laRelevePage` (the page's old
+   name) so the existing document didn't have to be migrated. */
 export const laRelevePageType = defineType({
   name: "laRelevePage",
-  title: "La Relève",
+  title: "École Converse",
   type: "document",
   icon: BulbOutlineIcon,
+  groups: [
+    { name: "students", title: "Students", default: true },
+    { name: "funders", title: "Funders" },
+  ],
   fields: [
-    title,
-    defineField({ name: "intro", type: "localeRichText" }),
-    cta(),
+    { ...title, group: ["students", "funders"] },
+    defineField({
+      name: "kicker",
+      type: "localeString",
+      description: "One line under the title.",
+      group: "students",
+    }),
+    defineField({
+      name: "image",
+      title: "Hero image",
+      type: "figure",
+      description: "Full-width photo behind the title.",
+      group: "students",
+    }),
+    defineField({ name: "intro", type: "localeRichText", group: "students" }),
+    { ...cta(), group: "students" },
+    defineField({
+      name: "why",
+      title: "Why École Converse",
+      type: "object",
+      group: ["students", "funders"],
+      fields: [title, defineField({ name: "body", type: "localeRichText" })],
+    }),
+    defineField({
+      name: "stats",
+      title: "Key figures",
+      type: "array",
+      group: "funders",
+      of: [
+        defineArrayMember({
+          name: "stat",
+          type: "object",
+          fields: [
+            defineField({ name: "value", type: "string", description: "e.g. 50+" }),
+            defineField({ name: "label", type: "localeString" }),
+          ],
+          preview: { select: { title: "value", subtitle: "label.fr" } },
+        }),
+      ],
+      validation: (r) => r.max(4),
+    }),
+    defineField({
+      name: "steps",
+      title: "How it works",
+      type: "array",
+      group: "students",
+      of: [
+        defineArrayMember({
+          name: "step",
+          type: "object",
+          fields: [title, text],
+          preview: { select: { title: "title.fr" } },
+        }),
+      ],
+    }),
     defineField({
       name: "programs",
       type: "array",
+      group: "students",
       of: [defineArrayMember({ type: "reference", to: [{ type: "program" }] })],
       description: "Leave empty to list every program in its menu order.",
     }),
-    seo,
+    defineField({
+      name: "cohorts",
+      title: "Past cohorts",
+      type: "array",
+      group: "funders",
+      of: [
+        defineArrayMember({
+          name: "cohort",
+          type: "object",
+          fields: [
+            defineField({ name: "year", type: "number" }),
+            defineField({ name: "track", type: "localeString", description: "e.g. Journalism" }),
+            defineField({ name: "count", title: "Participants", type: "number" }),
+          ],
+          preview: { select: { title: "track.fr", subtitle: "year" } },
+        }),
+      ],
+    }),
+    defineField({
+      name: "support",
+      title: "Support the school",
+      type: "object",
+      group: "funders",
+      fields: [
+        title,
+        defineField({ name: "body", type: "localeRichText" }),
+        defineField({
+          name: "ctas",
+          title: "Buttons",
+          type: "array",
+          of: [defineArrayMember({ type: "localeCta" })],
+          validation: (r) => r.max(2),
+        }),
+        defineField({
+          name: "partners",
+          type: "array",
+          of: [
+            defineArrayMember({
+              name: "partner",
+              type: "object",
+              fields: [
+                defineField({ name: "name", type: "string" }),
+                defineField({ name: "logo", type: "image" }),
+                defineField({ name: "url", type: "url" }),
+              ],
+              preview: { select: { title: "name", media: "logo" } },
+            }),
+          ],
+        }),
+      ],
+    }),
+    defineField({
+      name: "form",
+      title: "Sign-up form",
+      type: "object",
+      group: "students",
+      fields: [
+        defineField({ name: "title", type: "localeString" }),
+        defineField({ name: "text", type: "localeText" }),
+      ],
+    }),
+    { ...seo, group: ["students", "funders"] },
   ],
 });
 
@@ -204,6 +347,7 @@ export const getInvolvedPageType = defineType({
   icon: HeartIcon,
   fields: [
     title,
+    defineField({ name: "image", type: "figure" }),
     defineField({ name: "intro", type: "localeText" }),
     defineField({ name: "cards", title: "Sections before Donate", type: "array", of: [card] }),
     defineField({

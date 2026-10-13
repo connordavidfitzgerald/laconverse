@@ -14,16 +14,26 @@ const { rail, count, lang, class: className } = Astro.props;
 const s = t(lang);
 const pad = (n: number) => String(n).padStart(2, "0");
 const button =
-  "press label grid size-14 place-items-center border-2 border-ink text-2xl hover:bg-ink hover:text-paper disabled:pointer-events-none disabled:opacity-25";
+  "press label grid size-8 place-items-center text-2xl hover:opacity-50 disabled:pointer-events-none disabled:opacity-20";
 ---
 
-<rail-controls data-rail={rail} class:list={["flex items-center gap-5", className]}>
-  <span class="label text-lg tabular-nums" aria-hidden="true">
+<rail-controls data-rail={rail} class:list={["flex items-center gap-4", className]}>
+  <span class="label text-[1.25rem] tabular-nums" aria-hidden="true">
     <span data-pos>01</span> / {pad(count)}
   </span>
   <span class="flex">
-    <button type="button" data-step="-1" aria-label={s.previous} aria-controls={rail} class={button}>←</button>
-    <button type="button" data-step="1" aria-label={s.next} aria-controls={rail} class:list={[button, "-ml-0.5"]}>→</button>
+    <button
+      type="button"
+      data-step="-1"
+      aria-label={s.previous}
+      aria-controls={rail}
+      class={button}
+    >
+      ←
+    </button>
+    <button type="button" data-step="1" aria-label={s.next} aria-controls={rail} class={button}>
+      →
+    </button>
   </span>
 </rail-controls>
 
@@ -48,7 +58,10 @@ const button =
       const smooth = !matchMedia("(prefers-reduced-motion: reduce)").matches;
       for (const b of buttons)
         b.addEventListener("click", () =>
-          rail.scrollBy({ left: Number(b.dataset.step) * step(), behavior: smooth ? "smooth" : "auto" }),
+          rail.scrollBy({
+            left: Number(b.dataset.step) * step(),
+            behavior: smooth ? "smooth" : "auto",
+          }),
         );
       rail.addEventListener("scroll", update, { passive: true });
       addEventListener("resize", update);

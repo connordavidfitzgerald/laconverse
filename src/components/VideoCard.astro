@@ -17,24 +17,20 @@ const [category] = video.categories;
   <Picture
     img={video.poster}
     ratio={9 / 16}
-    class="media-inset rounded-[10px] lg:rounded-none"
+    class="media-inset rounded-[10px] lg:rounded-[11px]"
     sizes="(min-width: 1024px) 20vw, 55vw"
   />
-  <h3 class="display text-card-sm text-balance">
+  <h3 class="display text-card-sm">
     <a
       href={`${href(lang, "videos")}#${video.slug}`}
-      class="title-line after:absolute after:inset-0"
+      class="title-line font-black after:absolute after:inset-0"
     >
       {video.title}
     </a>
   </h3>
   <div class="flex items-center justify-between">
     {category ? (
-      <Chip
-        category={category}
-        lang={lang}
-        class="relative z-10 lg:text-base lg:font-black"
-      />
+      <Chip category={category} lang={lang} class="relative z-10 lg:text-base lg:font-black" />
     ) : (
       <span />
     )}

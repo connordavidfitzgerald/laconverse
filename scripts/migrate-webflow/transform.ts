@@ -812,17 +812,46 @@ for (const lang of ["fr", "en"] as Lang[]) {
     });
   });
   seed.push(...programs);
-  const releve = fx.laReleve(lang);
+  const ecole = fx.ecole(lang);
   page(
     lang,
     compact({
       _id: `laRelevePage-${lang}`,
       _type: "laRelevePage",
       language: lang,
-      title: releve.title ?? undefined,
-      intro: releve.intro ?? undefined,
-      cta: releve.cta ? { _type: "cta", ...releve.cta } : undefined,
+      title: ecole.title ?? undefined,
+      kicker: ecole.kicker ?? undefined,
+      intro: ecole.intro ?? undefined,
+      cta: ecole.cta ? { _type: "cta", ...ecole.cta } : undefined,
+      why: ecole.why ? compact({ title: ecole.why.title, body: ecole.why.body }) : undefined,
+      stats: withKeys(
+        ecole.stats.map((x) => ({ _type: "stat", ...x })),
+        `stat-${lang}`,
+      ),
+      steps: withKeys(
+        ecole.steps.map((x) => ({ _type: "step", ...x })),
+        `step-${lang}`,
+      ),
       programs: programs.map((p) => ({ ...ref(p._id), _key: key(p._id) })),
+      cohorts: withKeys(
+        ecole.cohorts.map((x) => ({ _type: "cohort", ...x })),
+        `cohort-${lang}`,
+      ),
+      support: ecole.support
+        ? compact({
+            title: ecole.support.title,
+            body: ecole.support.body,
+            ctas: withKeys(
+              ecole.support.ctas.map((c) => ({ _type: "cta", ...c })),
+              `sup-${lang}`,
+            ),
+            partners: withKeys(
+              ecole.support.partners.map(({ logo, ...p }) => ({ _type: "partner", ...p })),
+              `partner-${lang}`,
+            ),
+          })
+        : undefined,
+      form: ecole.form ?? undefined,
     }),
   );
   const gi = fx.getInvolved(lang);

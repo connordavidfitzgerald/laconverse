@@ -5,6 +5,7 @@
 import ArticleCtas from "../components/ArticleCtas.astro";
 import AuthorCard from "../components/AuthorCard.astro";
 import Chip from "../components/Chip.astro";
+import Icon from "../components/Icon.astro";
 import Picture from "../components/Picture.astro";
 import ShareButton from "../components/ShareButton.astro";
 import StoryRow from "../components/StoryRow.astro";
@@ -26,6 +27,16 @@ const translation = article.translations.find((x) => x.language === other && x.s
 const related = await getRelated(lang, article);
 const [author] = article.authorsFull;
 const hero = Boolean(article.image?.asset?.url);
+const hasNote = Boolean(article.authorsNote?.length);
+/* Bars of the listen player's timeline: a fixed pseudo-waveform seeded from the
+   audio URL, so it's stable per article without decoding the audio. Phones
+   show every other bar. */
+const LISTEN_BARS = 96;
+let seed = [...(article.listen ?? "")].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7);
+const rand = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+const listenBars = Array.from({ length: LISTEN_BARS }, (_, i) =>
+  Math.round(22 + 70 * rand() * (0.55 + 0.45 * Math.sin((i / LISTEN_BARS) * Math.PI))),
+);
 const kicker = [formatLabel(article.format, lang), article.series?.title]
   .filter(Boolean)
   .join(" · ");
@@ -40,6 +51,12 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
   alternate={translation ? href(other, "article", translation.slug) : null}
   header={hero ? "overlay" : "light"}
 >
+  <div
+    data-read-progress
+    aria-hidden="true"
+    class="pointer-events-none fixed inset-x-0 top-0 z-[45] h-[3px] origin-left bg-yellow"
+    style="transform: scaleX(0)"
+  ></div>
   <article class="article-type">
     {hero && (
       <div data-header-hero class="relative">
@@ -110,6 +127,16 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
             </p>
           </div>
         )}
+        {hasNote && (
+          <button
+            type="button"
+            data-note-open
+            aria-haspopup="dialog"
+            class="label -mt-2 rounded-full border border-ink px-3 py-1 text-xs transition-colors hover:bg-ink hover:text-paper"
+          >
+            {s.transparencyNote}
+          </button>
+        )}
       </div>
     </header>
 
@@ -125,29 +152,79 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
         </div>
 
         {article.listen && (
-          <listen-bar class="mt-2.5 flex items-center gap-4 bg-yellow px-5 py-5">
-            <button
-              type="button"
-              class="press grid size-6 place-items-center rounded-full bg-ink text-paper hover:scale-110"
-              aria-label={s.listen}
-            >
-              <svg viewBox="0 0 10 12" class="h-2 w-2" fill="currentColor" data-play>
-                <path d="M0 0v12l10-6z" />
-              </svg>
-              <svg viewBox="0 0 10 12" class="hidden h-2 w-2" fill="currentColor" data-pause>
-                <path d="M0 0h3.5v12H0zM6.5 0H10v12H6.5z" />
-              </svg>
-            </button>
-            <span class="label flex-1 text-md font-black">{s.listen}</span>
-            <span class="label text-xs font-black" data-time></span>
+          <listen-bar
+            class="mt-2.5 block"
+            data-play-label={s.listen}
+            data-pause-label={s.pause}
+          >
+            <div class="rounded-2xl bg-ink px-5 py-5 text-paper">
+              <div class="flex items-center gap-4">
+                <button
+                  type="button"
+                  data-toggle
+                  class="press grid size-10 shrink-0 place-items-center rounded-full bg-yellow text-ink hover:scale-110"
+                  aria-label={s.listen}
+                >
+                  <svg viewBox="0 0 10 12" class="ml-px h-3 w-3" fill="currentColor" data-play>
+                    <path d="M0 0v12l10-6z" />
+                  </svg>
+                  <svg viewBox="0 0 10 12" class="hidden h-3 w-3" fill="currentColor" data-pause>
+                    <path d="M0 0h3.5v12H0zM6.5 0H10v12H6.5z" />
+                  </svg>
+                </button>
+                <div
+                  data-track
+                  role="slider"
+                  tabindex="0"
+                  aria-label={s.seek}
+                  aria-valuemin="0"
+                  aria-valuemax="0"
+                  aria-valuenow="0"
+                  class="relative h-10 flex-1 cursor-pointer touch-none outline-none focus-visible:ring-2 focus-visible:ring-yellow/60"
+                >
+                  <span class="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-yellow"></span>
+                  <div data-bars class="absolute inset-0 flex items-center justify-between" aria-hidden="true">
+                    {listenBars.map((h) => (
+                      <span
+                        class="w-[2px] rounded-full bg-paper/30 transition-colors duration-150 will-change-transform max-sm:odd:hidden"
+                        style={`height: ${h}%`}
+                      ></span>
+                    ))}
+                  </div>
+                  <span
+                    data-head
+                    class="pointer-events-none absolute top-1/2 left-0 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow shadow-[0_0_0_4px_rgb(0_0_0)]"
+                  ></span>
+                </div>
+              </div>
+              <div>
+                <div>
+                  <div class="flex items-center justify-between gap-3 pt-3">
+                    <span class="label w-12 text-xs font-black tabular-nums" data-elapsed>0:00</span>
+                    <div class="flex items-center gap-2">
+                      <button type="button" data-skip="-15" aria-label={s.back15} class="label rounded-full px-3 py-1.5 text-xs font-black hover:bg-paper/10">
+                        −15
+                      </button>
+                      <button type="button" data-speed aria-label={s.speed} class="label w-14 rounded-full border border-paper/40 py-1.5 text-xs font-black tabular-nums hover:border-yellow hover:text-yellow">
+                        1×
+                      </button>
+                      <button type="button" data-skip="15" aria-label={s.forward15} class="label rounded-full px-3 py-1.5 text-xs font-black hover:bg-paper/10">
+                        +15
+                      </button>
+                    </div>
+                    <span class="label w-12 text-right text-xs font-black tabular-nums" data-remaining></span>
+                  </div>
+                </div>
+              </div>
+            </div>
             <audio src={article.listen} preload="metadata"></audio>
           </listen-bar>
         )}
 
-        <ArticleCtas lang={lang}>
+        <ArticleCtas lang={lang} storyPrompt={article.storyPrompt}>
           <div
             data-cta-body
-            class="prose-article tracking-[-0.01em] leading-[1.5] mt-10"
+            class="prose-article mt-10 leading-[1.5] tracking-[-0.01em] lg:text-[1.125rem]"
             set:html={renderRichText(article.body)}
           />
         </ArticleCtas>
@@ -182,18 +259,10 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
           </p>
         ) : null}
 
-        {article.authorsNote?.length ? (
-          <aside class="mt-10 border border-ink p-5" aria-labelledby="authors-note">
-            <h2 id="authors-note" class="label text-xs">
-              {s.authorsNote}
-            </h2>
-            <div class="prose-article mt-3" set:html={renderRichText(article.authorsNote)} />
-          </aside>
-        ) : null}
-
         {article.localJournalismInitiative && (
           <p class="mt-10 text-xs font-medium opacity-70">{s.lji}</p>
         )}
+
         {article.machineTranslated && (
           <p class="mt-10 text-xs font-medium opacity-70">{s.translatedFrom}</p>
         )}
@@ -235,30 +304,267 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
       </div>
     </div>
   </article>
+
+  {hasNote && (
+    <dialog
+      data-note
+      aria-labelledby="note-title"
+      class="m-auto max-h-[min(85dvh,48rem)] w-[calc(100%-2.5rem)] max-w-xl overflow-y-auto overscroll-contain rounded-2xl bg-paper p-0 text-ink backdrop:bg-ink/60"
+    >
+      <div class="sticky top-0 flex items-center justify-between gap-5 bg-paper px-5 pt-5 pb-3 lg:px-8 lg:pt-8">
+        <h2 id="note-title" class="label text-xs">{s.transparencyNote}</h2>
+        <button
+          type="button"
+          data-note-close
+          class="press grid size-8 place-items-center rounded-full hover:bg-ink hover:text-paper"
+          aria-label={s.close}
+        >
+          <Icon name="close" class="size-3.5" />
+        </button>
+      </div>
+      <div
+        class="prose-article px-5 pb-8 lg:px-8 lg:pb-10"
+        set:html={renderRichText(article.authorsNote)}
+      />
+    </dialog>
+  )}
 </Layout>
 
+<style>
+  dialog[data-note]::backdrop {
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+  }
+  dialog[data-note][open]:not([data-leaving])::backdrop {
+    opacity: 1;
+  }
+  @starting-style {
+    dialog[data-note][open]::backdrop {
+      opacity: 0;
+    }
+  }
+</style>
+
 <script>
+  import { d, gsap, reduced } from "../lib/motion";
+
+  const fmt = (sec: number) => {
+    if (!Number.isFinite(sec) || sec < 0) sec = 0;
+    return `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, "0")}`;
+  };
+  const SPEEDS = [1, 1.25, 1.5, 2, 0.75];
+
+  /* "Listen to the article", in the voice-note look — ink panel, white
+     controls, yellow line — with a scrubbable timeline, ±15 s skips and a
+     speed toggle. */
   class ListenBar extends HTMLElement {
+    audio!: HTMLAudioElement;
+    track!: HTMLElement;
+    bars: HTMLElement[] = [];
+    head!: HTMLElement;
+    raf = 0;
+    scrubbing = false;
+
     connectedCallback() {
-      const audio = this.querySelector("audio")!;
-      const time = this.querySelector<HTMLElement>("[data-time]")!;
-      const fmt = (s: number) =>
-        `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
-      const toggle = (on: boolean) => {
-        this.querySelector("[data-play]")!.classList.toggle("hidden", on);
-        this.querySelector("[data-pause]")!.classList.toggle("hidden", !on);
+      this.audio = this.querySelector("audio")!;
+      this.track = this.querySelector("[data-track]")!;
+      this.head = this.querySelector("[data-head]")!;
+      this.bars = [...this.querySelectorAll<HTMLElement>("[data-bars] > span")];
+      const { audio, track } = this;
+      const toggle = this.querySelector<HTMLButtonElement>("[data-toggle]")!;
+      const speed = this.querySelector<HTMLButtonElement>("[data-speed]")!;
+
+      const meta = () => {
+        track.setAttribute("aria-valuemax", String(Math.round(audio.duration || 0)));
+        this.paint();
       };
-      audio.addEventListener("loadedmetadata", () => (time.textContent = fmt(audio.duration)));
-      audio.addEventListener(
-        "timeupdate",
-        () => (time.textContent = fmt(audio.duration - audio.currentTime)),
+      if (audio.readyState >= 1) meta();
+      audio.addEventListener("loadedmetadata", meta);
+      audio.addEventListener("timeupdate", () => this.scrubbing || this.paint());
+      audio.addEventListener("play", () => {
+        this.playing(true);
+        this.loop();
+      });
+      audio.addEventListener("pause", () => {
+        this.playing(false);
+        cancelAnimationFrame(this.raf);
+        this.settle();
+      });
+      audio.addEventListener("ended", () => {
+        audio.currentTime = 0;
+        audio.playbackRate = 1;
+        speed.textContent = "1×";
+        this.paint();
+      });
+
+      toggle.addEventListener("click", () => (audio.paused ? audio.play() : audio.pause()));
+      this.querySelectorAll<HTMLButtonElement>("[data-skip]").forEach((b) =>
+        b.addEventListener("click", () => this.seek(audio.currentTime + Number(b.dataset.skip))),
       );
-      audio.addEventListener("play", () => toggle(true));
-      audio.addEventListener("pause", () => toggle(false));
-      this.querySelector("button")!.addEventListener("click", () =>
-        audio.paused ? audio.play() : audio.pause(),
+      speed.addEventListener("click", () => {
+        const next = SPEEDS[(SPEEDS.indexOf(audio.playbackRate) + 1) % SPEEDS.length];
+        audio.playbackRate = next;
+        speed.textContent = `${next}×`;
+        gsap.fromTo(speed, { scale: 0.85 }, { scale: 1, duration: d(0.3), ease: "back.out(3)" });
+      });
+
+      // Scrub: click or drag anywhere on the track.
+      const at = (e: PointerEvent) => {
+        const r = track.getBoundingClientRect();
+        return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * (audio.duration || 0);
+      };
+      track.addEventListener("pointerdown", (e) => {
+        if (!audio.duration) return;
+        this.scrubbing = true;
+        track.setPointerCapture(e.pointerId);
+        this.seek(at(e));
+        gsap.to(this.head, { scale: 1.4, duration: d(0.2) });
+      });
+      track.addEventListener("pointermove", (e) => this.scrubbing && this.seek(at(e)));
+      const release = () => {
+        if (!this.scrubbing) return;
+        this.scrubbing = false;
+        gsap.to(this.head, { scale: 1, duration: d(0.25) });
+      };
+      track.addEventListener("pointerup", release);
+      track.addEventListener("pointercancel", release);
+      track.addEventListener("keydown", (e) => {
+        const step = { ArrowLeft: -5, ArrowDown: -5, ArrowRight: 5, ArrowUp: 5 }[e.key];
+        if (step) this.seek(audio.currentTime + step);
+        else if (e.key === "Home") this.seek(0);
+        else if (e.key === "End") this.seek(audio.duration);
+        else if (e.key === " ") audio.paused ? audio.play() : audio.pause();
+        else return;
+        e.preventDefault();
+      });
+    }
+
+    disconnectedCallback() {
+      cancelAnimationFrame(this.raf);
+    }
+
+    text(sel: string, value: string) {
+      const el = this.querySelector(sel);
+      if (el) el.textContent = value;
+    }
+
+    playing(on: boolean) {
+      const b = this.querySelector("[data-toggle]")!;
+      b.setAttribute("aria-label", on ? this.dataset.pauseLabel! : this.dataset.playLabel!);
+      this.querySelector("[data-play]")!.classList.toggle("hidden", on);
+      this.querySelector("[data-pause]")!.classList.toggle("hidden", !on);
+    }
+
+    seek(t: number) {
+      const { audio } = this;
+      if (!audio.duration) return;
+      audio.currentTime = Math.min(audio.duration, Math.max(0, t));
+      this.paint();
+    }
+
+    /** Playhead, played bars, times and slider value from currentTime. */
+    paint() {
+      const { audio } = this;
+      const dur = audio.duration || 0;
+      const p = dur ? audio.currentTime / dur : 0;
+      this.head.style.left = `${p * 100}%`;
+      const cut = p * this.bars.length;
+      this.bars.forEach((bar, i) => {
+        const played = i < cut;
+        bar.classList.toggle("bg-yellow", played);
+        bar.classList.toggle("bg-paper/30", !played);
+      });
+      this.text("[data-elapsed]", fmt(audio.currentTime));
+      this.text("[data-remaining]", dur ? `-${fmt(dur - audio.currentTime)}` : "");
+      this.track.setAttribute("aria-valuenow", String(Math.round(audio.currentTime)));
+      this.track.setAttribute(
+        "aria-valuetext",
+        `${fmt(audio.currentTime)} / ${fmt(dur)}`,
       );
+    }
+
+    /** While playing: keep the playhead smooth and let the bars around it breathe. */
+    loop() {
+      cancelAnimationFrame(this.raf);
+      const frame = (now: number) => {
+        if (!this.scrubbing) this.paint();
+        if (!reduced()) {
+          const dur = this.audio.duration || 1;
+          const at = (this.audio.currentTime / dur) * this.bars.length;
+          this.bars.forEach((bar, i) => {
+            const near = Math.max(0, 1 - Math.abs(i - at) / 4);
+            const wave = 0.5 + 0.5 * Math.sin(now / 160 + i * 1.7);
+            bar.style.transform = near ? `scaleY(${1 + 0.45 * near * wave})` : "";
+          });
+        }
+        this.raf = requestAnimationFrame(frame);
+      };
+      this.raf = requestAnimationFrame(frame);
+    }
+
+    settle() {
+      if (reduced()) return;
+      gsap.to(this.bars, { scaleY: 1, duration: 0.3, overwrite: "auto" });
     }
   }
   customElements.define("listen-bar", ListenBar);
+
+  /* Reading progress: the yellow bar at the top fills from the top of the
+     page to the last line of the body text reaching the bottom of the
+     viewport. */
+  const bar = document.querySelector<HTMLElement>("[data-read-progress]");
+  const body = document.querySelector<HTMLElement>("[data-cta-body]");
+  if (bar && body) {
+    let queued = false;
+    const update = () => {
+      queued = false;
+      const end = body.getBoundingClientRect().bottom + scrollY - innerHeight;
+      const p = end > 0 ? scrollY / end : 1;
+      bar.style.transform = `scaleX(${Math.min(1, Math.max(0, p))})`;
+    };
+    const queue = () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(update);
+    };
+    addEventListener("scroll", queue, { passive: true });
+    addEventListener("resize", queue);
+    update();
+  }
+
+  /* Transparency note overlay: native <dialog> (Esc, focus trap), eased in
+     and out, closing on a backdrop click. */
+  const note = document.querySelector<HTMLDialogElement>("dialog[data-note]");
+  if (note) {
+    const close = () => {
+      if (!note.open || note.dataset.leaving !== undefined) return;
+      note.dataset.leaving = "";
+      gsap.to(note, {
+        opacity: 0,
+        y: 12,
+        duration: d(0.25),
+        ease: "power2.in",
+        onComplete: () => {
+          note.close();
+          delete note.dataset.leaving;
+          gsap.set(note, { clearProps: "opacity,transform" });
+        },
+      });
+    };
+    document.querySelector("[data-note-open]")?.addEventListener("click", () => {
+      note.showModal();
+      note.scrollTop = 0;
+      gsap.fromTo(
+        note,
+        { opacity: 0, y: 16 },
+        { opacity: 1, y: 0, duration: d(0.4), ease: "power3.out", clearProps: "transform" },
+      );
+    });
+    note.querySelector("[data-note-close]")!.addEventListener("click", close);
+    note.addEventListener("cancel", (e) => {
+      e.preventDefault();
+      close();
+    });
+    note.addEventListener("click", (e) => e.target === note && close());
+  }
 </script>

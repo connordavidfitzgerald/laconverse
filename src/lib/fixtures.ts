@@ -12,7 +12,7 @@ import type {
   GetInvolvedData,
   GiveYourVoiceData,
   HomeData,
-  LaReleveData,
+  EcoleData,
   Person,
   Podcast,
   PodcastCard,
@@ -305,6 +305,10 @@ export function article(lang: Lang, slug: string): Article | null {
   return {
     ...card,
     body: NOORAN_BODY[lang],
+    storyPrompt:
+      lang === "en"
+        ? "Have you ever been racially profiled?"
+        : "Avez-vous déjà été victime de profilage racial?",
     seo: null,
     translations: [{ language: other, slug: ARTS[i].slug[other] }],
     authorsFull: people(lang).filter((x) => x.slug === "nouri-nesrouche"),
@@ -455,16 +459,9 @@ export function podcast(lang: Lang, slug: string): Podcast | null {
 /* ---- Programs ----------------------------------------------------------- */
 
 const PROGRAMS: (ProgramCard & { lang?: never })[] = [
-  {
-    _id: "program-ecole",
-    title: "École Converse",
-    slug: "ecole-converse",
-    image: null,
-    linkTo: "self",
-  },
-  { _id: "program-mc", title: "MC Converse", slug: "mc-converse", image: null, linkTo: "self" },
+  { _id: "program-journalism", title: "Journalism", slug: "journalism", image: null, linkTo: "self" },
   { _id: "program-podcasts", title: "Podcasts", slug: "podcasts", image: null, linkTo: "podcasts" },
-  { _id: "program-events", title: "Events", slug: "events", image: null, linkTo: "self" },
+  { _id: "program-mc", title: "MC Converse", slug: "mc-converse", image: null, linkTo: "self" },
 ];
 
 export const programs = (lang: Lang): ProgramCard[] =>
@@ -473,8 +470,8 @@ export const programs = (lang: Lang): ProgramCard[] =>
     title:
       lang === "fr" && x.slug === "podcasts"
         ? "Balados"
-        : lang === "fr" && x.slug === "events"
-          ? "Événements"
+        : lang === "fr" && x.slug === "journalism"
+          ? "Journalisme"
           : x.title,
   }));
 
@@ -490,40 +487,19 @@ export function program(lang: Lang, slug: string): Program | null {
     label: lang === "en" ? "Apply for our next cohort" : "Postulez pour la prochaine cohorte",
     url: "#form",
   };
-  if (slug === "ecole-converse")
-    return {
-      ...base,
-      tagline:
-        lang === "en"
-          ? "Paid apprenticeships in journalism, podcasting and creative writing, built with the communities we cover."
-          : "Des stages rémunérés en journalisme, en balado et en création littéraire, bâtis avec les communautés que nous couvrons.",
-      body: null,
-      cta: null,
-      quote: null,
-      form:
-        lang === "en"
-          ? {
-              title: "Join École Converse",
-              text: "Tell us a little about yourself and we will be in touch before the next cohort begins.",
-            }
-          : {
-              title: "Rejoignez l’École Converse",
-              text: "Parlez-nous un peu de vous et nous vous écrirons avant le début de la prochaine cohorte.",
-            },
-    };
   if (slug === "mc-converse")
     return {
       ...base,
-      tagline: null,
+      tagline: lang === "en" ? "Rap is journalism." : "Le rap, c’est du journalisme.",
       body:
         lang === "en"
           ? paras(
-              "MC Converse is a creative writing course offered through École Converse. With training based on sensitivity, up-and-coming journalists are trained through a series of workshops with the aim of producing creative writing projects.",
-              "Bridging journalism and rap, MC Converse enables trainees to engage in dialogue with their community while speaking out about the dynamics of their realities. The aim is to create a space for social change, where rap becomes journalism.",
+              "MC Converse is the rap stream of École Converse. Each cohort brings together seven young people and a mentor artist — Raccoon in 2023, Meryem Saci in 2025 — to write a song and shoot a video.",
+              "The workshops are built on sensitivity: participants draw on their own lives and their neighbourhoods to speak about realities mainstream media leave out. Rap becomes a space for dialogue and social change.",
             )
           : paras(
-              "MC Converse est un atelier de création littéraire offert par l’École Converse. Grâce à une formation axée sur la sensibilité, la relève journalistique est formée au fil d’une série d’ateliers visant à produire des projets d’écriture créative.",
-              "Entre journalisme et rap, MC Converse permet aux participant·e·s de dialoguer avec leur communauté tout en prenant la parole sur les dynamiques de leurs réalités. Le but : créer un espace de changement social, où le rap devient journalisme.",
+              "MC Converse est le volet rap de l’École Converse. Chaque cohorte réunit sept jeunes et un·e artiste mentor — Raccoon en 2023, Meryem Saci en 2025 — pour écrire une chanson et tourner un clip.",
+              "Les ateliers misent sur la sensibilité : les participant·e·s puisent dans leur vécu et celui de leur quartier pour parler des réalités que les médias traditionnels laissent de côté. Le rap devient un espace de dialogue et de changement social.",
             ),
       cta: apply,
       quote: {
@@ -538,9 +514,27 @@ export function program(lang: Lang, slug: string): Program | null {
             ? "(Shamyr Daléus-Louis in conversation with Melissa Haouari from La Converse)"
             : "(Shamyr Daléus-Louis en conversation avec Melissa Haouari de La Converse)",
       },
-      form: null,
+      video: {
+        title: lang === "en" ? "Pioneers of journalistic rap" : "Les pionniers du rap journalistique",
+        text:
+          lang === "en"
+            ? "Since 2020, La Converse has been giving under-represented communities the tools to tell their own stories — through journalism, podcasting and rap."
+            : "Depuis 2020, La Converse outille les communautés invisibilisées pour qu’elles racontent leurs propres histoires — en journalisme, en balado et en rap.",
+        url: "https://www.youtube.com/watch?v=JGBQ7N8UTNY",
+        moreUrl: "https://www.youtube.com/playlist?list=PLqNdNoPxQBnb1cK649QXDhoDEo2FfQd5U",
+        moreLabel: lang === "en" ? "See all MC Converse videos" : "Voir toutes les vidéos MC Converse",
+      },
+      articles: articles(lang).slice(0, 3),
+      support: true,
+      form: {
+        title: lang === "en" ? "Join the next cohort" : "Rejoignez la prochaine cohorte",
+        text:
+          lang === "en"
+            ? "Got something to say? Tell us about yourself."
+            : "Vous avez quelque chose à dire ? Parlez-nous de vous.",
+      },
     };
-  return { ...base, tagline: null, body: null, cta: apply, quote: null, form: null };
+  return { ...base, tagline: null, body: null, cta: null, quote: null, articles: [], form: null };
 }
 
 /* ---- Singletons --------------------------------------------------------- */
@@ -606,37 +600,160 @@ export const about = (lang: Lang): AboutData => ({
         ),
   team: people(lang).filter((_, i) => PEOPLE[i].group === "team"),
   collaborators: people(lang).filter((_, i) => PEOPLE[i].group === "collaborator"),
-  sections: (lang === "en"
-    ? ["News", "Careers", "Policies", "Funding", "Alumni"]
-    : ["Nouvelles", "Carrières", "Politiques", "Financement", "Ancien·ne·s"]
-  ).map((title, i) => ({
-    _key: `s${i}`,
-    title,
-    body: paras(lang === "en" ? "Content coming from the CMS." : "Contenu à venir du CMS."),
-  })),
+  sections: [
+    {
+      _key: "news",
+      title: lang === "en" ? "News" : "Nouvelles",
+      kind: "series",
+      articles: articles(lang).slice(0, 3),
+    },
+    {
+      _key: "careers",
+      title: lang === "en" ? "Careers" : "Carrières",
+      kind: "positions",
+      positions: giveYourVoice(lang).positions,
+    },
+    {
+      _key: "funding",
+      title: lang === "en" ? "Funding" : "Financement",
+      body: paras(lang === "en" ? "Content coming from the CMS." : "Contenu à venir du CMS."),
+    },
+  ],
   partners: [],
   seo: null,
 });
 
-export const laReleve = (lang: Lang): LaReleveData => ({
-  title: "La Relève",
-  intro:
-    lang === "en"
+export const ecole = (lang: Lang): EcoleData => {
+  const en = lang === "en";
+  return {
+    title: "École Converse",
+    image: null,
+    kicker: en
+      ? "A program combining training, sensitivity and community."
+      : "Une école qui allie formation, sensibilité et communauté.",
+    intro: en
       ? paras(
-          "The École Converse training program aims to include communities in its thinking by training apprentice journalists to develop stories with the community.",
-          "With courses in journalism, podcasting, and creative writing, École Converse values the work and creativity of its members through paid apprenticeships. Through the program, we hope train the next generation of journalists to serve and cover communities that have traditionally been left out of important conversations.",
+          "École Converse is a training program that brings communities into the conversation by training apprentice journalists to produce stories with the community, not just about it.",
+          "With streams in journalism, podcasting and creative writing, the school pays its participants for their work and creativity. Afterwards, they can go on to join the La Converse newsroom.",
         )
       : paras(
-          "Le programme de formation de l’École Converse vise à inclure les communautés dans sa réflexion en formant des apprenti·e·s journalistes à développer des récits avec la communauté.",
-          "Avec des cours en journalisme, en balado et en création littéraire, l’École Converse valorise le travail et la créativité de ses membres grâce à des stages rémunérés.",
+          "L’École Converse est une école de formation qui inclut les communautés dans la réflexion en formant des apprenti·e·s journalistes à produire des reportages avec la communauté, et pas seulement à son sujet.",
+          "Avec des volets en journalisme, en balado et en écriture créative, l’École Converse rémunère ses participant·e·s pour leur travail et leur créativité. Par la suite, ils et elles peuvent se joindre à la salle de presse de La Converse.",
         ),
-  cta: {
-    label: lang === "en" ? "Apply for our next cohort" : "Postulez pour la prochaine cohorte",
-    url: lang === "en" ? "/en/la-releve/ecole-converse#form" : "/la-releve/ecole-converse#form",
-  },
-  programs: programs(lang),
-  seo: null,
-});
+    cta: {
+      label: en ? "Apply for our next cohort" : "Postulez pour la prochaine cohorte",
+      url: "#form",
+    },
+    why: {
+      title: en ? "Why École Converse?" : "Pourquoi une École Converse?",
+      body: en
+        ? paras(
+            "It all started with the desire to give overlooked communities the tools they need to reclaim their power in a media landscape where they are often silenced.",
+            "With École Converse, we want to give power back to communities left out of the discussions that concern them, and a platform to tell their own stories. Through sensitivity-based training, the school prepares the next generation of journalists to serve and cover communities traditionally left out of important conversations.",
+          )
+        : paras(
+            "Tout a commencé avec la volonté de donner aux communautés invisibilisées les outils dont elles ont besoin pour reprendre leur pouvoir dans un espace médiatique où elles sont souvent réduites au silence.",
+            "Avec l’École Converse, nous voulons redonner du pouvoir aux communautés exclues des discussions qui les concernent, et leur offrir une plateforme pour raconter leurs propres histoires. Grâce à une formation axée sur la sensibilité, l’École Converse forme la relève journalistique à servir et à couvrir les communautés traditionnellement laissées à l’écart des grandes conversations.",
+          ),
+    },
+    stats: en
+      ? [
+          { value: "8", label: "cohorts since 2021" },
+          { value: "50+", label: "young people trained" },
+          { value: "3", label: "streams: journalism, podcasting, creative writing" },
+          { value: "100%", label: "of participants paid" },
+        ]
+      : [
+          { value: "8", label: "cohortes depuis 2021" },
+          { value: "50+", label: "jeunes formé·e·s" },
+          { value: "3", label: "volets : journalisme, balado, écriture créative" },
+          { value: "100%", label: "des participant·e·s rémunéré·e·s" },
+        ],
+    steps: en
+      ? [
+          {
+            title: "Apply",
+            text: "Tell us about yourself and the stories that matter in your community.",
+          },
+          {
+            title: "Train, paid",
+            text: "Join a cohort and learn through a series of hands-on workshops with mentors from the newsroom and the arts. Every participant is paid.",
+          },
+          {
+            title: "Report with your community",
+            text: "Produce reports, portraits, podcasts and creative projects with people largely unseen in mainstream media, published on La Converse.",
+          },
+          {
+            title: "Join the newsroom",
+            text: "After the program, participants can go on to join the La Converse newsroom.",
+          },
+        ]
+      : [
+          {
+            title: "Postulez",
+            text: "Parlez-nous de vous et des histoires qui comptent dans votre communauté.",
+          },
+          {
+            title: "Formez-vous, rémunéré·e",
+            text: "Joignez une cohorte et apprenez au fil d’ateliers pratiques avec des mentors de la salle de presse et du milieu artistique. Chaque participant·e est rémunéré·e.",
+          },
+          {
+            title: "Racontez avec votre communauté",
+            text: "Produisez des reportages, des portraits, des balados et des projets créatifs avec des personnes invisibles dans les médias traditionnels, publiés sur La Converse.",
+          },
+          {
+            title: "Joignez la salle de presse",
+            text: "Après le programme, les participant·e·s peuvent se joindre à la salle de presse de La Converse.",
+          },
+        ],
+    programs: programs(lang),
+    cohorts: (
+      [
+        [2025, "MC Converse", "MC Converse", 7],
+        [2024, "Journalism", "Journalisme", 6],
+        [2024, "MC Converse", "MC Converse", 4],
+        [2024, "Podcasts", "Balados", 9],
+        [2023, "MC Converse", "MC Converse", 7],
+        [2023, "Podcasts", "Balados", 4],
+        [2022, "Journalism", "Journalisme", 10],
+        [2021, "Journalism", "Journalisme", 5],
+      ] as const
+    ).map(([year, trackEn, trackFr, count]) => ({ year, track: en ? trackEn : trackFr, count })),
+    support: {
+      title: en ? "Support École Converse" : "Soutenez l’École Converse",
+      body: en
+        ? paras(
+            "Every participant at École Converse is paid for their work, so the school depends on the foundations, institutions and individuals who fund it. Your support goes directly to paying participants and mentors, and to producing the stories, podcasts and songs each cohort publishes.",
+            "Past cohorts have produced the podcasts Pas tout Montréal and Ma colère et moi, the MC Converse rap song “Jamais trop tard” and reporting published on La Converse. To fund a cohort or propose a partnership, write to us.",
+          )
+        : paras(
+            "Chaque participant·e de l’École Converse est rémunéré·e pour son travail : l’école dépend donc des fondations, des institutions et des personnes qui la financent. Votre soutien sert directement à rémunérer les participant·e·s et les mentors, et à produire les reportages, balados et chansons que publie chaque cohorte.",
+            "Les cohortes passées ont produit les balados Pas tout Montréal et Ma colère et moi, la chanson rap « Jamais trop tard » de MC Converse et des reportages publiés sur La Converse. Pour financer une cohorte ou proposer un partenariat, écrivez-nous.",
+          ),
+      ctas: [
+        {
+          label: en ? "Fund a cohort" : "Financez une cohorte",
+          url: "mailto:info@laconverse.com?subject=%C3%89cole%20Converse",
+        },
+        {
+          label: en ? "Donate" : "Faire un don",
+          url: en ? "/en/get-involved#donate" : "/engagez-vous#donate",
+        },
+      ],
+      partners: [{ name: "Fondation Filles d’Action", logo: null, url: null }],
+    },
+    form: en
+      ? {
+          title: "Join École Converse",
+          text: "Tell us a little about yourself and we will be in touch before the next cohort begins.",
+        }
+      : {
+          title: "Rejoignez l’École Converse",
+          text: "Parlez-nous un peu de vous et nous vous écrirons avant le début de la prochaine cohorte.",
+        },
+    seo: null,
+  };
+};
 
 export const getInvolved = (lang: Lang): GetInvolvedData => {
   const en = lang === "en";
@@ -645,6 +762,7 @@ export const getInvolved = (lang: Lang): GetInvolvedData => {
     : "Des stages rémunérés en journalisme, en balado et en création littéraire pour les jeunes qui veulent raconter les histoires de leur communauté.";
   return {
     title: en ? "Get involved" : "Engagez-vous",
+    image: null,
     intro: en
       ? "La Converse is built with the communities it covers. Give, share your story, join the team or lend a hand — every contribution keeps independent journalism alive."
       : "La Converse se construit avec les communautés qu’elle couvre. Donnez, racontez votre histoire, joignez l’équipe ou donnez un coup de main — chaque contribution garde le journalisme indépendant vivant.",
@@ -685,7 +803,7 @@ export const getInvolved = (lang: Lang): GetInvolvedData => {
         text: blurb,
         cta: {
           label: en ? "Learn more" : "En savoir plus",
-          url: en ? "/en/la-releve/ecole-converse" : "/la-releve/ecole-converse",
+          url: en ? "/en/ecole-converse" : "/ecole-converse",
         },
         ctaStyle: "link",
       },
@@ -699,12 +817,12 @@ export const getInvolved = (lang: Lang): GetInvolvedData => {
         ? [
             { title: "Translation", text: "Making our articles accessible in more languages." },
             { title: "Events", text: "Helping out at our public gatherings." },
-            { title: "Mentorship", text: "Supporting young journalists in La Relève." },
+            { title: "Mentorship", text: "Supporting young journalists at École Converse." },
           ]
         : [
             { title: "Traduction", text: "Rendre nos articles accessibles dans plus de langues." },
             { title: "Événements", text: "Donner un coup de main lors de nos rassemblements." },
-            { title: "Mentorat", text: "Accompagner les jeunes journalistes de La Relève." },
+            { title: "Mentorat", text: "Accompagner les jeunes journalistes de l’École Converse." },
           ],
       cta: {
         label: en ? "Become a volunteer" : "Devenir bénévole",
@@ -815,7 +933,7 @@ export const contact = (lang: Lang): ContactData => {
           : "Envie d’en apprendre plus sur le journalisme?",
         cta: {
           label: "École Converse",
-          url: en ? "/en/la-releve/ecole-converse" : "/la-releve/ecole-converse",
+          url: en ? "/en/ecole-converse" : "/ecole-converse",
         },
       },
     ],

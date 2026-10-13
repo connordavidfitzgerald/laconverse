@@ -40,7 +40,7 @@ const [category] = article.categories;
       ) : (
         <span />
       )}
-      <p class="label flex min-w-0 gap-[5px] text-sm md:tracking-[-0.01em] font-medium">
+      <p class="label flex min-w-0 gap-[5px] text-sm md:tracking-[-0.01em] font-extrabold">
         {article.authors[0] && (
           <span data-author class="hidden truncate @min-[20rem]:inline">
             {article.authors[0].name}
@@ -57,12 +57,12 @@ const [category] = article.categories;
     </div>
     <h3
       class:list={[
-        "display font-black leading-[95%]",
+        "display font-black leading-[95%]  ",
         size === "sm"
           ? "text-card-sm"
           : size === "md"
-            ? "text-card-sm md:text-[1.75rem]"
-            : "text-4xl md:tracking-[-0.014em]",
+            ? "text-card-sm md:text-[1.25rem]"
+            : "text-[1.75rem] md:tracking-[-0.02em]",
       ]}
     >
       <a href={url} data-title class="title-line after:absolute after:inset-0">

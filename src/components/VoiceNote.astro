@@ -11,7 +11,7 @@
 import Icon from "./Icon.astro";
 import Socials from "./Socials.astro";
 import Spray from "./Spray.astro";
-import { t, type Lang } from "../i18n";
+import { href, t, type Lang } from "../i18n";
 import type { Settings } from "../lib/types";
 
 interface Props {
@@ -22,6 +22,7 @@ interface Props {
 }
 const { lang, settings, launcher = true } = Astro.props;
 const s = t(lang);
+const home = Astro.url.pathname.replace(/\/$/, "") === href(lang, "home").replace(/\/$/, "");
 const BARS = 32;
 
 const field =
@@ -30,6 +31,7 @@ const field =
 
 <voice-note
   data-lang={lang}
+  data-home={home ? "" : undefined}
   data-play={s.vnPlay}
   data-pause={s.vnPause}
   data-sent={s.sent}
@@ -55,10 +57,10 @@ const field =
       </span>
       <span
         data-fab-disc
-        class="relative grid size-[52px] place-items-center rounded-full bg-yellow text-ink shadow-[0_8px_24px_-8px_rgb(0_0_0/0.5)] transition-transform duration-200 ease-out group-hover:scale-105 group-active:scale-95"
+        class="relative grid size-[52px] lg:size-[64px] place-items-center rounded-full bg-yellow text-ink shadow-[0_8px_24px_-8px_rgb(0_0_0/0.5)] transition-transform duration-200 ease-out group-hover:scale-105 group-active:scale-95"
       >
         <span data-fab-icon class="grid place-items-center">
-          <Icon name="mic" class="h-[18px] w-[17px]" />
+          <Icon name="mic" class="h-[16px] w-[15px] lg:h-[20px] lg:w-[19px]" />
         </span>
       </span>
     </button>
@@ -169,7 +171,7 @@ const field =
                   >
                     {Array.from({ length: BARS }, () => (
                       <span
-                        class="w-[3px] rounded-full bg-yellow transition-opacity duration-200"
+                        class="w-[3px] rounded-full bg-yellow transition-[opacity,height] duration-200 ease-out"
                         style="height: 12%"
                       ></span>
                     ))}
@@ -347,6 +349,7 @@ const field =
   import { appear, d, gsap, reduced } from "../lib/motion";
 
   const MAX_SECONDS = 300;
+  const SAMPLE_MS = 110;
   const fmt = (sec: number) =>
     `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, "0")}`;
 
@@ -512,13 +515,9 @@ const field =
       const label = fab.querySelector<HTMLElement>("[data-fab-label]")!;
       const text = fab.querySelector<HTMLElement>("[data-fab-text]")!;
 
-      // The full intro plays once per visit; later pages just pop the disc in.
-      let seen = false;
-      try {
-        seen = sessionStorage.getItem("vn-intro") !== null;
-        sessionStorage.setItem("vn-intro", "");
-      } catch {}
-      if (seen) {
+      // The full intro plays on every load of the homepage; other pages just
+      // pop the disc in.
+      if (!this.hasAttribute("data-home")) {
         gsap.set(disc, { transition: "none", scale: 0 });
         gsap.set(icon, { scale: 0.6, opacity: 0 });
         fab.removeAttribute("data-intro");
@@ -535,13 +534,12 @@ const field =
       // GSAP folds the label's `translate-x-2` into its own x, so x is
       // absolute: 0 is where hover shows it. While the disc is enlarged the
       // label steps clear of the extra radius.
-      const shown = -(52 * (BIG - 1)) / 2;
+      const shown = -(disc.offsetWidth * (BIG - 1)) / 2;
       // The clip's left inset, in %. Tweened as a number: the browser
       // serialises a fully open inset() to its short form, which GSAP can't
       // interpolate back from.
       const clip = { left: 100 };
-      const paint = () =>
-        void (label.style.clipPath = `inset(0% 0% 0% ${clip.left}% round 999px)`);
+      const paint = () => void (label.style.clipPath = `inset(0% 0% 0% ${clip.left}% round 999px)`);
 
       // CSS transitions on these would fight the tweens.
       gsap.set([disc, label], { transition: "none" });
@@ -800,18 +798,27 @@ const field =
       this.started = performance.now();
       this.step("recording");
 
+      // Sample every frame but only commit a level every SAMPLE_MS, so the
+      // bars scroll at a calm pace (~3.5 s across) instead of one per frame.
+      let peak = 0;
+      let lastSample = 0;
+      bars.forEach((bar) => (bar.style.transition = ""));
       const tick = () => {
         analyser.getByteTimeDomainData(data);
-        let peak = 0;
         for (const v of data) peak = Math.max(peak, Math.abs(v - 128) / 128);
-        this.levels.push(peak);
-        // Scroll the most recent levels across the bars.
-        const recent = this.levels.slice(-bars.length);
-        bars.forEach((bar, i) => {
-          const v = recent[i - (bars.length - recent.length)] ?? 0;
-          bar.style.height = `${Math.max(12, Math.min(100, v * 260))}%`;
-          bar.style.opacity = "1";
-        });
+        const now = performance.now();
+        if (now - lastSample >= SAMPLE_MS) {
+          lastSample = now;
+          this.levels.push(peak);
+          peak = 0;
+          // Scroll the most recent levels across the bars.
+          const recent = this.levels.slice(-bars.length);
+          bars.forEach((bar, i) => {
+            const v = recent[i - (bars.length - recent.length)] ?? 0;
+            bar.style.height = `${Math.max(12, Math.min(100, v * 260))}%`;
+            bar.style.opacity = "1";
+          });
+        }
         const elapsed = (performance.now() - this.started) / 1000;
         this.time(elapsed);
         if (elapsed >= MAX_SECONDS) return this.stop();
@@ -836,6 +843,7 @@ const field =
       // Freeze the waveform: bucket every sampled level into the bars, and let
       // the live meter settle into that shape left to right.
       const bars = this.$$("[data-bars] > span");
+      bars.forEach((bar) => (bar.style.transition = "opacity 200ms"));
       const per = Math.max(1, Math.floor(this.levels.length / bars.length));
       bars.forEach((bar, i) => {
         const slice = this.levels.slice(i * per, (i + 1) * per);

@@ -1,13 +1,17 @@
 ---
 /* Figma: MC CONVERSE (HOMEPAGE 4959:3576) and 6B FORMATIONS — UI. Every block
-   below the title is optional, so one template covers all the programs. */
+   below the title is optional, so one template covers all the programs. A
+   program with no body yet (Journalism) gets the "coming soon" note from the
+   placeholder sections instead. */
 import AjaxForm from "../components/AjaxForm.astro";
 import BackLink from "../components/BackLink.astro";
 import FormFields from "../components/FormFields.astro";
 import Picture from "../components/Picture.astro";
+import StoryRow from "../components/StoryRow.astro";
 import Layout from "../layouts/Layout.astro";
 import { href, otherLang, t, type Lang } from "../i18n";
-import { renderRichText } from "../lib/portableText";
+import { getSettings } from "../lib/content";
+import { embedSrc, renderRichText } from "../lib/portableText";
 import type { Program } from "../lib/types";
 
 interface Props {
@@ -18,6 +22,11 @@ const { lang, program } = Astro.props;
 const s = t(lang);
 const other = otherLang(lang);
 const translation = program.translations.find((x) => x.language === other);
+const video = program.video?.url ? { ...program.video, src: embedSrc(program.video.url) } : null;
+const settings = await getSettings(lang);
+const donateUrl = program.support
+  ? (settings.donateUrl ?? `${href(lang, "getInvolved")}#donate`)
+  : null;
 ---
 
 <Layout
@@ -26,31 +35,34 @@ const translation = program.translations.find((x) => x.language === other);
   description={program.tagline}
   image={program.image}
   seo={program.seo}
-  alternate={translation ? href(other, "program", translation.slug) : href(other, "laReleve")}
+  alternate={translation ? href(other, "program", translation.slug) : href(other, "ecole")}
 >
   <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
     <div class="lg:col-span-8 lg:col-start-3">
-      <BackLink href={href(lang, "laReleve")} label={s.laReleve} />
+      <div class="flex justify-center">
+        <BackLink href={href(lang, "ecole")} label={s.ecole} />
+      </div>
+
       <h1 class="display pt-12 pb-12 text-center text-mega tracking-[-0.02em] text-balance lg:pt-16 lg:pb-16">
         {program.title}
       </h1>
-      <Picture
-        img={program.image}
-        ratio={353 / 440}
-        class="lg:aspect-[3/2]!"
-        eager
-        sizes="(min-width: 1024px) 66vw, 100vw"
-      />
-      {program.tagline && (
-        <p class="mt-5 font-display text-[1.375rem] font-bold leading-[0.95] tracking-[-0.02em] lg:text-intro">
-          {program.tagline}
-        </p>
-      )}
-      {program.body && (
+
+      {program.body ? (
         <div
           class="prose-intro mx-auto mt-8 max-w-[31rem] lg:max-w-3xl"
           set:html={renderRichText(program.body)}
         />
+      ) : (
+        <div class="flex flex-col items-center gap-4 pb-24 text-center">
+          <p class="label text-xs">{s.comingSoon}</p>
+          <p class="max-w-[28rem] text-sm font-medium leading-[1.35] lg:text-base">{s.comingSoonText}</p>
+          <a
+            href={`mailto:${settings.email}`}
+            class="display link-line decoration-2 text-[2.25rem] leading-[0.95] tracking-[-0.01em] lg:text-section"
+          >
+            {settings.email}
+          </a>
+        </div>
       )}
       {program.cta?.url && (
         <p class="py-16 text-center">
@@ -66,23 +78,88 @@ const translation = program.translations.find((x) => x.language === other);
   </div>
 
   {program.quote?.text && (
-    <figure class="px-5 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
+    <figure class="px-5 lg:pt-10 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
       <Picture
         img={program.quote.image}
         ratio={353 / 177}
         class="lg:col-span-6 lg:col-start-4"
         sizes="(min-width: 1024px) 50vw, 100vw"
       />
-      <blockquote class="display mt-5 px-4 text-center text-lg leading-[0.95] lg:col-span-6 lg:col-start-4 lg:text-3xl">
+      <blockquote class="display mt-5 px-4 lg:pt-10 text-center text-lg leading-[0.95] lg:col-span-6 lg:col-start-4 lg:text-3xl">
         {program.quote.text}
       </blockquote>
-      <figcaption class="mt-5 px-4 lg:col-span-6 lg:col-start-4">
-        {program.quote.attribution && <p class="label text-xs">{program.quote.attribution}</p>}
+      <figcaption class="mt-5 px-4 lg:col-span-6 lg:col-start-4 lg:pt-5">
+        {program.quote.attribution && (
+          <p class="label text-lg text-center tracking-[-0.02em] leading-none">
+            {program.quote.attribution}
+          </p>
+        )}
         {program.quote.source && (
-          <p class="mt-4 font-display text-xs font-medium uppercase">{program.quote.source}</p>
+          <p class="font-display text-lg text-center font-medium tracking-[-0.02em] leading-none pt-2">
+            {program.quote.source}
+          </p>
         )}
       </figcaption>
     </figure>
+  )}
+
+  {video?.src && (
+    <section
+      class="px-5 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5"
+      aria-labelledby="video-title"
+    >
+      <div class="lg:col-span-8 lg:col-start-3">
+        <div class="mt-20 bg-ink">
+          <iframe
+            class="aspect-video w-full"
+            src={video.src}
+            loading="lazy"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowfullscreen
+            title={video.title ?? program.title}
+          ></iframe>
+        </div>
+        {video.moreUrl && (
+          <p class="mt-5 text-center">
+            <a
+              href={video.moreUrl}
+              target="_blank"
+              rel="noopener"
+              class="label inline-flex items-center gap-2 text-xs font-black underline underline-offset-[3px] hover:no-underline lg:text-sm"
+            >
+              {video.moreLabel ?? s.seeAll}
+            </a>
+          </p>
+        )}
+        {donateUrl && (
+          <p class="mt-10 text-center">
+            <a
+              href={donateUrl}
+              class="label inline-block rounded-[10px] border border-ink px-6 py-3 text-xs hover:bg-ink hover:text-yellow lg:text-sm"
+            >
+              {s.supportProjects}
+            </a>
+          </p>
+        )}
+      </div>
+    </section>
+  )}
+
+  {program.articles.length > 0 && (
+    <section
+      class="px-5 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5"
+      aria-labelledby="program-articles"
+    >
+      <div class="lg:col-span-8 lg:col-start-3">
+        <h2 id="program-articles" class="display mb-5 text-[1.875rem] leading-[0.95] lg:text-5xl">
+          {s.latestArticles}
+        </h2>
+        {program.articles.map((a) => (
+          <StoryRow article={a} lang={lang} />
+        ))}
+        <div class="border-t border-ink"></div>
+      </div>
+    </section>
   )}
 
   {program.form && (

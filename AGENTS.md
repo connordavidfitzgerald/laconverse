@@ -36,5 +36,9 @@ Consult these guides before working on related tasks:
   per-language documents); a document is live in each language it has a slug
   in. Studio Auto-translate (Langbly) lives in `src/sanity/translate/`.
 - Components are plain Astro + Tailwind; interactivity is small custom elements
-  in `<script>` tags. No animation library yet.
+  in `<script>` tags. Motion is GSAP via `src/lib/motion.ts`; Lenis smooth
+  scroll in `src/lib/smoothScroll.ts` (opt out per page with Layout's
+  `smoothScroll={false}`); the yellow page wipe is GSAP in
+  `src/components/PageTransition.astro` (opt a link out with
+  `data-no-transition`).
 - Webflow migration: see README → “Webflow → Sanity migration”.

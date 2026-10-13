@@ -17,6 +17,8 @@ interface Props {
   imgClass?: string;
   eager?: boolean;
   alt?: string;
+  /** A flat colour for the frame in place of the generated placeholder. */
+  fill?: string;
 }
 
 const {
@@ -28,12 +30,13 @@ const {
   imgClass,
   eager = false,
   alt,
+  fill: fillColor,
 } = Astro.props;
 const dims = img?.asset?.metadata?.dimensions;
 const r = ratio ?? (dims ? dims.width / dims.height : 4 / 3);
 const src = imageUrl(img, 1280, ratio ? Math.round(1280 / ratio) : undefined);
 const set = srcset(img, widths, ratio);
-const fill = placeholder(img?.asset?._id ?? src ?? "");
+const fill = fillColor ?? placeholder(img?.asset?._id ?? src ?? "");
 ---
 
 <div
