@@ -69,7 +69,7 @@ const secondary = [
 
       <div class="flex items-center gap-5">
         <!-- Language: the current one as plain text, the other a link to
-             this page in that language. Phones show only the other one. -->
+             this page in that language. Phones switch from the open menu. -->
         <p
           class="label hidden items-center gap-1 text-lg leading-[100%] font-black lg:flex"
           aria-label={s.language}
@@ -96,20 +96,10 @@ const secondary = [
             </>
           ))}
         </p>
-        <a
-          href={alternate}
-          hreflang={other}
-          lang={other}
-          aria-label={s.language}
-          class="label text-xl leading-none font-black lg:hidden"
-        >
-          {other.toUpperCase()}
-        </a>
-
         <a href={donate} aria-label={s.favourites} class="press flex hover:scale-110">
           <span class="flex items-center gap-2">
             <Icon name="heart" class="h-4 w-[18px] text-[#F92F7B]" />
-            <span class="display text-md hidden leading-none font-black sm:block">{s.giveNow}</span>
+            <span class="display text-md leading-none font-black">{s.giveNow}</span>
           </span>
         </a>
 
@@ -178,7 +168,7 @@ const secondary = [
     aria-label={s.menu}
     hidden
   >
-    <Spray class="left-[-40%] top-[52%] w-[180%] -rotate-[28deg] md:left-[10%] md:top-[30%] md:w-[110%]" />
+    <Spray class="left-[-82%] top-[44%] w-[264%] -rotate-[28deg] md:left-[-17%] md:top-[22%] md:w-[164%]" />
 
     <!-- The bar again, in ink on yellow, with the hamburger turned into a
          close button. -->
@@ -218,7 +208,7 @@ const secondary = [
           hreflang={other}
           lang={other}
           aria-label={s.language}
-          class="label text-xl leading-none font-black lg:hidden"
+          class="label text-md leading-none font-black lg:hidden"
         >
           {other.toUpperCase()}
         </a>
@@ -226,7 +216,7 @@ const secondary = [
         <a href={donate} aria-label={s.favourites} class="press flex hover:scale-110">
           <span class="flex items-center gap-2">
             <Icon name="heart" class="h-4 w-[18px] text-[#F92F7B]" />
-            <span class="display text-md hidden leading-none font-black sm:block">{s.giveNow}</span>
+            <span class="display text-md leading-none font-black">{s.giveNow}</span>
           </span>
         </a>
         <button
