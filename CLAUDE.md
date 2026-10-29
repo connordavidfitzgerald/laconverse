@@ -38,7 +38,5 @@ Consult these guides before working on related tasks:
 - Components are plain Astro + Tailwind; interactivity is small custom elements
   in `<script>` tags. Motion is GSAP via `src/lib/motion.ts`; Lenis smooth
   scroll in `src/lib/smoothScroll.ts` (opt out per page with Layout's
-  `smoothScroll={false}`); the yellow page wipe is GSAP in
-  `src/components/PageTransition.astro` (opt a link out with
-  `data-no-transition`).
+  `smoothScroll={false}`).
 - Webflow migration: see README → “Webflow → Sanity migration”.

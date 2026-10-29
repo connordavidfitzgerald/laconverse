@@ -1,5 +1,6 @@
 ---
-/* Figma: HOMEPAGE (mobile) + HOMEPAGE — DESKTOP. */
+/* Figma: HOMEPAGE (mobile) + the desktop homepage on the 8-column grid
+   (`page-grid`, 40px margins). */
 import ArticleCard from "../components/ArticleCard.astro";
 import ArticleSearch from "../components/ArticleSearch.astro";
 import Chip from "../components/Chip.astro";
@@ -7,12 +8,11 @@ import Logo from "../components/Logo.astro";
 import PartnerCard from "../components/PartnerCard.astro";
 import Picture from "../components/Picture.astro";
 import PodcastCard from "../components/PodcastCard.astro";
-import RailControls from "../components/RailControls.astro";
 import SectionTitle from "../components/SectionTitle.astro";
 import SupportBand from "../components/SupportBand.astro";
 import VideoCard from "../components/VideoCard.astro";
 import Layout from "../layouts/Layout.astro";
-import { href, otherLang, t, type Lang } from "../i18n";
+import { formatDate, href, otherLang, t, type Lang } from "../i18n";
 import { getArticleCount, getCategories, getHome, getLatest, getSettings } from "../lib/content";
 
 interface Props {
@@ -25,68 +25,124 @@ const [home, settings, total, categories, latest] = await Promise.all([
   getSettings(lang),
   getArticleCount(lang),
   getCategories(lang),
-  getLatest(lang, 6),
+  getLatest(lang, 10),
 ]);
 const { lead, topStories, videos, podcasts, partnerStories } = home;
 const ecoleHref = href(lang, "ecole");
-// First word on its own line, the rest indented beneath it (desktop).
-const [ecoleFirst, ...ecoleRest] = (home.ecole?.title ?? "École Converse").split(" ");
-const ecoleTitle = [ecoleFirst, ecoleRest.join(" ")];
+const ecoleTitle = home.ecole?.title ?? "École Converse";
+// Desktop: the three stories beside the lead.
+const sideStories = topStories.filter((a) => a._id !== lead?._id).slice(0, 3);
+// The grid below skips the lead and side stories so nothing shows twice.
+const shown = [lead, ...sideStories].filter((a) => a != null);
+const shownIds = shown.map((a) => a._id);
+const gridStories = latest.filter((a) => !shownIds.includes(a._id)).slice(0, 6);
+const gridCategories = categories.map((c) => ({
+  ...c,
+  count: c.count - shown.filter((a) => a.categories.some((x) => x.slug === c.slug)).length,
+}));
+// Desktop: what the school teaches, under its photo.
+const ecoleTracks = [
+  { label: s.mcConverse, icon: "/icons/ecole-mic.png" },
+  { label: s.podcasts, icon: "/icons/ecole-podcast.png" },
+  { label: s.journalism, icon: "/icons/ecole-journalism.png" },
+];
 ---
 
 <Layout lang={lang} seo={home.seo} alternate={href(otherLang(lang), "home")}>
-  <!-- Lead story -->
+  <!-- Lead story. Desktop: lead in cols 1–6, three stories stacked in 7–8. -->
   {lead && (
-    <section data-header-hero class="bg-white px-2.5 lg:px-5 pb-10">
-      <article class="group relative flex flex-col lg:mx-auto lg:grid lg:grid-cols-12 lg:gap-x-5">
-        <div class="order-2 px-2.5 flex flex-col items-center gap-5 pt-[60px] text-center lg:order-1 lg:col-span-8 lg:col-start-3 lg:px-2.5 lg:pt-10 lg:pb-5">
-          {lead.categories[0] && (
-            <Chip category={lead.categories[0]} lang={lang} class="relative z-10 lg:text-xl" />
-          )}
-          <h1 class="display text-hero pt-2">
+    <section
+      data-header-hero
+      class="bg-white px-2.5 pb-10 lg:page-grid lg:items-start lg:px-page lg:pb-0"
+    >
+      <article class="group relative flex flex-col lg:col-span-6">
+        <Picture
+          img={lead.image}
+          eager
+          sizes="(min-width: 1024px) 71vw, 100vw"
+          class="order-1 lg:aspect-video! w-full h-auto"
+        />
+        <div class="order-2 px-2.5 flex flex-col items-center gap-5 pt-[60px] text-center lg:items-start lg:px-0 lg:pt-5 lg:pb-5 lg:text-left">
+          <!-- Desktop: author and date across from the chip. -->
+          <div class="flex w-full items-center justify-center gap-2 lg:justify-between">
+            {lead.categories[0] ? (
+              <Chip category={lead.categories[0]} lang={lang} class="relative z-10 lg:text-md" />
+            ) : (
+              <span />
+            )}
+            <p class="label hidden min-w-0 gap-[5px] text-md font-extrabold tracking-[-0.01em] lg:flex">
+              {lead.authors[0] && (
+                <a
+                  href={href(lang, "author", lead.authors[0].slug)}
+                  class="relative z-10 truncate link-line"
+                >
+                  {lead.authors[0].name}
+                </a>
+              )}
+              <time datetime={lead.publishedAt} class="shrink-0 whitespace-nowrap opacity-60">
+                {formatDate(lang, lead.publishedAt)}
+              </time>
+            </p>
+          </div>
+          <h1 class="display text-hero font-black pt-2 lg:pt-0 lg:text-[80px] lg:tracking-[-0.02em]">
             <a href={href(lang, "article", lead.slug)} class="after:absolute after:inset-0">
               {lead.title}
             </a>
           </h1>
-          <div class="flex flex-col items-center gap-5 lg:gap-10 lg:mt-5 lg:w-full lg:grid lg:grid-cols-6 lg:gap-x-5">
+          <div class="flex flex-col items-center gap-5 lg:items-start">
             {lead.dek && (
-              <p class="font-display text-dek font-medium leading-[0.95] tracking-[-0.02em] text lg:col-span-4 lg:col-start-2 lg:px-0 lg:font-medium">
+              <p class="font-display text-[26px] font-medium leading-[0.95] tracking-[-0.02em] lg:text-2xl lg:font-bold lg:tracking-[-0.015em]">
                 {lead.dek}
               </p>
             )}
             {lead.authors[0] && (
-              <p class="text-sm font-medium label lg:col-span-4 lg:col-start-2 lg:text-lg">
-                {lead.authors[0].name}
+              <p class="text-sm font-medium label lg:hidden">
+                PAR{" "}
+                <a
+                  href={href(lang, "author", lead.authors[0].slug)}
+                  class="relative z-10 link-line"
+                >
+                  {lead.authors[0].name}
+                </a>
               </p>
             )}
           </div>
         </div>
-        <Picture
-          img={lead.image}
-          ratio={1}
-          eager
-          sizes="(min-width: 1024px) 63vw, 100vw"
-          class="order-1 lg:order-2 lg:col-span-12 lg:col-start-1 lg:aspect-[5/3]! lg:mt-10"
-        />
       </article>
+      {sideStories.length > 0 && (
+        <ul class="hidden lg:col-span-2 lg:flex lg:flex-col lg:gap-2.5">
+          {sideStories.map((a) => (
+            <li>
+              <ArticleCard article={a} lang={lang} size="sm" sizes="20vw" />
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   )}
 
   <!-- Top stories -->
-  <section class="px-5 pt-16 lg:pt-0 lg:px-20" aria-labelledby="top-stories">
-    <!-- Desktop: the search page's filter + grid, minus the search bar -->
+  <section class="px-5 pt-16 lg:px-page lg:pt-10" aria-labelledby="top-stories">
+    <!-- Desktop: the search page's sort bar, filter and grid, minus the search bar -->
     <ArticleSearch
       lang={lang}
-      categories={categories}
-      articles={latest}
-      total={total}
+      categories={gridCategories}
+      articles={gridStories}
+      total={total - shown.length}
+      exclude={shownIds}
       pageSize={6}
+      sortFirst
+      filterClass="py-40"
+      listClass="lg:gap-x-10"
+      moreLabel={s.seeAllArticles}
       class="hidden! lg:block!"
     />
     <div class="grid gap-5 md:grid-cols-2 lg:hidden">
-      {topStories.map((a) => (
-        <ArticleCard article={a} lang={lang} />
-      ))}
+      {topStories
+        .filter((a) => a._id !== lead?._id)
+        .map((a) => (
+          <ArticleCard article={a} lang={lang} />
+        ))}
     </div>
     <p class="py-[60px] text-center lg:hidden">
       <a href={href(lang, "search")} class="label text-lg tracking-[-0.015em]">
@@ -95,40 +151,18 @@ const ecoleTitle = [ecoleFirst, ecoleRest.join(" ")];
     </p>
   </section>
 
-  <!-- Support band: after videos on phones, before them on desktop -->
-  <div class="hidden px-10 pt-[120px] lg:grid lg:grid-cols-12 lg:gap-x-5">
-    <SupportBand
-      lang={lang}
-      {...home.support}
-      donateUrl={settings.donateUrl}
-      class="lg:col-span-8 lg:col-start-3"
-    />
-  </div>
-
-  <!-- Videos. Desktop: title and greyed “see all” in cols 1–4 with the rail
-       controls under them; the rail starts at col 5 and bleeds off the right. -->
+  <!-- Videos. Desktop: ruled, title and greyed “see all” stacked, the rail
+       starting at the margin and bleeding off the right. -->
   {videos.length > 0 && (
-    <section class="overflow-hidden pt-5 pb-10 lg:pt-[240px] lg:pb-0">
-      <div class="lg:grid lg:grid-cols-12 pt-10 border-t border-black/50 lg:gap-x-5 lg:@container px-5">
-        <SectionTitle
-          lang={lang}
-          title={s.videos}
-          href={href(lang, "videos")}
-          rail
-          class="lg:col-span-4 lg:col-start-1 lg:row-start-1 lg:self-start"
-        />
-        <RailControls
-          rail="home-videos"
-          count={videos.length}
-          lang={lang}
-          class="hidden! lg:col-span-4 lg:col-start-1 lg:row-start-1 lg:flex! lg:self-end"
-        />
+    <section class="overflow-hidden pt-5 pb-10 lg:px-page lg:pt-0">
+      <div class="pt-10 border-t border-black/50 px-5 lg:border-ink lg:px-0">
+        <SectionTitle lang={lang} title={s.videos} href={href(lang, "videos")} rail />
         <ul
           id="home-videos"
-          class="rail -mr-5 mt-2.5 gap-2.5 pr-5 lg:col-span-8 lg:col-start-5 lg:row-start-1 lg:mt-0 lg:gap-5"
+          class="rail -mr-5 mt-2.5 gap-2.5 pr-5 lg:-mr-page lg:mt-10 lg:gap-5 lg:pr-page"
         >
           {videos.map((v) => (
-            <li class="w-[207px] lg:w-[17.25cqw]">
+            <li class="w-[207px] lg:w-[16.85vw]">
               <VideoCard video={v} lang={lang} />
             </li>
           ))}
@@ -137,41 +171,49 @@ const ecoleTitle = [ecoleFirst, ecoleRest.join(" ")];
     </section>
   )}
 
-  <div class="px-5 pt-10 pb-[60px] lg:hidden">
-    <SupportBand lang={lang} {...home.support} donateUrl={settings.donateUrl} />
-  </div>
+  <!-- The rest reorders by breakpoint. Phones: support, École, podcasts.
+       Desktop: podcasts, École, support. Partners close both. -->
+  <div class="flex flex-col">
+    <div class="order-1 px-5 pt-10 pb-[60px] lg:order-3 lg:page-grid lg:px-page lg:py-30">
+      <SupportBand
+        lang={lang}
+        {...home.support}
+        donateUrl={settings.donateUrl}
+        class="lg:col-span-6 lg:col-start-2"
+      />
+    </div>
 
-  <!-- Podcasts: rails come before École on desktop, after it on phones -->
-  <div class="flex flex-col lg:flex-col-reverse">
-    <!-- École Converse. Desktop: ruled kicker, a two-line title that breaks
-         the grid and bleeds into the photo (cols 5–12), copy in cols 1–4. -->
-    <section class="px-5 pb-10 lg:px-5 lg:pt-10 lg:pb-30">
-      <div class="lg:grid lg:grid-cols-12 lg:gap-x-5">
-        <h2 class="display text-section tracking-[-0.015em] lg:relative lg:z-10 lg:col-span-12 lg:mt-10 lg:text-poster lg:leading-[0.82] lg:tracking-[-0.03em] lg:pointer-events-none">
-          <span class="lg:block">{ecoleTitle[0]}</span>
-          {ecoleTitle[1] && (
-            <>
-              {" "}
-              <span class="lg:block lg:pl-[calc((100%+1.25rem)/4)]">{ecoleTitle[1]}</span>
-            </>
-          )}
+    <!-- École Converse. Desktop: ruled, centred title, the photo in cols 3–6,
+         the three tracks, then the copy in cols 3–6. -->
+    <section class="order-2 px-5 pb-10 lg:px-page lg:pb-0">
+      <div class="lg:page-grid lg:border-t lg:border-ink lg:pt-30">
+        <h2 class="display text-section tracking-[-0.015em] lg:col-span-8 lg:text-center lg:text-[120px] lg:tracking-[-0.02em]">
+          {ecoleTitle}
         </h2>
         <a
           href={ecoleHref}
-          class="group relative mt-2.5 block lg:col-span-8 lg:col-start-5 lg:row-start-3 lg:-mt-[min(5.5vw,6.5rem)]"
+          class="group relative mt-2.5 block lg:col-span-4 lg:col-start-3 lg:mt-20"
           tabindex="-1"
           aria-hidden="true"
         >
           <Picture
             img={home.ecole?.image}
-            ratio={1}
-            class="media-inset lg:aspect-[16/11]!"
-            sizes="(min-width: 1024px) 66vw, 100vw"
+            ratio={16 / 9}
+            class="media-inset lg:aspect-video!"
+            sizes="(min-width: 1024px) 47vw, 100vw"
           />
           <Logo class="absolute bottom-[22px] left-[19px] h-[18px] w-auto text-paper lg:hidden" />
         </a>
-        <div class="flex flex-col gap-5 py-2.5 lg:col-span-4 lg:row-start-3 lg:gap-10 lg:self-end lg:py-0">
-          <p class="font-display text-intro font-black leading-[0.95] tracking-[-0.02em] lg:indent-[2.5em] lg:font-bold lg:leading-none">
+        <ul class="hidden lg:col-span-8 lg:mt-20 lg:flex lg:justify-center lg:gap-20">
+          {ecoleTracks.map((track) => (
+            <li class="flex flex-col items-center gap-5">
+              <img src={track.icon} alt="" width="60" height="60" class="size-[60px]" />
+              <span class="display text-[30px] tracking-[-0.02em]">{track.label}</span>
+            </li>
+          ))}
+        </ul>
+        <div class="flex flex-col gap-5 py-2.5 lg:col-span-4 lg:col-start-3 lg:mt-10 lg:items-center lg:gap-10 lg:py-0 lg:text-center">
+          <p class="font-display text-intro font-black leading-[0.95] tracking-[-0.02em] lg:text-[30px] lg:font-medium">
             {home.ecole?.text ??
               (lang === "en"
                 ? "Offering courses in journalism, podcasting, and creative writing, École Converse trains the next generation of journalists through paid apprenticeships."
@@ -179,7 +221,7 @@ const ecoleTitle = [ecoleFirst, ecoleRest.join(" ")];
           </p>
           <a
             href={ecoleHref}
-            class="label w-max bg-lilac px-[15px] py-2.5 text-xs leading-[1.2] hover:bg-ink hover:text-lilac lg:px-5 lg:py-3 lg:font-black lg:text-xl lg:leading-none"
+            class="label w-max bg-lilac px-[15px] py-2.5 text-xs leading-[1.2] hover:bg-ink hover:text-lilac lg:px-10 lg:py-5 lg:font-black lg:text-lg lg:leading-none"
           >
             {s.learnMore} <span class="nudge-x">→</span>
           </a>
@@ -187,29 +229,23 @@ const ecoleTitle = [ecoleFirst, ecoleRest.join(" ")];
       </div>
     </section>
 
-    <!-- Podcasts: same desktop layout as Videos, with wider square cards. -->
+    <!-- Podcasts. Desktop: ruled like Videos, the first four in a row. -->
     {podcasts.length > 0 && (
-      <section class="overflow-hidden pb-10 lg:pt-10 lg:pb-0">
-        <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:@container py-10 lg:border-t lg:border-b lg: border-black/50">
+      <section class="order-3 overflow-hidden pb-10 lg:order-1 lg:px-page lg:pb-10">
+        <div class="px-5 py-10 lg:border-t lg:border-ink lg:px-0 lg:pb-0">
           <SectionTitle
             lang={lang}
             title={s.podcasts}
             href={href(lang, "podcasts")}
             rail
-            class="[&_a]:hidden lg:col-span-4 lg:col-start-1 lg:row-start-1 lg:self-start lg:[&_a]:inline"
-          />
-          <RailControls
-            rail="home-podcasts"
-            count={podcasts.length}
-            lang={lang}
-            class="hidden! lg:col-span-4 lg:col-start-1 lg:row-start-1 lg:flex! lg:self-end"
+            class="[&_a]:hidden lg:[&_a]:inline"
           />
           <ul
             id="home-podcasts"
-            class="rail -mr-5 mt-2.5 gap-2.5 pr-5 lg:col-span-8 lg:col-start-5 lg:row-start-1 lg:mt-0 lg:gap-5"
+            class="rail -mr-5 mt-2.5 gap-2.5 pr-5 lg:mr-0 lg:mt-10 lg:grid lg:grid-cols-4 lg:gap-5 lg:overflow-visible lg:pr-0"
           >
-            {podcasts.map((p) => (
-              <li class="w-[207px] lg:w-[25.7cqw]">
+            {podcasts.map((p, i) => (
+              <li class:list={["w-[207px] lg:w-auto", i >= 4 && "lg:hidden"]}>
                 <PodcastCard podcast={p} lang={lang} />
               </li>
             ))}
@@ -223,26 +259,26 @@ const ecoleTitle = [ecoleFirst, ecoleRest.join(" ")];
         </div>
       </section>
     )}
-  </div>
 
-  <!-- Independent media portal -->
-  {partnerStories.length > 0 && (
-    <section class="overflow-hidden px-5 pb-10 lg:px-5 lg:pt-20 lg:pb-60">
-      <div class="lg:grid lg:grid-cols-12 lg:gap-x-5">
-        <SectionTitle
-          lang={lang}
-          title={s.independentMedia}
-          class="lg:col-span-5 lg:self-start"
-          stacked
-        />
-        <ul class="rail -mr-5 mt-2.5 gap-2.5 pr-5 lg:col-span-7 lg:-mr-5 lg:mt-0 lg:gap-5 lg:pr-5">
-          {partnerStories.map((p) => (
-            <li class="w-[247px] lg:w-[351px]">
-              <PartnerCard story={p} lang={lang} />
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  )}
+    <!-- Independent media portal -->
+    {partnerStories.length > 0 && (
+      <section class="order-4 overflow-hidden px-5 pb-10 lg:px-page lg:pb-60">
+        <div class="lg:page-grid">
+          <SectionTitle
+            lang={lang}
+            title={s.independentMedia}
+            class="lg:col-span-3 lg:self-start"
+            stacked
+          />
+          <ul class="rail -mr-5 mt-2.5 gap-2.5 pr-5 lg:col-span-5 lg:-mr-page lg:mt-0 lg:gap-5 lg:pr-page">
+            {partnerStories.map((p) => (
+              <li class="w-[247px] lg:w-[351px]">
+                <PartnerCard story={p} lang={lang} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+  </div>
 </Layout>

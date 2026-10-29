@@ -4,12 +4,10 @@
    just instantly. Hover states stay in CSS (see global.css); GSAP handles
    anything that enters, leaves, or changes shape. */
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-gsap.registerPlugin(ScrollTrigger);
 gsap.defaults({ ease: "power2.out", duration: 0.4 });
 
-export { gsap, ScrollTrigger };
+export { gsap };
 
 const reducedQuery =
   typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
@@ -111,6 +109,25 @@ function queueFade(img: HTMLImageElement) {
   ready.push(img);
 }
 
+/* One observer for every waiting image: fires once an image's top is within
+   the bottom 8% of the viewport. */
+const onSeen = new Map<Element, () => void>();
+let seenObserver: IntersectionObserver | null = null;
+function whenSeen(el: Element, done: () => void) {
+  seenObserver ??= new IntersectionObserver(
+    (entries) =>
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        seenObserver!.unobserve(e.target);
+        onSeen.get(e.target)?.();
+        onSeen.delete(e.target);
+      }),
+    { rootMargin: "0px 0px -8% 0px" },
+  );
+  onSeen.set(el, done);
+  seenObserver.observe(el);
+}
+
 export function fadeImages(scope: ParentNode | Element[] = document) {
   if (reduced()) return;
   const imgs = Array.isArray(scope)
@@ -129,7 +146,7 @@ export function fadeImages(scope: ParentNode | Element[] = document) {
     });
     const seen = new Promise<void>((done) => {
       if (!below) return done();
-      ScrollTrigger.create({ trigger: img, start: "top 92%", once: true, onEnter: () => done() });
+      whenSeen(img, done);
     });
     Promise.all([loaded, seen]).then(() => queueFade(img));
   }

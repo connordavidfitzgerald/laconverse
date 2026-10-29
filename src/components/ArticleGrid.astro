@@ -15,9 +15,25 @@ interface Props {
   countLabel?: string;
   /** Leave “load more” to a parent (the search page drives its own). */
   managed?: boolean;
+  /** Extra classes for the card list (column gaps differ per page). */
+  listClass?: string;
+  /** Label for the “load more” button. */
+  moreLabel?: string;
 }
-const { lang, articles, total, filter = {}, countLabel, managed = false } = Astro.props;
+const {
+  lang,
+  articles,
+  total,
+  filter = {},
+  countLabel,
+  managed = false,
+  listClass,
+  moreLabel,
+} = Astro.props;
 const s = t(lang);
+// A `filter` slot (ArticleSearch's categories) goes between the sort bar and
+// the cards; the bar then reads as a top rule rather than a bottom one.
+const hasFilter = Astro.slots.has("filter");
 // The client-side card template: a card with every slot present, filled per entry.
 const blank: Card = {
   _id: "",
@@ -37,7 +53,12 @@ const blank: Card = {
   data-shown={articles.length}
   data-managed={managed ? "" : undefined}
 >
-  <div class="flex items-center justify-between border-b border-ink py-2.5">
+  <div
+    class:list={[
+      "flex items-center justify-between border-ink",
+      hasFilter ? "border-t pt-5" : "border-b py-2.5",
+    ]}
+  >
     <p class="label inline-flex items-center gap-1.5 text-sm font-extrabold">
       {s.sortLatest}
       <Icon name="chevron" class="h-1.5 w-2.5" />
@@ -46,7 +67,8 @@ const blank: Card = {
       {total} {countLabel ?? s.results}
     </p>
   </div>
-  <div data-list class="mt-5 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+  <slot name="filter" />
+  <div data-list class:list={["mt-5 grid gap-5 md:grid-cols-2 lg:grid-cols-3", listClass]}>
     {articles.map((a) => (
       <ArticleCard article={a} lang={lang} />
     ))}
@@ -58,7 +80,7 @@ const blank: Card = {
         data-more
         class="label bg-yellow px-5 py-3 font-extrabold text-xl text-ink hover:bg-ink hover:text-yellow disabled:opacity-40"
       >
-        {s.loadMore}
+        {moreLabel ?? s.loadMore}
       </button>
     </p>
   )}

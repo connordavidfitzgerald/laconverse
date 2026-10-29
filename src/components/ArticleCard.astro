@@ -27,29 +27,30 @@ const [category] = article.categories;
 ---
 
 <article class:list={["group relative flex flex-col", className]}>
-  <Picture
-    img={article.image}
-    ratio={size === "sm" ? 247 / 265 : 4 / 3}
-    sizes={sizes}
-    class="media-inset"
-  />
-  <div class="@container flex flex-col gap-1 py-2 md:gap-4 md:pt-4 md:pb-6">
+  <Picture img={article.image} ratio={16 / 9} sizes={sizes} class="media-inset" />
+  <div class="@container flex flex-col gap-1 py-2 md:gap-2.5 md:pt-4 md:pb-6">
     <div class="flex items-center justify-between gap-2 py-2 md:py-0">
       {category ? (
         <Chip category={category} lang={lang} class="relative z-10" data-chip />
       ) : (
         <span />
       )}
-      <p class="label flex min-w-0 gap-[5px] text-sm md:tracking-[-0.01em] font-extrabold">
+      <!-- Too narrow for the byline beside the chip (the homepage side stories
+           around 1024–1180px): drop it. -->
+      <p class="label hidden min-w-0 gap-[5px] text-sm font-extrabold md:tracking-[-0.01em] @min-[16.5rem]:flex">
         {article.authors[0] && (
-          <span data-author class="hidden truncate @min-[20rem]:inline">
+          <a
+            href={href(lang, "author", article.authors[0].slug)}
+            data-author
+            class="relative z-10 hidden truncate link-line @min-[20rem]:inline"
+          >
             {article.authors[0].name}
-          </span>
+          </a>
         )}
         <time
           data-date
           datetime={article.publishedAt}
-          class="shrink-0 whitespace-nowrap opacity-50"
+          class="shrink-0 whitespace-nowrap opacity-60"
         >
           {formatDate(lang, article.publishedAt)}
         </time>

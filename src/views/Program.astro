@@ -38,7 +38,7 @@ const donateUrl = program.support
   alternate={translation ? href(other, "program", translation.slug) : href(other, "ecole")}
 >
   <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
-    <div class="lg:col-span-8 lg:col-start-3">
+    <div class="lg:col-span-8 lg:col-start-3 md:mx-auto md:max-w-2xl lg:mx-0 lg:max-w-none">
       <div class="flex justify-center">
         <BackLink href={href(lang, "ecole")} label={s.ecole} />
       </div>
@@ -55,7 +55,9 @@ const donateUrl = program.support
       ) : (
         <div class="flex flex-col items-center gap-4 pb-24 text-center">
           <p class="label text-xs">{s.comingSoon}</p>
-          <p class="max-w-[28rem] text-sm font-medium leading-[1.35] lg:text-base">{s.comingSoonText}</p>
+          <p class="max-w-[28rem] text-sm font-medium leading-[1.35] lg:text-base">
+            {s.comingSoonText}
+          </p>
           <a
             href={`mailto:${settings.email}`}
             class="display link-line decoration-2 text-[2.25rem] leading-[0.95] tracking-[-0.01em] lg:text-section"
@@ -108,7 +110,7 @@ const donateUrl = program.support
       class="px-5 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5"
       aria-labelledby="video-title"
     >
-      <div class="lg:col-span-8 lg:col-start-3">
+      <div class="lg:col-span-8 lg:col-start-3 md:mx-auto md:max-w-2xl lg:mx-0 lg:max-w-none">
         <div class="mt-20 bg-ink">
           <iframe
             class="aspect-video w-full"
@@ -150,7 +152,7 @@ const donateUrl = program.support
       class="px-5 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5"
       aria-labelledby="program-articles"
     >
-      <div class="lg:col-span-8 lg:col-start-3">
+      <div class="lg:col-span-8 lg:col-start-3 md:mx-auto md:max-w-2xl lg:mx-0 lg:max-w-none">
         <h2 id="program-articles" class="display mb-5 text-[1.875rem] leading-[0.95] lg:text-5xl">
           {s.latestArticles}
         </h2>
@@ -168,7 +170,7 @@ const donateUrl = program.support
       class="scroll-mt-10 px-5 pt-10 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5"
       aria-labelledby="form-title"
     >
-      <div class="lg:col-span-6 lg:col-start-4">
+      <div class="lg:col-span-6 lg:col-start-4 md:mx-auto md:max-w-2xl lg:mx-0 lg:max-w-none">
         <h2 id="form-title" class="display text-[1.875rem] leading-[0.95] lg:text-5xl">
           {program.form.title}
         </h2>

@@ -185,7 +185,7 @@ export async function getIndex(lang: Lang): Promise<IndexEntry[]> {
     s: a.slug,
     d: a.dek,
     p: a.publishedAt,
-    i: imageUrl(a.image, 800, 600),
+    i: imageUrl(a.image, 800, 450),
     c: a.categories,
     g: a.tags?.map((t) => t.slug),
     a: a.authors,

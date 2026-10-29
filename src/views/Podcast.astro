@@ -39,7 +39,7 @@ const latestSpotify = spotify(latest?.src);
 >
   <podcast-player class="block px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
     <audio preload="none"></audio>
-    <div class="lg:col-span-8 lg:col-start-3">
+    <div class="lg:col-span-8 lg:col-start-3 md:mx-auto md:max-w-2xl lg:mx-0 lg:max-w-none">
       <div class="w-full flex justify-center lg:pb-20 pt-20">
         <BackLink href={href(lang, "podcasts")} label={s.podcasts} />
       </div>

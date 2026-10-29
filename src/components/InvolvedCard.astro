@@ -1,7 +1,7 @@
 ---
 /* One "way to help" on the Engagez-vous page: a wide image beside a narrow,
-   bottom-aligned text column on desktop, swapping sides with `flip` so the
-   page alternates; stacked and left-aligned on mobile. */
+   bottom-aligned text column from tablets up, swapping sides with `flip` so
+   the page alternates; stacked and left-aligned on phones. */
 import Picture from "./Picture.astro";
 import type { Card } from "../lib/types";
 
@@ -15,17 +15,17 @@ const { card: c, id, num, flip = false } = Astro.props;
 const voice = c.cta?.url === "#voice" ? "" : undefined;
 ---
 
-<section id={id} class="mt-20 scroll-mt-24 lg:mt-32 lg:grid lg:grid-cols-12 lg:gap-x-5">
+<section id={id} class="mt-20 scroll-mt-24 md:grid md:grid-cols-12 md:gap-x-5 lg:mt-32">
   <Picture
     img={c.image}
     ratio={353 / 250}
-    class:list={["lg:col-span-7 lg:row-start-1", flip && "lg:col-start-6"]}
-    sizes="(min-width: 1024px) 58vw, 100vw"
+    class:list={["md:col-span-7 md:row-start-1", flip && "md:col-start-6"]}
+    sizes="(min-width: 768px) 58vw, 100vw"
   />
   <div
     class:list={[
-      "mt-5 lg:row-start-1 lg:mt-0 lg:self-end lg:col-span-4",
-      flip ? "lg:col-start-1" : "lg:col-start-9",
+      "mt-5 md:row-start-1 md:mt-0 md:self-end md:col-span-5 lg:col-span-4",
+      flip ? "md:col-start-1" : "md:col-start-8 lg:col-start-9",
     ]}
   >
     <p class="label text-xs lg:text-sm">{num}</p>

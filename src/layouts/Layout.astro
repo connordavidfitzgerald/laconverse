@@ -1,8 +1,8 @@
 ---
 import "../styles/global.css";
+import displayFont from "../assets/fonts/FavoritCompressed-Black.woff2?url";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
-import PageTransition from "../components/PageTransition.astro";
 import VoiceNote from "../components/VoiceNote.astro";
 import { href, htmlLang, otherLang, t, type Lang } from "../i18n";
 import { getSettings } from "../lib/content";
@@ -76,17 +76,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:locale" content={htmlLang[lang].replace("-", "_")} />
     {ogImage && <meta property="og:image" content={ogImage} />}
     <meta name="twitter:card" content="summary_large_image" />
-    <link
-      rel="preload"
-      href="/fonts/ABCFavoritCompressedTrial-Ultra.otf"
-      as="font"
-      type="font/otf"
-      crossorigin
-    />
+    <link rel="preload" href={displayFont} as="font" type="font/woff2" crossorigin />
     <slot name="head" />
   </head>
   <body class:list={["min-h-dvh", dark && "bg-ink! text-paper"]}>
-    <PageTransition />
     <a
       href="#main"
       class="label sr-only z-[60] bg-ink px-4 py-3 text-paper focus:not-sr-only focus:fixed focus:left-4 focus:top-4"

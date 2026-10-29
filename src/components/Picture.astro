@@ -4,7 +4,7 @@
    shows its flat placeholder colour so the layout never collapses. The image
    fades in over that colour once it loads (`fadeImages` in lib/motion). */
 import { placeholder } from "../lib/placeholder";
-import { imageUrl, srcset } from "../lib/sanity";
+import { imageUrl, pictureWidths, srcset } from "../lib/sanity";
 import type { Img } from "../lib/types";
 
 interface Props {
@@ -16,6 +16,10 @@ interface Props {
   class?: string;
   imgClass?: string;
   eager?: boolean;
+  /** The page preloads this image (a `<link rel="preload" media>` in the
+      head, see Article) for the viewports that show it. The tag itself then
+      stays lazy, so a copy hidden at the current size never loads. */
+  preloaded?: boolean;
   alt?: string;
   /** A flat colour for the frame in place of the generated placeholder. */
   fill?: string;
@@ -25,10 +29,11 @@ const {
   img,
   ratio,
   sizes = "100vw",
-  widths = [400, 640, 960, 1280, 1920],
+  widths = pictureWidths,
   class: className,
   imgClass,
   eager = false,
+  preloaded = false,
   alt,
   fill: fillColor,
 } = Astro.props;
@@ -50,8 +55,8 @@ const fill = fillColor ?? placeholder(img?.asset?._id ?? src ?? "");
       srcset={set}
       sizes={set ? sizes : undefined}
       alt={alt ?? img?.alt ?? ""}
-      loading={eager ? "eager" : "lazy"}
-      fetchpriority={eager ? "high" : undefined}
+      loading={eager && !preloaded ? "eager" : "lazy"}
+      fetchpriority={eager && !preloaded ? "high" : undefined}
       decoding="async"
       class:list={["absolute inset-0 size-full object-cover", imgClass]}
     />

@@ -24,7 +24,7 @@ const page = await getGiveYourVoice(lang);
   alternate={href(otherLang(lang), "giveYourVoice")}
 >
   <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
-    <div class="lg:col-span-8 lg:col-start-3">
+    <div class="lg:col-span-8 lg:col-start-3 md:mx-auto md:max-w-2xl lg:mx-0 lg:max-w-none">
       <p class="pt-5 text-center">
         <BackLink href={href(lang, "getInvolved")} label={s.getInvolved} />
       </p>
@@ -50,7 +50,7 @@ const page = await getGiveYourVoice(lang);
                   <span>
                     <span class="display block text-2xl leading-[0.95] lg:text-4xl">{p.title}</span>
                     {p.meta && (
-                      <span class="label block text-[0.625rem] opacity-40 lg:text-xs">
+                      <span class="label block text-[0.625rem] opacity-60 lg:text-xs">
                         {p.meta}
                       </span>
                     )}

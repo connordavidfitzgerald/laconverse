@@ -55,14 +55,23 @@ const videos = await getVideos(lang);
                 data-video
               ></video>
             ) : iframe ? (
-              <iframe
-                src={iframe}
-                class="absolute inset-0 size-full"
-                loading="lazy"
-                allow="autoplay; encrypted-media; picture-in-picture"
-                allowfullscreen
-                title={v.title}
-              ></iframe>
+              /* A poster stands in for the player until it's asked for:
+                 each embed costs ~0.5 MB of third-party script. */
+              <button
+                type="button"
+                data-embed={iframe}
+                data-title={v.title}
+                aria-label={`${s.playVideo} : ${v.title}`}
+                class="group absolute inset-0 size-full cursor-pointer"
+              >
+                <Picture img={v.poster} class="absolute! inset-0 size-full" ratio={9 / 16} />
+                <span
+                  aria-hidden="true"
+                  class="absolute left-1/2 top-1/2 grid size-16 -translate-1/2 place-items-center rounded-full bg-ink/60 text-2xl text-paper transition-colors group-hover:bg-ink/80"
+                >
+                  ▶
+                </span>
+              </button>
             ) : (
               <Picture
                 img={v.poster}
@@ -159,6 +168,17 @@ const videos = await getVideos(lang);
             {v.src && (
               <button
                 type="button"
+                data-playback
+                class="press label absolute right-4 top-14 overflow-hidden rounded-full bg-ink/60 px-3 py-1.5 text-xs text-paper hover:bg-ink/80"
+                data-on={s.pause}
+                data-off={s.play}
+              >
+                {s.pause}
+              </button>
+            )}
+            {v.src && (
+              <button
+                type="button"
                 data-sound
                 class="press label absolute right-4 top-4 overflow-hidden rounded-full bg-ink/60 px-3 py-1.5 text-xs text-paper hover:bg-ink/80"
                 data-on={s.mute}
@@ -175,7 +195,7 @@ const videos = await getVideos(lang);
 </Layout>
 
 <script>
-  import { d, gsap, swapText } from "../lib/motion";
+  import { d, gsap, reduced, swapText } from "../lib/motion";
 
   const SNAP = ["snap-y", "snap-mandatory"];
 
@@ -187,14 +207,17 @@ const videos = await getVideos(lang);
       if (footer) footer.style.scrollSnapAlign = "end";
 
       // Play what is on screen, pause the rest; a slide leaving the screen
-      // also folds its write-up away.
+      // also folds its write-up away. A video the viewer paused (or every
+      // video, with reduced motion) stays paused until they press play.
+      const held = new WeakSet<HTMLVideoElement>();
       const io = new IntersectionObserver(
         (entries) =>
           entries.forEach((e) => {
             const slide = e.target as HTMLElement;
             const v = slide.querySelector<HTMLVideoElement>("[data-video]");
-            if (e.isIntersecting) v?.play().catch(() => {});
-            else {
+            if (e.isIntersecting) {
+              if (v && !held.has(v)) v.play().catch(() => {});
+            } else {
               v?.pause();
               this.#close(slide);
             }
@@ -202,6 +225,41 @@ const videos = await getVideos(lang);
         { threshold: 0.6 },
       );
       this.querySelectorAll<HTMLElement>("[data-slide]").forEach((s) => io.observe(s));
+
+      this.querySelectorAll<HTMLButtonElement>("[data-playback]").forEach((b) => {
+        const v = b.parentElement!.querySelector("video")!;
+        if (reduced()) {
+          held.add(v);
+          b.textContent = b.dataset.off!;
+        }
+        b.addEventListener("click", () => {
+          if (v.paused) {
+            held.delete(v);
+            v.play().catch(() => {});
+          } else {
+            held.add(v);
+            v.pause();
+          }
+        });
+        v.addEventListener("play", () => swapText(b, b.dataset.on!));
+        v.addEventListener("pause", () => swapText(b, b.dataset.off!));
+      });
+
+      // Embeds: swap the poster for the player when it's pressed.
+      this.querySelectorAll<HTMLButtonElement>("[data-embed]").forEach((b) =>
+        b.addEventListener("click", () => {
+          const frame = document.createElement("iframe");
+          const src = new URL(b.dataset.embed!);
+          src.searchParams.set("autoplay", "1");
+          frame.src = src.href;
+          frame.title = b.dataset.title!;
+          frame.allow = "autoplay; encrypted-media; picture-in-picture";
+          frame.allowFullscreen = true;
+          frame.className = "absolute inset-0 size-full";
+          b.replaceWith(frame);
+          frame.focus();
+        }),
+      );
 
       this.querySelectorAll<HTMLButtonElement>("[data-sound]").forEach((b) =>
         b.addEventListener("click", () => {
@@ -238,15 +296,18 @@ const videos = await getVideos(lang);
       );
 
       // Escape folds an open write-up; with none open, it leaves the feed.
-      document.addEventListener("keydown", (this.#onKey = (e: KeyboardEvent) => {
-        if (e.key !== "Escape" || e.defaultPrevented) return;
-        // Only from the feed itself, not from the header, menu or voice note.
-        const target = e.target as Element;
-        if (target !== document.body && !this.contains(target)) return;
-        const open = this.querySelector<HTMLElement>("[data-panel]:not([hidden])");
-        if (open) this.#close(open.closest<HTMLElement>("[data-slide]")!, true);
-        else exit();
-      }));
+      document.addEventListener(
+        "keydown",
+        (this.#onKey = (e: KeyboardEvent) => {
+          if (e.key !== "Escape" || e.defaultPrevented) return;
+          // Only from the feed itself, not from the header, menu or voice note.
+          const target = e.target as Element;
+          if (target !== document.body && !this.contains(target)) return;
+          const open = this.querySelector<HTMLElement>("[data-panel]:not([hidden])");
+          if (open) this.#close(open.closest<HTMLElement>("[data-slide]")!, true);
+          else exit();
+        }),
+      );
     }
 
     #onKey?: (e: KeyboardEvent) => void;

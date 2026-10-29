@@ -61,7 +61,7 @@ const secondary = [
 
     <div
       data-hdr-bar
-      class="relative z-10 flex items-center justify-between gap-6 px-5 py-5 transition-[padding] duration-500 ease-power3-out"
+      class="relative z-10 flex items-center justify-between gap-6 px-5 py-5 transition-[padding] duration-500 ease-power3-out lg:p-10 lg:group-data-compact/hdr:py-5"
     >
       <a href={href(lang, "home")} class="block shrink-0" aria-label="La Converse — accueil">
         <Logo class="h-[18px] w-auto" />
@@ -168,11 +168,15 @@ const secondary = [
     aria-label={s.menu}
     hidden
   >
-    <Spray class="left-[-82%] top-[44%] w-[264%] -rotate-[28deg] md:left-[-17%] md:top-[22%] md:w-[164%]" />
+    <!-- Clipped to the menu's box so the oversized, rotated spray doesn't
+         stretch the scroll area. -->
+    <div class="pointer-events-none absolute inset-0 overflow-hidden" data-menu-spray>
+      <Spray class="left-[-82%] top-[44%] w-[264%] -rotate-[28deg] md:left-[-17%] md:top-[22%] md:w-[164%]" />
+    </div>
 
     <!-- The bar again, in ink on yellow, with the hamburger turned into a
          close button. -->
-    <div class="relative flex items-center justify-between gap-6 px-5 py-5" data-menu-fade>
+    <div class="relative flex items-center justify-between gap-6 px-5 py-5 lg:p-10 lg:[:root:has([data-hdr][data-compact])_&]:py-5" data-menu-fade>
       <a href={href(lang, "home")} class="block shrink-0" aria-label="La Converse — accueil">
         <Logo class="h-[18px] w-auto" />
       </a>
@@ -233,107 +237,71 @@ const secondary = [
       </div>
     </div>
 
-    <div class="relative grid flex-1 gap-y-8 px-5 pt-2 pb-5 lg:grid-cols-12 lg:gap-x-5 lg:pt-10">
-      <!-- Search, and from `lg` the article categories under it. -->
-      <div class="flex flex-col gap-12 lg:col-span-4 lg:col-start-9 lg:row-start-1">
-        <form
-          role="search"
-          action={href(lang, "search")}
-          method="get"
-          class="flex items-center gap-3 border-b border-ink pb-2"
-          data-menu-fade
+    <div class="relative grid flex-1 gap-y-8 px-5 pt-2 pb-5 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-5 lg:gap-y-10 lg:px-10 lg:pt-10">
+      <form
+        role="search"
+        action={href(lang, "search")}
+        method="get"
+        class="flex items-center gap-3 self-start border-b border-ink pb-2 has-[input:focus-visible]:shadow-[0_1px_0_var(--color-ink)] lg:col-span-4 lg:col-start-9 lg:row-start-1"
+        data-menu-fade
+      >
+        <label for="menu-q" class="sr-only">{s.search}</label>
+        <input
+          id="menu-q"
+          name="q"
+          type="search"
+          autocomplete="off"
+          enterkeyhint="search"
+          placeholder={s.searchPlaceholder}
+          class="display min-w-0 flex-1 bg-transparent text-2xl font-black outline-none placeholder:text-ink/45 [&::-webkit-search-cancel-button]:hidden"
+        />
+        <button
+          type="submit"
+          class="grid size-[30px] shrink-0 place-items-center rounded-full bg-ink text-yellow"
+          aria-label={s.search}
         >
-          <label for="menu-q" class="sr-only">{s.search}</label>
-          <input
-            id="menu-q"
-            name="q"
-            type="search"
-            autocomplete="off"
-            enterkeyhint="search"
-            placeholder={s.searchPlaceholder}
-            class="display min-w-0 flex-1 bg-transparent text-2xl font-black outline-none placeholder:text-ink/45 [&::-webkit-search-cancel-button]:hidden"
-          />
-          <button
-            type="submit"
-            class="grid size-[30px] shrink-0 place-items-center rounded-full bg-ink text-yellow"
-            aria-label={s.search}
-          >
-            <Icon name="search" class="size-2.5" />
-          </button>
-        </form>
-        <div
-          class="hidden lg:flex lg:flex-col lg:items-start lg:gap-4"
-          data-menu-nav
-        >
-          <p class="label text-sm" data-menu-fade>{s.articles}</p>
-          <ul class="display text-2xl leading-[1.1] font-black">
-            {settings.menuCategories.map((c) => (
-              <li>
-                <a
-                  href={href(lang, "category", c.slug)}
-                  class="block link-line decoration-2"
-                  data-menu-line
-                >
-                  {c.title}
-                </a>
-              </li>
-            ))}
-          </ul>
-          <a
-            href={href(lang, "search")}
-            class="label group inline-flex items-center gap-1.5 text-base"
-            data-menu-line
-          >
-            {s.seeAllStories}
-            <span class="nudge-x" aria-hidden="true">→</span>
-          </a>
-        </div>
-      </div>
+          <Icon name="search" class="size-2.5" />
+        </button>
+      </form>
 
+      <!-- The article categories, large. -->
       <nav
-        class="lg:col-span-7 lg:row-start-1"
-        aria-label={s.menu}
+        class="flex flex-col items-start gap-4 lg:col-span-7 lg:row-span-2 lg:row-start-1"
+        aria-label={s.articles}
         data-menu-nav
       >
         <ul
           class="display text-[2rem] leading-[1.1] font-black tracking-[-0.015em] md:text-5xl lg:text-[clamp(2.5rem,4.5vw,4.5rem)] lg:leading-[0.98]"
         >
-          <!-- Phones get the categories as an accordion; from `lg` they sit
-               in their own column. -->
-          <li class="lg:hidden">
-            <button
-              type="button"
-              data-submenu
-              aria-expanded="false"
-              aria-controls="menu-articles"
-              class="display flex w-full items-center justify-between text-left font-black"
-              data-menu-line
-            >
-              <span>{s.articles}</span>
-              <Icon
-                name="chevron"
-                class="h-2.5 w-5 transition-transform duration-300 ease-out [[aria-expanded=true]>&]:rotate-180"
-              />
-            </button>
-            <ul id="menu-articles" class="py-1 pl-4 text-2xl leading-[1.1] md:text-3xl" hidden>
-              {settings.menuCategories.map((c) => (
-                <li>
-                  <a
-                    href={href(lang, "category", c.slug)}
-                    class="block link-line decoration-2"
-                    data-menu-line
-                  >
-                    {c.title}
-                  </a>
-                </li>
-              ))}
-              <li>
-                <a href={href(lang, "search")} class="block link-line decoration-2" data-menu-line>
-                  {s.seeAllStories} →
-                </a>
-              </li>
-            </ul>
-          </li>
+          {settings.menuCategories.map((c) => (
+            <li>
+              <a
+                href={href(lang, "category", c.slug)}
+                class="block link-line decoration-2"
+                data-menu-line
+              >
+                {c.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+        <a
+          href={href(lang, "search")}
+          class="label group inline-flex items-center gap-1.5 text-base"
+          data-menu-line
+        >
+          {s.seeAllStories}
+          <span class="nudge-x" aria-hidden="true">→</span>
+        </a>
+      </nav>
+
+      <!-- The site's pages, in the column under search. -->
+      <nav
+        class="lg:col-span-4 lg:col-start-9 lg:row-start-2"
+        aria-label={s.menu}
+        data-menu-nav
+      >
+        <ul class="display text-2xl leading-[1.1] font-black">
           {primary.map(({ label, url }) => (
             <li>
               <a href={url} class="block link-line decoration-2" data-menu-line>
@@ -342,7 +310,7 @@ const secondary = [
             </li>
           ))}
           {secondary.map(({ label, url }, i) => (
-            <li class:list={[i === 0 && "pt-5 lg:pt-8"]}>
+            <li class:list={[i === 0 && "pt-5"]}>
               <a href={url} class="block link-line decoration-2" data-menu-line>
                 {label}
               </a>
@@ -354,21 +322,13 @@ const secondary = [
 
 
     <div
-      class="relative mx-5 mt-8 flex flex-col items-center gap-4 border-y border-ink py-4 text-center lg:flex-row lg:justify-end lg:gap-6 lg:text-right"
+      class="relative mx-5 mt-8 lg:mx-10 flex flex-col items-start gap-4 border-y border-ink py-4 text-left lg:flex-row lg:items-center lg:gap-6"
       data-menu-fade
     >
-      <p class="display max-w-[22rem] text-lg leading-[0.95]">
-        {settings.voicePrompt ?? s.vnTitle}
-      </p>
-      <div class="flex flex-col items-center gap-4 lg:order-last">
-        <button
-          type="button"
-          data-voice-open
-          class="press grid size-[84px] place-items-center rounded-full bg-ink text-paper hover:scale-105"
-          aria-label={s.vnOpen}
-        >
-          <Icon name="mic" class="h-[23px] w-[22px]" />
-        </button>
+      <div class="flex flex-col items-start gap-3">
+        <p class="display max-w-[22rem] text-lg leading-[0.95]">
+          {settings.voicePrompt ?? s.vnTitle}
+        </p>
         <button
           type="button"
           data-voice-open="write"
@@ -377,9 +337,17 @@ const secondary = [
           {s.vnWrite}
         </button>
       </div>
+      <button
+        type="button"
+        data-voice-open
+        class="press grid size-[84px] shrink-0 place-items-center rounded-full bg-ink text-paper hover:scale-105 lg:order-first"
+        aria-label={s.vnOpen}
+      >
+        <Icon name="mic" class="h-[23px] w-[22px]" />
+      </button>
     </div>
 
-    <div class="relative flex items-center justify-between px-5 py-5" data-menu-fade>
+    <div class="relative flex items-center justify-between px-5 py-5 lg:px-10" data-menu-fade>
       <Socials
         socials={settings.socials.filter((x) =>
           ["whatsapp", "linkedin", "instagram"].includes(x.platform),
@@ -523,7 +491,7 @@ const secondary = [
 </style>
 
 <script>
-  import { collapse, d, expand, gsap } from "../lib/motion";
+  import { d, gsap } from "../lib/motion";
 
   const FOCUSABLE = "a[href], button:not([disabled]), input, [tabindex]:not([tabindex='-1'])";
 
@@ -682,14 +650,6 @@ const secondary = [
         b.addEventListener("click", () => this.open(b)),
       );
       this.querySelector("[data-menu-close]")?.addEventListener("click", () => this.close());
-      this.querySelectorAll<HTMLButtonElement>("[data-submenu]").forEach((b) =>
-        b.addEventListener("click", () => {
-          const open = b.getAttribute("aria-expanded") !== "true";
-          b.setAttribute("aria-expanded", String(open));
-          const list = document.getElementById(b.getAttribute("aria-controls")!)!;
-          open ? expand(list) : collapse(list);
-        }),
-      );
       // Anything inside the menu that opens the voice note closes the menu first.
       this.#menu
         .querySelectorAll("[data-voice-open]")
@@ -723,9 +683,19 @@ const secondary = [
       }
     }
 
+    /** While the menu is open, everything around it is inert, so screen
+        readers can't wander behind the dialog either. */
+    #inertAround(on: boolean) {
+      for (let el: HTMLElement = this.#menu; el !== document.body; el = el.parentElement!)
+        for (const sib of el.parentElement!.children)
+          if (sib !== el && sib instanceof HTMLElement && sib.tagName !== "SCRIPT")
+            sib.inert = on;
+    }
+
     open(opener: HTMLElement) {
       this.#opener = opener;
       this.#menu.hidden = false;
+      this.#inertAround(true);
       opener.setAttribute("aria-expanded", "true");
       document.documentElement.style.overflow = "hidden";
       this.#menu.querySelector<HTMLElement>("[data-menu-close]")?.focus();
@@ -738,7 +708,7 @@ const secondary = [
         (el) => el.getClientRects().length,
       );
       const fades = this.#menu.querySelectorAll("[data-menu-fade]");
-      const spray = this.#menu.querySelector(":scope > svg");
+      const spray = this.#menu.querySelector("[data-menu-spray]");
       this.#tl?.kill();
       this.#tl = gsap
         .timeline()
@@ -787,9 +757,10 @@ const secondary = [
 
     close(restoreFocus = true) {
       this.#opener?.setAttribute("aria-expanded", "false");
+      this.#inertAround(false);
       if (restoreFocus) this.#opener?.focus();
       this.#tl?.kill();
-      gsap.set(this.#menu.querySelectorAll("[data-menu-line], [data-menu-fade], :scope > svg"), {
+      gsap.set(this.#menu.querySelectorAll("[data-menu-line], [data-menu-fade], [data-menu-spray]"), {
         clearProps: "transform,opacity,clipPath",
       });
       this.#tl = gsap.timeline().to(this.#menu, {

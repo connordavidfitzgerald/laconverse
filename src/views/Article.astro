@@ -14,6 +14,7 @@ import { formatDate, href, otherLang, t, type Lang } from "../i18n";
 import { getRelated } from "../lib/content";
 import { formatLabel } from "../lib/formats";
 import { readingMinutes, renderRichText } from "../lib/portableText";
+import { imageUrl, pictureWidths, srcset } from "../lib/sanity";
 import type { Article } from "../lib/types";
 
 interface Props {
@@ -28,12 +29,23 @@ const related = await getRelated(lang, article);
 const [author] = article.authorsFull;
 const hero = Boolean(article.image?.asset?.url);
 const hasNote = Boolean(article.authorsNote?.length);
+/* The photo is in the page twice (full-bleed on phones, inside the title
+   block on desktop). Each viewport preloads only its own copy, at the same
+   srcset and sizes the <img> will pick from. */
+const heroSrcset = srcset(article.image, pictureWidths, 16 / 9);
+const heroSrc = imageUrl(article.image, 1280, Math.round(1280 / (16 / 9)));
+const heroPreloads = hero
+  ? [
+      { media: "(max-width: 1023.98px)", sizes: "100vw" },
+      { media: "(min-width: 1024px)", sizes: "(min-width: 1280px) 47vw, 63vw" },
+    ]
+  : [];
 /* Bars of the listen player's timeline: a fixed pseudo-waveform seeded from the
    audio URL, so it's stable per article without decoding the audio. Phones
    show every other bar. */
 const LISTEN_BARS = 96;
 let seed = [...(article.listen ?? "")].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7);
-const rand = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+const rand = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
 const listenBars = Array.from({ length: LISTEN_BARS }, (_, i) =>
   Math.round(22 + 70 * rand() * (0.55 + 0.45 * Math.sin((i / LISTEN_BARS) * Math.PI))),
 );
@@ -51,6 +63,19 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
   alternate={translation ? href(other, "article", translation.slug) : null}
   header={hero ? "overlay" : "light"}
 >
+  <Fragment slot="head">
+    {heroPreloads.map((p) => (
+      <link
+        rel="preload"
+        as="image"
+        href={heroSrc}
+        imagesrcset={heroSrcset}
+        imagesizes={heroSrcset ? p.sizes : undefined}
+        media={p.media}
+        fetchpriority="high"
+      />
+    ))}
+  </Fragment>
   <div
     data-read-progress
     aria-hidden="true"
@@ -58,54 +83,75 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
     style="transform: scaleX(0)"
   ></div>
   <article class="article-type">
+    <!-- Phones: the photo runs full-bleed under the transparent bar. Desktop
+         hides it (so the bar reads as scrolled-past and turns light) and sets
+         the photo inside the title block instead. -->
     {hero && (
-      <div data-header-hero class="relative">
+      <div data-header-hero class="relative lg:hidden">
+        {/* Both photos are in the page at every size; the hidden one is lazy
+            and display:none, so it never loads (see `heroPreloads`). */}
         <Picture
           img={article.image}
-          ratio={4 / 5}
+          ratio={16 / 9}
           eager
-          class="min-h-[70svh] w-full lg:aspect-auto! lg:h-[min(100svh,56.25vw)] lg:min-h-0"
-          sizes="100vw"
+          preloaded
+          sizes="(min-width: 1024px) 1px, 100vw"
         />
-        <div
-          aria-hidden="true"
-          class="pointer-events-none absolute inset-x-0 top-0 h-40 bg-linear-to-b from-ink/50 to-transparent lg:h-56"
-        ></div>
+        <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-40"></div>
       </div>
     )}
-    <header class="lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
+    <header class="lg:grid lg:grid-cols-12 lg:gap-x-10 lg:px-page">
       {!hero && (
-        <Picture
-          img={article.image}
-          ratio={1}
-          eager
-          class="lg:col-span-10 lg:col-start-2 lg:aspect-[16/9]!"
-          sizes="(min-width: 1024px) 83vw, 100vw"
-        />
+        <Picture img={article.image} ratio={16 / 9} eager class="lg:hidden" sizes="100vw" />
       )}
       {article.image?.caption && (
-        <p
-          class:list={[
-            "px-5 pt-2 text-[calc(0.625rem*var(--type-scale))] font-medium opacity-60 lg:px-0 text-center ",
-            hero ? "lg:col-span-12" : "lg:col-span-10 lg:col-start-2",
-          ]}
-        >
+        <p class="px-5 pt-2 text-center text-[calc(0.625rem*var(--type-scale))] font-medium opacity-60 lg:hidden">
           {article.image.caption}
         </p>
       )}
-      <div class="flex flex-col items-center gap-5 px-5 pt-10 text-center lg:col-span-8 lg:col-start-3 lg:px-0 lg:pt-[60px]">
+      <!-- Desktop (Figma: header · Écouter la douleur des Palestiniens):
+           cols 4–9 (3–10 on small laptops, which the frame doesn't cover),
+           chip, the photo, title and dek, then the byline and the
+           transparency note, 40px apart. The title is 72px at 1728. -->
+      <div
+        class:list={[
+          "flex flex-col items-center gap-5 px-5 pt-10 text-center lg:col-span-8 lg:col-start-3 lg:gap-10 lg:px-0 xl:col-span-6 xl:col-start-4",
+          hero ? "lg:pt-[150px]" : "lg:pt-[60px]",
+        ]}
+      >
         {article.categories[0] && (
-          <Chip category={article.categories[0]} lang={lang} class="text-sm!" />
+          <Chip category={article.categories[0]} lang={lang} class="text-sm! lg:text-md!" />
         )}
 
-        <h1 class="display text-hero">{article.title}</h1>
-        {article.dek && (
-          <p class="font-display text-dek font-medium leading-[0.95] tracking-[-0.02em] lg:font-medium">
-            {article.dek}
-          </p>
+        {article.image && (
+          <figure class="hidden w-full lg:block">
+            <Picture
+              img={article.image}
+              ratio={16 / 9}
+              eager
+              preloaded
+              class="lg:aspect-video!"
+              sizes="(min-width: 1280px) 47vw, (min-width: 1024px) 63vw, 1px"
+            />
+            {article.image.caption && (
+              <figcaption class="pt-2 text-[calc(0.625rem*var(--type-scale))] font-medium opacity-60">
+                {article.image.caption}
+              </figcaption>
+            )}
+          </figure>
         )}
+        <div class="flex flex-col items-center gap-5">
+          <h1 class="display text-hero font-black lg:text-[clamp(3rem,4.17vw,4.5rem)] lg:tracking-[-0.02em]">
+            {article.title}
+          </h1>
+          {article.dek && (
+            <p class="font-display text-[30px] font-medium leading-[0.95] tracking-[-0.02em] lg:max-w-[34rem] lg:text-[1.5rem] lg:tracking-[-0.015em]">
+              {article.dek}
+            </p>
+          )}
+        </div>
         {article.authorsFull.length > 0 && (
-          <div class="flex flex-col items-center gap-[5px] py-5">
+          <div class="flex flex-col items-center gap-[5px] py-5 lg:gap-2.5 lg:py-0">
             <div class="flex -space-x-2">
               {article.authorsFull.map((p) => (
                 <Picture
@@ -116,12 +162,14 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
                 />
               ))}
             </div>
-            <p class="label text-md font-medium">
-              {s.by}{" "}
+            <p class="label text-md font-medium lg:font-black lg:tracking-[-0.01em]">
+              <span class="lg:hidden">{s.by} </span>
               {article.authorsFull.map((p, i) => (
                 <>
                   {i > 0 && ", "}
-                  <a href={href(lang, "author", p.slug)}>{p.name}</a>
+                  <a href={href(lang, "author", p.slug)} class="link-line">
+                    {p.name}
+                  </a>
                 </>
               ))}
             </p>
@@ -132,7 +180,7 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
             type="button"
             data-note-open
             aria-haspopup="dialog"
-            class="label -mt-2 rounded-full border border-ink px-3 py-1 text-xs transition-colors hover:bg-ink hover:text-paper"
+            class="label -mt-2 rounded-full border border-ink px-3 py-1 text-xs transition-colors hover:bg-ink hover:text-paper lg:mt-0"
           >
             {s.transparencyNote}
           </button>
@@ -141,7 +189,8 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
     </header>
 
     <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
-      <div class="lg:col-span-6 lg:col-start-4">
+      <!-- Capped so lines stay readable on wide screens (~75 characters). -->
+      <div class="lg:col-span-6 lg:col-start-4 lg:mx-auto lg:w-full lg:max-w-[42rem]">
         <div class="mt-10 flex items-center justify-between">
           <p class="label text-md font-black">
             <time datetime={article.publishedAt}>{formatDate(lang, article.publishedAt)}</time>
@@ -152,11 +201,7 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
         </div>
 
         {article.listen && (
-          <listen-bar
-            class="mt-2.5 block"
-            data-play-label={s.listen}
-            data-pause-label={s.pause}
-          >
+          <listen-bar class="mt-2.5 block" data-play-label={s.listen} data-pause-label={s.pause}>
             <div class="rounded-2xl bg-ink px-5 py-5 text-paper">
               <div class="flex items-center gap-4">
                 <button
@@ -183,7 +228,11 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
                   class="relative h-10 flex-1 cursor-pointer touch-none outline-none focus-visible:ring-2 focus-visible:ring-yellow/60"
                 >
                   <span class="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-yellow"></span>
-                  <div data-bars class="absolute inset-0 flex items-center justify-between" aria-hidden="true">
+                  <div
+                    data-bars
+                    class="absolute inset-0 flex items-center justify-between"
+                    aria-hidden="true"
+                  >
                     {listenBars.map((h) => (
                       <span
                         class="w-[2px] rounded-full bg-paper/30 transition-colors duration-150 will-change-transform max-sm:odd:hidden"
@@ -200,19 +249,39 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
               <div>
                 <div>
                   <div class="flex items-center justify-between gap-3 pt-3">
-                    <span class="label w-12 text-xs font-black tabular-nums" data-elapsed>0:00</span>
+                    <span class="label w-12 text-xs font-black tabular-nums" data-elapsed>
+                      0:00
+                    </span>
                     <div class="flex items-center gap-2">
-                      <button type="button" data-skip="-15" aria-label={s.back15} class="label rounded-full px-3 py-1.5 text-xs font-black hover:bg-paper/10">
+                      <button
+                        type="button"
+                        data-skip="-15"
+                        aria-label={s.back15}
+                        class="label rounded-full px-3 py-1.5 text-xs font-black hover:bg-paper/10"
+                      >
                         −15
                       </button>
-                      <button type="button" data-speed aria-label={s.speed} class="label w-14 rounded-full border border-paper/40 py-1.5 text-xs font-black tabular-nums hover:border-yellow hover:text-yellow">
+                      <button
+                        type="button"
+                        data-speed
+                        aria-label={s.speed}
+                        class="label w-14 rounded-full border border-paper/40 py-1.5 text-xs font-black tabular-nums hover:border-yellow hover:text-yellow"
+                      >
                         1×
                       </button>
-                      <button type="button" data-skip="15" aria-label={s.forward15} class="label rounded-full px-3 py-1.5 text-xs font-black hover:bg-paper/10">
+                      <button
+                        type="button"
+                        data-skip="15"
+                        aria-label={s.forward15}
+                        class="label rounded-full px-3 py-1.5 text-xs font-black hover:bg-paper/10"
+                      >
                         +15
                       </button>
                     </div>
-                    <span class="label w-12 text-right text-xs font-black tabular-nums" data-remaining></span>
+                    <span
+                      class="label w-12 text-right text-xs font-black tabular-nums"
+                      data-remaining
+                    ></span>
                   </div>
                 </div>
               </div>
@@ -237,7 +306,9 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
                 {article.photographers.map((p, i) => (
                   <>
                     {i > 0 && ", "}
-                    <a href={href(lang, "author", p.slug)}>{p.name}</a>
+                    <a href={href(lang, "author", p.slug)} class="link-line">
+                      {p.name}
+                    </a>
                   </>
                 ))}
               </>
@@ -251,7 +322,9 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
                 {article.illustrators.map((p, i) => (
                   <>
                     {i > 0 && ", "}
-                    <a href={href(lang, "author", p.slug)}>{p.name}</a>
+                    <a href={href(lang, "author", p.slug)} class="link-line">
+                      {p.name}
+                    </a>
                   </>
                 ))}
               </>
@@ -312,7 +385,9 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
       class="m-auto max-h-[min(85dvh,48rem)] w-[calc(100%-2.5rem)] max-w-xl overflow-y-auto overscroll-contain rounded-2xl bg-paper p-0 text-ink backdrop:bg-ink/60"
     >
       <div class="sticky top-0 flex items-center justify-between gap-5 bg-paper px-5 pt-5 pb-3 lg:px-8 lg:pt-8">
-        <h2 id="note-title" class="label text-xs">{s.transparencyNote}</h2>
+        <h2 id="note-title" class="label text-xs">
+          {s.transparencyNote}
+        </h2>
         <button
           type="button"
           data-note-close
@@ -477,10 +552,7 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
       this.text("[data-elapsed]", fmt(audio.currentTime));
       this.text("[data-remaining]", dur ? `-${fmt(dur - audio.currentTime)}` : "");
       this.track.setAttribute("aria-valuenow", String(Math.round(audio.currentTime)));
-      this.track.setAttribute(
-        "aria-valuetext",
-        `${fmt(audio.currentTime)} / ${fmt(dur)}`,
-      );
+      this.track.setAttribute("aria-valuetext", `${fmt(audio.currentTime)} / ${fmt(dur)}`);
     }
 
     /** While playing: keep the playhead smooth and let the bars around it breathe. */

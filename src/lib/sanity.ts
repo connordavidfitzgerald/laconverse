@@ -40,6 +40,9 @@ export function imageUrl(
   return b.url();
 }
 
+/** Picture's default srcset widths. */
+export const pictureWidths = [400, 640, 960, 1280, 1920];
+
 export function srcset(
   img: Img | null | undefined,
   widths: number[],

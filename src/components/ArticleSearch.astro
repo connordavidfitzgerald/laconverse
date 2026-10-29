@@ -17,6 +17,15 @@ interface Props {
   syncUrl?: boolean;
   /** Cards per page; `articles` should be the first page. */
   pageSize?: number;
+  /** Sort bar above the categories rather than under them (homepage). */
+  sortFirst?: boolean;
+  /** Passed to ArticleGrid. */
+  listClass?: string;
+  moreLabel?: string;
+  /** Classes for the categories' wrapper (replace its default padding). */
+  filterClass?: string;
+  /** Article ids to leave out of the index (already shown elsewhere on the page). */
+  exclude?: string[];
   class?: string;
 }
 const {
@@ -26,10 +35,16 @@ const {
   total,
   syncUrl = false,
   pageSize = 12,
+  sortFirst = false,
+  listClass,
+  moreLabel,
+  filterClass = "lg:pt-35 lg:pb-30 py-20",
+  exclude = [],
   class: className,
 } = Astro.props;
 const s = t(lang);
 const hasForm = Astro.slots.has("default");
+const grid = { lang, articles, total, listClass, moreLabel, managed: true };
 ---
 
 <article-search
@@ -40,12 +55,23 @@ const hasForm = Astro.slots.has("default");
   data-total={total}
   data-page={pageSize}
   data-sync={syncUrl ? "" : undefined}
+  data-exclude={exclude.length ? exclude.join(" ") : undefined}
 >
   <slot />
-  <div class:list={["lg:pt-35 lg:pb-30 py-20"]}>
-    <CategoryFilter lang={lang} categories={categories} total={total} asFilter />
-  </div>
-  <ArticleGrid lang={lang} articles={articles} total={total} managed />
+  {sortFirst ? (
+    <ArticleGrid {...grid}>
+      <div slot="filter" class={filterClass}>
+        <CategoryFilter lang={lang} categories={categories} total={total} asFilter />
+      </div>
+    </ArticleGrid>
+  ) : (
+    <>
+      <div class={filterClass}>
+        <CategoryFilter lang={lang} categories={categories} total={total} asFilter />
+      </div>
+      <ArticleGrid {...grid} />
+    </>
+  )}
 </article-search>
 
 <script>
@@ -104,7 +130,10 @@ const hasForm = Astro.slots.has("default");
     /** `animate` is off for the first render, which replaces the server-rendered
         cards in place and shouldn't flicker. */
     async update(animate = true) {
-      this.entries ??= await loadIndex(this.dataset.lang!);
+      if (!this.entries) {
+        const exclude = new Set(this.dataset.exclude?.split(" "));
+        this.entries = (await loadIndex(this.dataset.lang!)).filter((e) => !exclude.has(e.id));
+      }
       const q = fold(this.query.trim());
       this.results = this.entries.filter(
         (e) =>

@@ -18,8 +18,8 @@ export function loadIndex(lang: string): Promise<Entry[]> {
 }
 
 const paths = {
-  fr: { article: "/articles/", category: "/categorie/" },
-  en: { article: "/en/articles/", category: "/en/category/" },
+  fr: { article: "/articles/", category: "/categorie/", author: "/auteur/" },
+  en: { article: "/en/articles/", category: "/en/category/", author: "/en/author/" },
 } as const;
 
 const dates = {
@@ -54,7 +54,11 @@ export function cardLinks(node: DocumentFragment, e: Entry, lang: string) {
       dot.classList.add(dotClass(e.c[0].slug));
     }
   } else chip.remove();
-  node.querySelector("[data-author]")!.textContent = e.a[0]?.name ?? "";
+  const author = node.querySelector<HTMLAnchorElement>("[data-author]")!;
+  if (e.a[0]) {
+    author.href = p.author + e.a[0].slug;
+    author.textContent = e.a[0].name;
+  } else author.remove();
   const time = node.querySelector<HTMLTimeElement>("[data-date]")!;
   time.dateTime = e.p;
   time.textContent = dates[lang as "en" | "fr"].format(new Date(e.p));

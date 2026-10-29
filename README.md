@@ -247,9 +247,11 @@ already generated are in Sanity and keep working. If it breaks, the script's
 
 ## Before launch
 
-- [ ] Licensed ABC Favorit Compressed webfonts (currently the _Trial_ `.otf`
-      files in `public/fonts/`; swap the files and the `@font-face` URLs in
-      `src/styles/global.css`).
+- [ ] Licensed ABC Favorit Compressed webfonts (currently subsets of the
+      _Trial_ cuts in `src/assets/fonts/`). Subset each licensed file the same
+      way and keep the file names:
+      `python3 -m fontTools.subset Favorit-Black.otf --unicodes="U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2190-2199,U+2212" --layout-features='*' --flavor=woff2 --output-file=src/assets/fonts/FavoritCompressed-Black.woff2`
+      (needs `pip install fonttools brotli`).
 - [ ] Donate URL, newsletter endpoint and WhatsApp/Facebook links in Site settings.
 - [ ] Partner stories (Independent media portal) and About partners: new content, not in Webflow.
 - [ ] Final English copy for the interface strings in `src/i18n/index.ts`.

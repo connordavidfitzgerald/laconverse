@@ -17,7 +17,7 @@ const s = t(lang);
 
 <form
   role="search"
-  class:list={["flex items-center gap-2.5 border-b border-ink pb-2.5", className]}
+  class:list={["flex items-center gap-2.5 border-b border-ink pb-2.5 has-[input:focus-visible]:shadow-[0_1px_0_var(--color-ink)]", className]}
   action={href(lang, "search")}
 >
   <label for="q" class="sr-only">

@@ -31,6 +31,10 @@ export function embedSrc(url: string): string | null {
   return null;
 }
 
+/* The « chevron from the Figma QUOTE component; the closing one is this
+   rotated 180° in CSS. */
+const CHEVRON = `<svg viewBox="0 0 47 27" aria-hidden="true"><path fill="currentColor" d="M46.5093 19.7788L25.8283 13.6024C25.6525 13.5494 25.5963 13.4979 25.6122 13.412C25.6223 13.3533 25.7202 13.3204 25.8398 13.2846L46.4531 7.12826C46.6879 7.05812 46.8594 6.97081 46.8594 6.71602V0.0901768C46.5871 0.0572551 46.4142 0.0944709 46.1621 0.186079L23.4297 6.9522L23.3663 0L0 6.95506V19.9362L22.7627 26.7124C23.0004 26.7925 23.1459 26.8297 23.3966 26.8011L23.4124 19.9348L46.2082 26.7195C46.456 26.794 46.6073 26.8426 46.8594 26.7997V20.1008C46.8594 19.9434 46.662 19.826 46.5093 19.7802V19.7788ZM23.3605 19.7401C23.3087 19.7616 23.2381 19.7716 23.1084 19.7902L1.95776 13.4449L22.5639 7.26567C22.8679 7.1755 23.0638 7.10107 23.398 7.11681L23.4009 19.4639C23.4009 19.5841 23.3994 19.723 23.3605 19.7387V19.7401Z"/></svg>`;
+
 export function renderRichText(value?: RichText | null): string {
   if (!value?.length) return "";
   return toHTML(value as never, {
@@ -60,8 +64,10 @@ export function renderRichText(value?: RichText | null): string {
             return `<p><a href="${escapeHTML(value.url)}" target="_blank" rel="noopener">${escapeHTML(value.url)}</a></p>`;
           return "";
         },
+        /* Figma QUOTE: centred Black caps between two « » chevrons, which
+           stand in for the quotation marks, so any typed ones are dropped. */
         pullQuote: ({ value }: { value: { text?: string; attribution?: string } }) =>
-          `<blockquote><p>${escapeHTML(value.text ?? "")}</p>${value.attribution ? `<footer class="mt-2 text-sm">${escapeHTML(value.attribution)}</footer>` : ""}</blockquote>`,
+          `<blockquote class="pull-quote">${CHEVRON}<p>${escapeHTML((value.text ?? "").trim().replace(/^[«“"]\s*|\s*[»”"]$/g, ""))}</p>${value.attribution ? `<footer class="label">${escapeHTML(value.attribution)}</footer>` : ""}${CHEVRON}</blockquote>`,
         callout: ({
           value,
         }: {
