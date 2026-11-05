@@ -1,12 +1,14 @@
 ---
-/* Figma: 4 CATEGORY PAGE — UI. */
+/* Figma: Sujet — gabarit. Laid out like the search page: the search bar
+   (searching within the section), the section's chip and description, then
+   the sticky explorer with the section current beside two-up story cards. */
 import ArticleGrid from "../components/ArticleGrid.astro";
-import CategoryFilter from "../components/CategoryFilter.astro";
+import ExploreNav from "../components/ExploreNav.astro";
 import SearchForm from "../components/SearchForm.astro";
-import SupportBand from "../components/SupportBand.astro";
+import SectionIntro from "../components/SectionIntro.astro";
 import Layout from "../layouts/Layout.astro";
 import { href, otherLang, t, type Lang } from "../i18n";
-import { getCategories, getSettings } from "../lib/content";
+import { getCategories } from "../lib/content";
 import type { TaxonomyPage } from "../lib/types";
 
 /* Sections and topics share the page; a topic shows the section list without
@@ -18,8 +20,7 @@ interface Props {
 }
 const { lang, category, kind = "category" } = Astro.props;
 const s = t(lang);
-const [categories, settings] = await Promise.all([getCategories(lang), getSettings(lang)]);
-const total = categories.reduce((n, c) => n + c.count, 0);
+const categories = await getCategories(lang);
 // The same section or topic in the other language, when it has a slug there.
 const other = otherLang(lang);
 const otherSlug = category.alternates?.[other];
@@ -31,32 +32,29 @@ const otherSlug = category.alternates?.[other];
   description={category.description}
   alternate={otherSlug ? href(other, kind, otherSlug) : href(other, "search")}
 >
-  <header class="px-5 lg:px-5">
+  <div class="px-5 pt-5 pb-20 lg:px-page lg:pt-[55px] lg:pb-30">
+    <h1 class="sr-only">{category.title}</h1>
     <SearchForm lang={lang} category={kind === "category" ? category.slug : null} />
     {category.description && (
-      <p class="mx-auto mt-10 max-w-2xl text-center font-display text-dek font-extrabold leading-[0.95] lg:mt-16">
-        {category.description}
-      </p>
+      <SectionIntro lang={lang} category={category} chip={kind === "category"} />
     )}
-  </header>
-  <div class="px-5 pt-[60px] pb-10 lg:px-5 lg:pt-20 lg:pb-14">
-    <CategoryFilter
-      lang={lang}
-      categories={categories}
-      current={kind === "category" ? category.slug : null}
-      total={total}
-    />
-  </div>
-  <div class="px-5 lg:px-5">
-    <ArticleGrid
-      lang={lang}
-      articles={category.articles}
-      total={category.total}
-      filter={kind === "category" ? { category: category.slug } : { tag: category.slug }}
-      countLabel={s.articlesCount}
-    />
-  </div>
-  <div class="px-5 py-10 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5 lg:py-20">
-    <SupportBand lang={lang} donateUrl={settings.donateUrl} class="lg:col-span-8 lg:col-start-3" />
+    <div class="pt-10 lg:page-grid lg:pt-20">
+      <ExploreNav
+        lang={lang}
+        categories={categories}
+        current={kind === "category" ? category.slug : null}
+        class="pb-10 lg:sticky lg:top-[calc(var(--header-h)+2.5rem)] lg:col-span-4 lg:self-start lg:pb-0"
+      />
+      <div class="lg:col-span-8 lg:col-start-5">
+        <ArticleGrid
+          lang={lang}
+          articles={category.articles}
+          total={category.total}
+          filter={kind === "category" ? { category: category.slug } : { tag: category.slug }}
+          countLabel={s.articlesCount}
+          explore
+        />
+      </div>
+    </div>
   </div>
 </Layout>

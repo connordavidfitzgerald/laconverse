@@ -1,7 +1,7 @@
 ---
 /* Section heading with an optional “see all” link beside it (mobile) or under
    it (desktop rails). `rail`: on desktop the link drops under the title at the
-   same size, greyed (homepage rails). */
+   same size, greyed, both in Inter Extra Bold (`section-head`, homepage). */
 import { t, type Lang } from "../i18n";
 
 interface Props {
@@ -25,8 +25,7 @@ const { lang, title, href: link, class: className, stacked = false, rail = false
 >
   <h2
     class:list={[
-      "display text-section tracking-[-0.015em] lg:tracking-[-0.02em]",
-      rail && "lg:text-rail",
+      rail ? "section-head" : "display text-section",
     ]}
   >
     {title}
@@ -37,8 +36,8 @@ const { lang, title, href: link, class: className, stacked = false, rail = false
       class:list={[
         "shrink-0 text-xs font-medium",
         rail
-          ? "lg:display lg:text-rail lg:tracking-[-0.02em] lg:opacity-30 lg:hover:opacity-100"
-          : "lg:label lg:text-base lg:font-extrabold lg:normal-case",
+          ? "lg:section-head lg:text-[#949494] lg:hover:text-ink"
+          : "lg:label lg:text-base lg:font-medium lg:normal-case",
       ]}
     >
       {t(lang).seeAll} <span class="nudge-x">→</span>

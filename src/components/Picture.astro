@@ -41,7 +41,9 @@ const dims = img?.asset?.metadata?.dimensions;
 const r = ratio ?? (dims ? dims.width / dims.height : 4 / 3);
 const src = imageUrl(img, 1280, ratio ? Math.round(1280 / ratio) : undefined);
 const set = srcset(img, widths, ratio);
-const fill = fillColor ?? placeholder(img?.asset?._id ?? src ?? "");
+// A page can retint every default placeholder with `--placeholder` (Layout's
+// `mediaTint`); an explicit `fill` still wins.
+const fill = fillColor ?? `var(--placeholder, ${placeholder(img?.asset?._id ?? src ?? "")})`;
 ---
 
 <div

@@ -1,6 +1,6 @@
 ---
 import "../styles/global.css";
-import displayFont from "../assets/fonts/FavoritCompressed-Black.woff2?url";
+import displayFont from "../assets/fonts/ABCFavoritCompressed-Ultra.woff2?url";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import VoiceNote from "../components/VoiceNote.astro";
@@ -32,6 +32,9 @@ interface Props {
   voiceLauncher?: boolean;
   /** Lenis smooth wheel scrolling. Off for scroll-snapped pages. */
   smoothScroll?: boolean;
+  /** Colour images load over (and card hover insets open onto) on this page,
+      in place of the default yellow, e.g. `var(--color-lilac)` on École. */
+  mediaTint?: string;
 }
 
 const {
@@ -43,6 +46,7 @@ const {
   alternate: alt,
   bare = false,
   dark = false,
+  mediaTint,
 } = Astro.props;
 const tone = Astro.props.header ?? (dark ? "dark" : "light");
 const compactHeader = Astro.props.compactHeader ?? false;
@@ -79,7 +83,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link rel="preload" href={displayFont} as="font" type="font/woff2" crossorigin />
     <slot name="head" />
   </head>
-  <body class:list={["min-h-dvh", dark && "bg-ink! text-paper"]}>
+  <body class:list={["isolate min-h-dvh", dark && "bg-ink! text-paper"]}>
     <a
       href="#main"
       class="label sr-only z-[60] bg-ink px-4 py-3 text-paper focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
@@ -98,11 +102,16 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         aria-hidden="true"
         class:list={[
           compactHeader ? "h-(--header-h)" : "h-(--header-h-full)",
-          tone === "yellow" && "bg-yellow",
+          tone === "yellow" ? "bg-yellow" : "bg-inherit",
         ]}
       ></div>
     )}
-    <main id="main">
+    <!-- Opaque so the footer's curtain reveal stays hidden underneath. -->
+    <main
+      id="main"
+      class="bg-inherit"
+      style={mediaTint ? `--placeholder: ${mediaTint}; --inset: ${mediaTint}` : undefined}
+    >
       <slot />
     </main>
     {!bare && <Footer lang={lang} settings={settings} alternate={alternate} />}
@@ -111,9 +120,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 </html>
 
 <script>
+  import { dragRails } from "../lib/dragScroll";
   import { fadeImages } from "../lib/motion";
   import { smoothScroll } from "../lib/smoothScroll";
 
   smoothScroll();
+  dragRails();
   fadeImages(document.getElementById("main") ?? document);
 </script>

@@ -3,6 +3,7 @@ import Chip from "./Chip.astro";
 import Picture from "./Picture.astro";
 import { formatDuration, href, type Lang } from "../i18n";
 import type { VideoCard } from "../lib/types";
+import { videoKindLabel } from "../lib/videoKinds";
 
 interface Props {
   video: VideoCard;
@@ -11,31 +12,51 @@ interface Props {
 }
 const { video, lang, class: className } = Astro.props;
 const [category] = video.categories;
+const kind = videoKindLabel(video.kind, lang);
 ---
 
-<article class:list={["group relative flex flex-col gap-2.5", className]}>
+<!-- Same anatomy as ArticleCard: image, then the type (or section) across
+     from the duration, then the title. -->
+<article
+  class:list={["group relative flex flex-col", className]}
+  lang={video.lang && video.lang !== lang ? video.lang : undefined}
+>
   <Picture
     img={video.poster}
     ratio={9 / 16}
-    class="media-inset rounded-[10px] lg:rounded-[11px]"
+    class="media-inset"
     sizes="(min-width: 1024px) 20vw, 55vw"
   />
-  <h3 class="display text-card-sm">
-    <a
-      href={`${href(lang, "videos")}#${video.slug}`}
-      class="title-line font-black after:absolute after:inset-0"
-    >
-      {video.title}
-    </a>
-  </h3>
-  <div class="flex items-center justify-between">
-    {category ? (
-      <Chip category={category} lang={lang} class="relative z-10 lg:text-base lg:font-black" />
-    ) : (
-      <span />
-    )}
-    <span class="label text-xs opacity-50 lg:text-lg lg:font-extrabold lg:opacity-100">
-      {formatDuration(video.duration)}
-    </span>
+  <div class="flex flex-col gap-1 py-2 md:gap-2.5 md:pt-4 md:pb-6">
+    <div class="flex items-center justify-between gap-2 py-2 md:py-0">
+      {kind ? (
+        <span
+          lang={lang}
+          class="label inline-flex items-baseline gap-[0.45em] whitespace-nowrap text-ink font-medium text-[calc(1rem*var(--type-scale,1))]"
+        >
+          <span aria-hidden="true" class="size-[1cap] shrink-0 bg-yellow" />
+          {kind}
+        </span>
+      ) : category ? (
+        <Chip
+          category={category}
+          lang={lang}
+          class="relative z-10 text-[calc(1rem*var(--type-scale,1))]!"
+        />
+      ) : (
+        <span />
+      )}
+      <span class="label shrink-0 text-[calc(1rem*var(--type-scale,1))]! font-medium whitespace-nowrap opacity-60">
+        {formatDuration(video.duration)}
+      </span>
+    </div>
+    <h3 class="display font-black leading-[95%] text-card-sm">
+      <a
+        href={`${href(lang, "videos")}#${video.slug}`}
+        class="title-line after:absolute after:inset-0"
+      >
+        {video.title}
+      </a>
+    </h3>
   </div>
 </article>

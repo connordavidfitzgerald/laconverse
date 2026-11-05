@@ -122,7 +122,7 @@ rate limiting yet. If spam shows up, add Vercel's firewall rule or a captcha.
 
 Voice notes and written stories are also sent to the newsroom
 (`src/lib/notify.ts`): an email to `NOTIFY_EMAIL`, with the recording attached
-and linked, and a WhatsApp message to `WHATSAPP_TO`, with a link to the
+and linked, and a WhatsApp message (CallMeBot) to `CALLMEBOT_WHATSAPP`, with a link to the
 recording. A channel is skipped while its keys are missing, and a failed
 notification is only logged (the submission is still saved in the Inbox).
 
@@ -132,18 +132,14 @@ One-time setup, then put the keys in Vercel (Production) and redeploy:
    and add the DNS records it lists. Then create an API key
    → `RESEND_API_KEY`. Replies go straight to the sender when they left an
    email address.
-2. **WhatsApp (Meta Cloud API).** In Meta Business Suite, create a business
-   portfolio. At https://developers.facebook.com create an app with the
-   WhatsApp product, then add a phone number that isn't already on WhatsApp
-   → `WHATSAPP_PHONE_NUMBER_ID`. Create a system user with a permanent token
-   that has `whatsapp_business_messaging` → `WHATSAPP_TOKEN`. Then create a
-   message template named `nouvelle_soumission` (category Utility, French)
-   with this body:
-
-   > La Converse — {{1}} de {{2}} ({{3}}) : {{4}}. Aussi envoyé à info@laconverse.com.
-
-   Once Meta approves it, set `WHATSAPP_TO` to the recipient's number
-   (international format, digits only; comma-separate several).
+2. **WhatsApp (CallMeBot).** Each person who should get the alerts adds
+   the CallMeBot number to their contacts and sends it the activation
+   message listed at https://www.callmebot.com/blog/free-api-whatsapp-messages/.
+   The bot replies with an API key. Set
+   `CALLMEBOT_WHATSAPP=15145550123:apikey` (international format, digits
+   only; comma-separate several people). It's an unofficial free service:
+   text only (the message links to the recording), with no delivery
+   guarantee, so the email remains the reliable channel.
 
 Chrome and Android record WebM. The link plays in any browser, but the email
 attachment may not open in iPhone Mail. Safari recordings (MP4) play everywhere.
@@ -247,10 +243,10 @@ already generated are in Sanity and keep working. If it breaks, the script's
 
 ## Before launch
 
-- [ ] Licensed ABC Favorit Compressed webfonts (currently subsets of the
-      _Trial_ cuts in `src/assets/fonts/`). Subset each licensed file the same
-      way and keep the file names:
-      `python3 -m fontTools.subset Favorit-Black.otf --unicodes="U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2190-2199,U+2212" --layout-features='*' --flavor=woff2 --output-file=src/assets/fonts/FavoritCompressed-Black.woff2`
+- [x] Licensed ABC Favorit Compressed webfonts (Medium and Ultra, with
+      italics, in `src/assets/fonts/`). Optional: subset them to Latin + French
+      punctuation to roughly halve their size:
+      `python3 -m fontTools.subset ABCFavoritCompressed-Ultra.woff2 --unicodes="U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2190-2199,U+2212" --layout-features='*' --flavor=woff2 --output-file=ABCFavoritCompressed-Ultra.subset.woff2`
       (needs `pip install fonttools brotli`).
 - [ ] Donate URL, newsletter endpoint and WhatsApp/Facebook links in Site settings.
 - [ ] Partner stories (Independent media portal) and About partners: new content, not in Webflow.

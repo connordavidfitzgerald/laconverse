@@ -19,6 +19,9 @@ interface Props {
   listClass?: string;
   /** Label for the “load more” button. */
   moreLabel?: string;
+  /** Two-up cards beside the explorer (Figma: Sujet — gabarit), without the
+      sort bar. Default: three-up cards under the bar. */
+  explore?: boolean;
 }
 const {
   lang,
@@ -29,11 +32,13 @@ const {
   managed = false,
   listClass,
   moreLabel,
+  explore = false,
 } = Astro.props;
 const s = t(lang);
 // A `filter` slot (ArticleSearch's categories) goes between the sort bar and
 // the cards; the bar then reads as a top rule rather than a bottom one.
 const hasFilter = Astro.slots.has("filter");
+const sizes = explore ? "(min-width: 1024px) 31vw, (min-width: 768px) 50vw, 100vw" : undefined;
 // The client-side card template: a card with every slot present, filled per entry.
 const blank: Card = {
   _id: "",
@@ -57,20 +62,27 @@ const blank: Card = {
     class:list={[
       "flex items-center justify-between border-ink",
       hasFilter ? "border-t pt-5" : "border-b py-2.5",
+      explore && "hidden",
     ]}
   >
-    <p class="label inline-flex items-center gap-1.5 text-sm font-extrabold">
+    <p class="label inline-flex items-center gap-1.5 text-sm font-medium">
       {s.sortLatest}
       <Icon name="chevron" class="h-1.5 w-2.5" />
     </p>
-    <p class="label text-sm font-extrabold" data-count>
+    <p class="label text-sm font-medium" data-count>
       {total} {countLabel ?? s.results}
     </p>
   </div>
   <slot name="filter" />
-  <div data-list class:list={["mt-5 grid gap-5 md:grid-cols-2 lg:grid-cols-3", listClass]}>
+  <div
+    data-list
+    class:list={[
+      explore ? "grid gap-x-10 gap-y-4 md:grid-cols-2" : "mt-5 grid gap-5 md:grid-cols-2 lg:grid-cols-3",
+      listClass,
+    ]}
+  >
     {articles.map((a) => (
-      <ArticleCard article={a} lang={lang} />
+      <ArticleCard article={a} lang={lang} sizes={sizes} />
     ))}
   </div>
   {(managed || total > articles.length) && (
@@ -78,14 +90,14 @@ const blank: Card = {
       <button
         type="button"
         data-more
-        class="label bg-yellow px-5 py-3 font-extrabold text-xl text-ink hover:bg-ink hover:text-yellow disabled:opacity-40"
+        class="label bg-yellow px-10 py-3 font-medium text-xl text-ink hover:bg-ink hover:text-yellow disabled:opacity-40"
       >
         {moreLabel ?? s.loadMore}
       </button>
     </p>
   )}
   <template data-card>
-    <ArticleCard article={blank} lang={lang} />
+    <ArticleCard article={blank} lang={lang} sizes={sizes} />
   </template>
 </article-grid>
 

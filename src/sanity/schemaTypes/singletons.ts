@@ -6,6 +6,7 @@ import { UsersIcon } from "@sanity/icons/Users";
 import { HeartIcon } from "@sanity/icons/Heart";
 import { BulbOutlineIcon } from "@sanity/icons/BulbOutline";
 import { EnvelopeIcon } from "@sanity/icons/Envelope";
+import { PinIcon } from "@sanity/icons/Pin";
 
 /* One document per page, shared by both languages, with a fixed ID (the type
    name) that the Studio structure opens directly and the frontend fetches.
@@ -87,12 +88,6 @@ export const homePageType = defineType({
       description: "Leave empty to show the latest articles.",
     }),
     defineField({
-      name: "support",
-      title: "Support band",
-      type: "object",
-      fields: [title, text, cta()],
-    }),
-    defineField({
       name: "ecole",
       title: "École Converse block",
       type: "object",
@@ -115,6 +110,53 @@ export const aboutPageType = defineType({
     title,
     defineField({ name: "image", type: "figure" }),
     defineField({ name: "intro", type: "localeRichText" }),
+    defineField({
+      name: "statements",
+      description: "The two offset paragraphs under the intro. A link can close each.",
+      type: "array",
+      of: [
+        defineArrayMember({
+          name: "statement",
+          type: "object",
+          fields: [text, cta()],
+          preview: { select: { title: "text.fr" } },
+        }),
+      ],
+      validation: (r) => r.max(2),
+    }),
+    defineField({ name: "principlesImage", title: "Principles image", type: "figure" }),
+    defineField({
+      name: "principles",
+      description: "Numbered in order: 01, 02…",
+      type: "array",
+      of: [
+        defineArrayMember({
+          name: "principle",
+          type: "object",
+          fields: [title, defineField({ name: "body", type: "localeRichText" })],
+          preview: { select: { title: "title.fr" } },
+        }),
+      ],
+    }),
+    defineField({
+      name: "valuesTitle",
+      title: "Values title",
+      description: "Heading over the values carousel, under the principles.",
+      type: "localeString",
+    }),
+    defineField({
+      name: "values",
+      description: "The values carousel, numbered in order: 01, 02…",
+      type: "array",
+      of: [
+        defineArrayMember({
+          name: "value",
+          type: "object",
+          fields: [title, text],
+          preview: { select: { title: "title.fr", subtitle: "text.fr" } },
+        }),
+      ],
+    }),
     defineField({
       name: "team",
       type: "array",
@@ -216,7 +258,27 @@ export const laRelevePageType = defineType({
       title: "Why École Converse",
       type: "object",
       group: ["students", "funders"],
-      fields: [title, defineField({ name: "body", type: "localeRichText" })],
+      fields: [
+        title,
+        defineField({ name: "body", title: "Lead", type: "localeRichText" }),
+        defineField({ name: "image", type: "figure" }),
+        defineField({
+          name: "aside",
+          title: "Text beside the image",
+          description: "Sits over the page's button (Call to action above).",
+          type: "localeRichText",
+        }),
+      ],
+    }),
+    defineField({
+      name: "approach",
+      type: "object",
+      group: "students",
+      fields: [
+        title,
+        defineField({ name: "body", type: "localeRichText" }),
+        defineField({ name: "image", type: "figure" }),
+      ],
     }),
     defineField({
       name: "stats",
@@ -322,73 +384,6 @@ export const laRelevePageType = defineType({
   ],
 });
 
-const card = defineArrayMember({
-  name: "card",
-  type: "object",
-  fields: [
-    title,
-    defineField({ name: "image", type: "figure" }),
-    text,
-    cta(),
-    defineField({
-      name: "ctaStyle",
-      type: "string",
-      options: { list: ["link", "button"], layout: "radio" },
-      initialValue: "link",
-    }),
-  ],
-  preview: { select: { title: "title.fr", media: "image" } },
-});
-
-export const getInvolvedPageType = defineType({
-  name: "getInvolvedPage",
-  title: "Get involved",
-  type: "document",
-  icon: HeartIcon,
-  fields: [
-    title,
-    defineField({ name: "image", type: "figure" }),
-    defineField({ name: "intro", type: "localeText" }),
-    defineField({ name: "cards", title: "Sections before Donate", type: "array", of: [card] }),
-    defineField({
-      name: "donate",
-      type: "object",
-      fields: [
-        title,
-        text,
-        defineField({
-          name: "options",
-          type: "array",
-          of: [defineArrayMember({ type: "localeCta" })],
-        }),
-      ],
-    }),
-    defineField({ name: "cardsAfter", title: "Sections after Donate", type: "array", of: [card] }),
-    defineField({
-      name: "volunteer",
-      type: "object",
-      fields: [
-        title,
-        defineField({ name: "intro", type: "localeText" }),
-        defineField({
-          name: "items",
-          type: "array",
-          of: [
-            defineArrayMember({
-              name: "item",
-              type: "object",
-              fields: [title, defineField({ name: "text", type: "localeString" })],
-              preview: { select: { title: "title.fr" } },
-            }),
-          ],
-        }),
-        cta(),
-      ],
-    }),
-    seo,
-  ],
-});
-
 export const giveYourVoicePageType = defineType({
   name: "giveYourVoicePage",
   title: "Give your voice (careers)",
@@ -436,3 +431,137 @@ export const contactPageType = defineType({
     seo,
   ],
 });
+
+export const donatePageType = defineType({
+  name: "donatePage",
+  title: "Donate",
+  type: "document",
+  icon: HeartIcon,
+  groups: [
+    { name: "page", title: "Page", default: true },
+    { name: "zeffy", title: "Zeffy" },
+  ],
+  fields: [
+    { ...title, group: "page" },
+    defineField({ name: "image", type: "figure", group: "page" }),
+    defineField({
+      name: "intro",
+      type: "localeRichText",
+      group: "page",
+      description: "A ♥ at the end of a paragraph shows as the pink heart.",
+    }),
+    defineField({
+      name: "support",
+      title: "Donate box",
+      description: "Also shown on the homepage.",
+      type: "object",
+      group: "page",
+      fields: [title, text],
+    }),
+    defineField({
+      name: "sections",
+      description: "Label on the left, text on the right (What will your donation support?, About us…).",
+      type: "array",
+      group: "page",
+      of: [
+        defineArrayMember({
+          name: "section",
+          type: "object",
+          fields: [
+            defineField({ name: "label", type: "localeString" }),
+            defineField({ name: "body", type: "localeRichText" }),
+          ],
+          preview: { select: { title: "label.fr" } },
+        }),
+      ],
+    }),
+    defineField({
+      name: "zeffyForms",
+      title: "Zeffy forms, one per frequency",
+      description:
+        "Each form's public link, e.g. https://www.zeffy.com/fr-CA/donation-form/…. Give each form only its own frequency in Zeffy: the site opens the one matching the donor's choice, with the amount filled in.",
+      type: "object",
+      group: "zeffy",
+      options: { columns: 3 },
+      fields: [
+        defineField({ name: "monthly", title: "Monthly form", type: "url" }),
+        defineField({ name: "annually", title: "Annual form", type: "url" }),
+        defineField({ name: "once", title: "One-time form", type: "url" }),
+      ],
+    }),
+    defineField({
+      name: "zeffyUrl",
+      title: "Fallback Zeffy form",
+      description: "Used for any frequency without its own form above.",
+      type: "url",
+      group: "zeffy",
+    }),
+    defineField({
+      name: "goal",
+      title: "Goal ($)",
+      description:
+        "The bar fills toward this; the amount raised is the forms' total, from Zeffy. With a single form, that form's own Zeffy goal wins; with several, this one does.",
+      type: "number",
+      validation: (r) => r.min(1),
+      group: "zeffy",
+    }),
+    defineField({
+      name: "presets",
+      title: "Preset amounts ($)",
+      description:
+        "Up to four per frequency. Keep them the same as each Zeffy form's suggested amounts so the two match.",
+      type: "object",
+      group: "zeffy",
+      options: { columns: 3 },
+      fields: (
+        [
+          ["monthly", "Monthly", [5, 10, 15, 25]],
+          ["annually", "Annually", [120, 200, 350, 500]],
+          ["once", "One time", [50, 100, 150, 200]],
+        ] as const
+      ).map(([name, title, initialValue]) =>
+        defineField({
+          name,
+          title,
+          type: "array",
+          of: [defineArrayMember({ type: "number", validation: (r) => r.min(1) })],
+          initialValue: [...initialValue],
+          validation: (r) => r.max(4),
+        }),
+      ),
+    }),
+    { ...seo, group: "page" },
+  ],
+});
+
+export const studioPageType = defineType({
+  name: "studioPage",
+  title: "Studio Converse",
+  type: "document",
+  icon: PinIcon,
+  fields: [
+    title,
+    defineField({ name: "image", type: "figure" }),
+    defineField({ name: "kicker", type: "localeString", description: "The first line of the intro." }),
+    defineField({ name: "intro", type: "localeText" }),
+    defineField({
+      name: "studios",
+      type: "array",
+      of: [
+        defineArrayMember({
+          name: "studio",
+          type: "object",
+          fields: [
+            defineField({ name: "name", type: "localeString" }),
+            defineField({ name: "image", type: "figure" }),
+            text,
+            defineField({ name: "bookUrl", title: "Booking link", type: "url" }),
+          ],
+          preview: { select: { title: "name.fr", media: "image" } },
+        }),
+      ],
+    }),
+    seo,
+  ],
+});
+

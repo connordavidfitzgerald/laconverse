@@ -1,11 +1,20 @@
 ---
-/* Yellow footer with the giant « » (Figma: FOOTER / FOOTER — DESKTOP). Phones
-   stack everything centred; from `lg` it spreads into the desktop layout:
-   contact + donate top-left, newsletter top-right, socials under them. */
+/* Yellow footer (Figma: La Converse — Site / Footer). From `lg` it sits on the
+   12-column grid: three nav columns at 1–3, contact at 7, donate at 10; the
+   newsletter at 1–5 and socials at 7–11 below. Phones (no frame) drop the nav
+   and stack the rest, left-aligned. It is only as tall as its content.
+
+   Curtain reveal: the footer is sticky underneath the page (z -1, `main`
+   carries the page background over it; `body` is `isolate` so the negative
+   z-index stays above body's own box — otherwise body swallows every click
+   on the footer), so the content lifts away to uncover
+   it rather than the footer scrolling in. Its sticky `bottom` is
+   min(0, viewport − footer height): a footer that fits stays pinned to the
+   bottom of the screen; a taller one pins its top to the top of the screen
+   and scrolls the rest normally once uncovered. The height comes from the
+   ResizeObserver below (without JS it falls back to `bottom: 0`). */
 import Icon from "./Icon.astro";
-import Logo from "./Logo.astro";
 import Socials from "./Socials.astro";
-import Spray from "./Spray.astro";
 import AjaxForm from "./AjaxForm.astro";
 import { href, t, type Lang } from "../i18n";
 import type { Settings } from "../lib/types";
@@ -15,36 +24,80 @@ interface Props {
   settings: Settings;
   alternate: string;
 }
-const { lang, settings, alternate } = Astro.props;
+const { lang, settings } = Astro.props;
 const s = t(lang);
-const donate = settings.donateUrl ?? `${href(lang, "getInvolved")}#donate`;
-const year = new Date().getFullYear();
+const donate = href(lang, "donate");
+
+const nav = [
+  [
+    { label: s.about, url: href(lang, "about") },
+    { label: s.careers, url: `${href(lang, "about")}#careers` },
+    { label: s.ecole, url: href(lang, "ecole") },
+  ],
+  [
+    { label: s.involve, url: href(lang, "involve") },
+    { label: s.donate, url: donate },
+    { label: s.contact, url: href(lang, "contact") },
+  ],
+  [
+    { label: s.studio, url: href(lang, "studio") },
+    { label: s.videos, url: href(lang, "videoIndex") },
+    { label: s.podcasts, url: href(lang, "podcasts") },
+  ],
+].map((col) => col.sort((a, b) => a.label.localeCompare(b.label, lang)));
 ---
 
-<footer class="relative overflow-hidden bg-yellow px-5 pt-5 pb-10 lg:px-5 lg:pt-10 lg:pb-10">
-  <Spray
-    class="-left-[107%] top-[62%] w-[325%] -rotate-[22deg] lg:-left-[36%] lg:top-[28%] lg:w-[132%]"
-    seed={4}
-  />
+<footer
+  data-site-footer
+  class="sticky -z-1 bottom-[min(0px,100dvh_-_var(--footer-h,0px))] bg-yellow px-5 pt-10 pb-5 lg:px-page lg:pb-10"
+>
+  <div class="grid grid-cols-3 gap-x-5 gap-y-15 lg:page-grid lg:gap-y-10">
+    <!-- Site nav -->
+    <nav class="col-span-3 hidden grid-cols-subgrid lg:grid">
+      {nav.map((col) => (
+        <ul class="label text-lg leading-[1.05]">
+          {col.map((l) => (
+            <li>
+              <a href={l.url} class="link-line decoration-2 whitespace-nowrap">{l.label}</a>
+            </li>
+          ))}
+        </ul>
+      ))}
+    </nav>
 
-  <div class="relative grid gap-10 text-center lg:grid-cols-12 lg:gap-x-5 lg:gap-y-[4.5rem] lg:text-left">
+    <!-- Contact -->
+    <div class="col-span-3 flex flex-col gap-1 lg:col-span-3 lg:col-start-7 lg:gap-2">
+      <p class="label text-lg">{s.contact}</p>
+      <a
+        href={`mailto:${settings.email}`}
+        class="link-line decoration-2 label inline-flex items-center gap-1 self-start text-2xl lg:text-3xl"
+      >
+        {settings.email}
+        <Icon name="arrow-ne" class="nudge-ne size-4" />
+      </a>
+    </div>
+
+    <!-- Donate -->
+    <div class="col-span-3 flex flex-col gap-1 lg:col-span-2 lg:col-start-10 lg:gap-2">
+      <p class="label text-lg">{s.donate}</p>
+      <a href={donate} class="link-line decoration-2 label inline-flex items-center gap-1 self-start text-2xl lg:text-3xl">
+        <span class="whitespace-nowrap">{s.supportUs}</span>
+        <Icon name="arrow-ne" class="nudge-ne size-4" />
+      </a>
+    </div>
+
     <!-- Newsletter -->
-    <div class="order-1 lg:order-3 lg:col-span-5 lg:col-start-8">
-      <p class="display mx-auto max-w-[20rem] text-lg leading-[0.95] tracking-[-0.01em] lg:mx-0 lg:max-w-[26rem]">
-        {s.newsletter}
-      </p>
+    <div class="col-span-3 lg:col-span-5">
+      <label class="label block text-lg" for="newsletter-email">{s.newsletter}</label>
       <AjaxForm
         action={settings.newsletterAction ?? "/api/contact"}
         external={!!settings.newsletterAction}
         lang={lang}
-        class="mt-5"
+        class="mt-1 lg:mt-2"
       >
         <input type="hidden" name="kind" value="newsletter" />
         <input type="hidden" name="context" value="footer" />
-        <div class="relative flex items-end gap-2.5 border-b border-ink pb-3 after:absolute after:inset-x-0 after:-bottom-px after:h-[3px] after:origin-left after:scale-x-0 after:bg-ink after:transition-transform after:duration-500 after:ease-[cubic-bezier(0.2,0.7,0.2,1)] has-[input:focus-visible]:after:scale-x-100">
-          <label class="sr-only" for="newsletter-email">
-            {s.email}
-          </label>
+        <div class="relative flex items-center gap-1 border-b border-ink pb-2.5 after:absolute after:inset-x-0 after:-bottom-px after:h-[3px] after:origin-left after:scale-x-0 after:bg-ink after:transition-transform after:duration-500 after:ease-[cubic-bezier(0.2,0.7,0.2,1)] has-[input:focus-visible]:after:scale-x-100">
           <input
             id="newsletter-email"
             name="email"
@@ -52,58 +105,28 @@ const year = new Date().getFullYear();
             required
             autocomplete="email"
             placeholder={s.email}
-            class="display min-w-0 flex-1 bg-transparent text-2xl tracking-[-0.02em] placeholder:text-ink outline-none lg:text-[1.875rem]"
+            class="label min-w-0 flex-1 bg-transparent text-2xl lg:text-3xl placeholder:text-ink outline-none"
           />
-          <button
-            type="submit"
-            class="press label shrink-0 rounded-[10px] border border-ink px-5 py-3 text-base hover:bg-ink hover:text-yellow disabled:opacity-50 lg:px-[30px] lg:py-[15px] lg:text-[1.0625rem]"
-          >
-            {s.subscribe}
+          <button type="submit" class="group grid size-6 shrink-0 place-items-center disabled:opacity-50" aria-label={s.subscribe}>
+            <Icon name="arrow-ne" class="nudge-ne size-4" />
           </button>
         </div>
       </AjaxForm>
     </div>
 
-    <!-- Contact -->
-    <div class="order-2 flex flex-col gap-[5px] lg:order-1 lg:col-span-3 lg:gap-2.5">
-      <p class="label text-sm font-bold lg:font-black">{s.contact}</p>
-      <a
-        href={`mailto:${settings.email}`}
-        class="link-line decoration-2 display inline-flex items-center justify-center gap-1 text-[2.25rem] leading-[0.95] tracking-[-0.01em] lg:justify-start lg:text-[1.75rem]"
-      >
-        {settings.email}
-        <Icon name="arrow-ne" class="nudge-ne hidden size-4 lg:block" />
-      </a>
-    </div>
-
-    <!-- Donate (desktop) -->
-    <div class="order-3 hidden flex-col gap-2.5 lg:order-2 lg:col-span-4 lg:flex">
-      <p class="label text-sm">{s.donate}</p>
-      <a
-        href={donate}
-        class="link-line decoration-2 display inline-flex items-center gap-1 text-[1.75rem] leading-[0.95]"
-      >
-        {s.supportUs}
-        <Icon name="arrow-ne" class="nudge-ne size-4" />
-      </a>
-    </div>
-
     <!-- Socials -->
-    <div class="order-4 flex flex-col items-center gap-2.5 lg:col-span-12 lg:-mt-10 lg:items-start">
-      <p class="label text-sm font-medium lg:sr-only">{s.socials}</p>
-      <Socials socials={settings.socials} />
-    </div>
-
-    <!-- Support (mobile) -->
-    <a
-      href={donate}
-      class="display order-5 grid min-h-[105px] place-items-center rounded-[10px] border border-ink p-10 text-2xl hover:bg-ink hover:text-yellow lg:hidden"
-    >
-      {s.supportUs}
-    </a>
-
-    <div class="order-6 mt-10 lg:col-span-12 lg:mt-0">
-      <Logo class="h-auto w-full" />
+    <div class="col-span-3 flex flex-col gap-1 lg:col-span-5 lg:col-start-7 lg:gap-2">
+      <p class="label text-lg">{s.followUs}</p>
+      <Socials socials={settings.socials} variant="text" />
     </div>
   </div>
 </footer>
+
+<script>
+  const footer = document.querySelector<HTMLElement>("[data-site-footer]");
+  if (footer) {
+    const set = () => footer.style.setProperty("--footer-h", `${footer.offsetHeight}px`);
+    new ResizeObserver(set).observe(footer);
+    set();
+  }
+</script>

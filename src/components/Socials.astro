@@ -4,10 +4,12 @@ import type { Settings } from "../lib/types";
 
 interface Props {
   socials: Settings["socials"];
-  variant?: "round" | "plain";
+  variant?: "round" | "plain" | "text";
   class?: string;
+  /** Text variant only: override the link size (defaults to 24 → 30px). */
+  size?: string;
 }
-const { socials, variant = "round", class: className } = Astro.props;
+const { socials, variant = "round", class: className, size = "text-2xl lg:text-3xl" } = Astro.props;
 const names: Record<string, string> = {
   instagram: "Instagram",
   tiktok: "TikTok",
@@ -22,11 +24,23 @@ const names: Record<string, string> = {
 <ul
   class:list={[
     "flex items-center",
-    variant === "round" ? "gap-[5px] md:gap-1.5" : "gap-4",
+    variant === "round" ? "gap-[5px] md:gap-1.5" : variant === "text" ? "flex-wrap gap-x-5 lg:gap-x-10 lg:gap-y-2.5" : "gap-4",
     className,
   ]}
 >
-  {socials.map(({ platform, url }) => (
+  {socials.map(({ platform, url }) => variant === "text" ? (
+    <li>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener"
+        class:list={["link-line decoration-2 label inline-flex items-center gap-1", size]}
+      >
+        {names[platform] ?? platform}
+        <Icon name="arrow-ne" class="nudge-ne size-4" />
+      </a>
+    </li>
+  ) : (
     <li>
       <a
         href={url}

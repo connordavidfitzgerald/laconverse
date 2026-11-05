@@ -1,5 +1,9 @@
 ---
-import View from "../../views/Podcasts.astro";
+/* The podcasts index is the École Converse podcasts program's page. */
+import View from "../../views/Program.astro";
+import { getPodcastsProgram } from "../../lib/content";
+
+const program = await getPodcastsProgram("fr");
 ---
 
-<View lang="fr" />
+<View lang="fr" program={program} />

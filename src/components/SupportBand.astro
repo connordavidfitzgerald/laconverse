@@ -22,7 +22,7 @@ const body =
     : "C’est le soutien de la communauté qui garde nos reportages libres et indépendants. Aidez-nous à continuer de couvrir ce qui compte.");
 const label =
   cta?.label ?? (en ? "Become a La Converse supporter" : "Devenir membre de La Converse");
-const url = cta?.url ?? donateUrl ?? `${href(lang, "getInvolved")}#donate`;
+const url = cta?.url ?? donateUrl ?? href(lang, "donate");
 ---
 
 <section
@@ -35,7 +35,7 @@ const url = cta?.url ?? donateUrl ?? `${href(lang, "getInvolved")}#donate`;
     class="-left-[55%] top-[55%] w-[190%] -rotate-[25deg] lg:-left-[0%] lg:top-[-20%] lg:w-[120%]"
     seed={21}
   />
-  <h2 class="display relative text-[2.5rem] leading-[0.95] tracking-[-0.01em] lg:flex-1 lg:text-support lg:tracking-[-0.0075em]">
+  <h2 class="display relative text-[2.5rem] leading-[0.95] lg:flex-1 lg:text-support">
     {heading}
   </h2>
   <div class="relative mt-[30px] flex flex-col gap-[30px] lg:mt-0 lg:w-[33.3%] lg:shrink-0 lg:flex-col-reverse lg:gap-5 lg:pt-[15px]">
@@ -45,6 +45,6 @@ const url = cta?.url ?? donateUrl ?? `${href(lang, "getInvolved")}#donate`;
     >
       {label}
     </a>
-    <p class="display text-lg leading-[0.95] tracking-[-0.01em] lg:font-black">{body}</p>
+    <p class="display text-lg leading-[0.95] lg:font-black">{body}</p>
   </div>
 </section>

@@ -21,9 +21,9 @@ const settings = await getSettings(lang);
 <Layout lang={lang} title={title} alternate={href(otherLang(lang), route)}>
   <div class="px-5 lg:px-5">
     <header class="pt-5 lg:pt-10">
-      <h1 class="display text-mega tracking-[-0.02em]">{title}</h1>
+      <h1 class="display text-mega">{title}</h1>
       <p
-        class="mt-2.5 max-w-[40rem] font-display text-2xl font-extrabold leading-[0.95] tracking-[-0.02em] lg:text-intro"
+        class="mt-2.5 max-w-[40rem] font-display text-2xl font-medium leading-[0.95] lg:text-intro"
       >
         {blurb}
       </p>
@@ -34,7 +34,7 @@ const settings = await getSettings(lang);
       <p class="max-w-[28rem] text-sm font-medium leading-[1.35] lg:text-base">{s.comingSoonText}</p>
       <a
         href={`mailto:${settings.email}`}
-        class="display link-line decoration-2 text-[2.25rem] leading-[0.95] tracking-[-0.01em] lg:text-section"
+        class="display link-line decoration-2 text-[2.25rem] leading-[0.95] lg:text-section"
       >
         {settings.email}
       </a>

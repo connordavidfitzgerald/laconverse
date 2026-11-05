@@ -1,32 +1,36 @@
 @import "tailwindcss";
 @import "@fontsource-variable/inter";
 
-/* ABC Favorit Compressed. These are the trial cuts from the Figma file; swap in
-   the licensed files under the same family name before launch. Each is
-   subset to Latin + French punctuation and saved as woff2 (README → Fonts);
-   living under src/ gives them hashed, long-cached URLs. */
+/* ABC Favorit Compressed (licensed). Two cuts only: Medium (500) and Ultra
+   (900), each with its italic, so `font-medium` and `font-black` are the only
+   Favorit weights; anything else would be synthesised. Living under src/
+   gives them hashed, long-cached URLs. */
 @font-face {
   font-family: "Favorit Compressed";
-  src: url("../assets/fonts/FavoritCompressed-Medium.woff2") format("woff2");
+  src: url("../assets/fonts/ABCFavoritCompressed-Medium.woff2") format("woff2");
   font-weight: 500;
+  font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Favorit Compressed";
-  src: url("../assets/fonts/FavoritCompressed-Bold.woff2") format("woff2");
-  font-weight: 700;
+  src: url("../assets/fonts/ABCFavoritCompressed-MediumItalic.woff2") format("woff2");
+  font-weight: 500;
+  font-style: italic;
   font-display: swap;
 }
 @font-face {
   font-family: "Favorit Compressed";
-  src: url("../assets/fonts/FavoritCompressed-Extrabold.woff2") format("woff2");
-  font-weight: 800;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Favorit Compressed";
-  src: url("../assets/fonts/FavoritCompressed-Black.woff2") format("woff2");
+  src: url("../assets/fonts/ABCFavoritCompressed-Ultra.woff2") format("woff2");
   font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Favorit Compressed";
+  src: url("../assets/fonts/ABCFavoritCompressed-UltraItalic.woff2") format("woff2");
+  font-weight: 900;
+  font-style: italic;
   font-display: swap;
 }
 
@@ -36,6 +40,10 @@
   --color-pink: #f92f7b;
   --color-ink: #000000;
   --color-paper: #ffffff;
+  /* Donate widget: the selected toggle and the amount-raised track, and the
+     resting toggles (Figma: DONATE). */
+  --color-wine: #810030;
+  --color-mist: #f1f1f1;
 
   /* Category dots: brand yellow (oklch 0.91 0.18 110) walked round the hue
      wheel in 60° steps, chroma held near the yellow's and lightness lowered
@@ -50,6 +58,9 @@
   --color-cat-red: oklch(0.63 0.21 25);
 
   --font-display: "Favorit Compressed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  /* Favorit tracking, used by every Favorit utility and `.font-display`.
+     Also generates a `tracking-display` class. */
+  --tracking-display: -0.01em;
   --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
 
   /* Fluid ramps: each hits its mobile size at the 393 artboard and its desktop
@@ -61,7 +72,6 @@
   /* Desktop poster titles on the homepage: 216 at the 1728 artboard, capped. */
   --text-poster: min(12.5vw, 15rem);
   --text-poster--line-height: 0.82;
-  --text-poster--letter-spacing: -0.03em;
   --text-rail: 3.5rem; /* 48 → 72 */
   --text-rail--line-height: 0.95;
   --text-section-lg: 3rem; /* 36 → 120 */
@@ -72,18 +82,31 @@
   --text-support--line-height: 0.95;
   --text-card: clamp(1.5rem, 1.853rem + 0.599vw, 2rem); /* 32 → 40 */
   --text-card--line-height: 0.95;
-  --text-card-sm: clamp(1.5rem, 1.426rem + 0.2996vw, 1.75rem); /* 24 → 28 */
+  --text-card-sm: 1.75rem; /* 24 → 28 */
   --text-card-sm--line-height: 0.95;
   --text-dek: clamp(1.125rem, 1.2rem + 0.749vw, 1.75rem); /* 18 → 28 */
   --text-dek--line-height: 0.95;
   --text-intro: clamp(1.5rem, 1.279rem + 0.899vw, 2.25rem); /* 24 → 36 */
   --text-intro--line-height: 1;
   --text-sm: 1rem;
+  /* The redesigned pages (Figma: 2026 desktop frames). One family, Favorit
+     Ultra caps throughout; these are its five steps. */
+  --text-page: clamp(2.75rem, 1.35rem + 5.7vw, 7.5rem); /* 44 → 120: page titles */
+  --text-page--line-height: 1.1;
+  --text-lead: clamp(1.5rem, 1.058rem + 1.798vw, 3rem); /* 24 → 48: intros */
+  --text-lead--line-height: 0.95;
+  --text-item: clamp(2rem, 1.706rem + 1.199vw, 3rem); /* 32 → 48: card titles */
+  --text-item--line-height: 0.95;
+  --text-body: clamp(1.125rem, 1.015rem + 0.449vw, 1.5rem); /* 18 → 24: section copy */
+  --text-body--line-height: 0.95;
+  --text-copy: clamp(1rem, 0.963rem + 0.15vw, 1.125rem); /* 16 → 18: card copy, labels */
+  --text-copy--line-height: 0.95;
   --spacing-gutter: 1.25rem; /* 20 — side margin on phones, column gap everywhere */
   --spacing-margin: clamp(1.25rem, 0.882rem + 1.498vw, 2.5rem); /* 20 → 40 page margin */
   --spacing-section: 6rem; /* 96 */
-  /* The 8-column desktop grid (Figma: homepage desktop, 1728 artboard): 40px
-     page margin, 40px between columns. Pages move onto it one by one. */
+  /* The 12-column desktop grid (Figma: the 1728 desktop frames): 40px page
+     margin, 40px between columns. Vertical rhythm steps 40/80/120/240
+     (Tailwind's 10/20/30/60). */
   --spacing-page: 2.5rem; /* 40 */
   --spacing-col-gap: 2.5rem; /* 40 */
 
@@ -179,6 +202,10 @@
       animation-duration: 1ms !important;
     }
   }
+  /* Bare `font-display` elements (no Favorit utility) take the same tracking. */
+  .font-display {
+    letter-spacing: var(--tracking-display);
+  }
 }
 
 /* Nav hover underline: fades in and settles up toward the text rather than
@@ -217,7 +244,7 @@
    border inside the frame. Same curve and length as the menu links rising in
    (power3.out, 0.6s). Put on the Picture frame (which already clips) inside a
    `.group`; `&&` outranks the frame's grey placeholder background. Set
-   `--inset` to change the colour (École Converse uses lilac). */
+   `--inset` to change the colour (Layout's `mediaTint` does, on École Converse). */
 @utility media-inset {
   && {
     background-color: var(--inset, var(--color-yellow));
@@ -266,30 +293,44 @@
   }
 }
 
-/* Favorit headings: uppercase, tight leading, slightly pulled in. */
+/* Favorit headings: uppercase, tight leading. */
 @utility display {
   font-family: var(--font-display);
+  letter-spacing: var(--tracking-display);
   font-weight: 900;
   text-transform: uppercase;
   line-height: 0.95;
-  letter-spacing: -0.015em;
+}
+
+/* Homepage section heads (Videos, Podcasts, École Converse): Inter Extra
+   Bold caps, pulled tight, with a greyed link stacked under (Figma: HOME). */
+@utility section-head {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 1.5rem;
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+  @media (width >= 64rem) {
+    font-size: 1.875rem;
+  }
 }
 
 /* Small uppercase labels (bylines, dates, nav). */
 @utility label {
   font-family: var(--font-display);
+  letter-spacing: var(--tracking-display);
   font-weight: 900;
   text-transform: uppercase;
   line-height: 1;
-  letter-spacing: -0.01em;
 }
 
-/* The 8-column page grid (see --spacing-page): columns and gaps only, so it
+/* The 12-column page grid (see --spacing-page): columns and gaps only, so it
    nests inside ruled wrappers; pair it with `px-page` for the page margin.
    Children place themselves with col-span-* / col-start-*. */
 @utility page-grid {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--spacing-col-gap);
 }
 
@@ -306,6 +347,19 @@
   & > * {
     scroll-snap-align: start;
     flex: none;
+  }
+  /* Mouse drag (src/lib/dragScroll.ts): grab cursor when there is somewhere
+     to go; snapping and hover effects off mid-drag. */
+  &[data-draggable] {
+    cursor: grab;
+  }
+  &.is-dragging {
+    cursor: grabbing;
+    scroll-snap-type: none;
+    user-select: none;
+    & * {
+      pointer-events: none;
+    }
   }
 }
 
@@ -332,7 +386,8 @@
   --text-dek: calc(clamp(1.125rem, 1.2rem + 0.749vw, 1.75rem) * var(--type-scale));
 }
 
-/* Article body typography (Portable Text output). */
+/* Article body typography (Portable Text output). Components dropped into the
+   body (the donate widget) opt out of the element styles with `data-no-prose`. */
 @utility prose-article {
   font-family: var(--font-sans);
   font-weight: 500;
@@ -341,36 +396,37 @@
   & > * + * {
     margin-top: 1.25em;
   }
-  & h2 {
-    font-family: var(--font-display);
-    font-weight: 900;
+  /* Subheads: the homepage section-head type, set a little looser to read
+     over several lines. */
+  & :is(h2, h3):not(:where([data-no-prose] *)) {
+    font-family: var(--font-sans);
+    font-weight: 800;
     text-transform: uppercase;
-    font-size: var(--text-md);
-    line-height: 0.95;
-    letter-spacing: -0.015em;
-    margin-top: 2em;
-  }
-  & h3 {
-    font-family: var(--font-display);
-    font-weight: 900;
-    text-transform: uppercase;
-    font-size: var(--text-4xl);
-    line-height: 0.95;
+    font-size: 1.5rem;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
     margin-top: 1.75em;
+    @media (width >= 64rem) {
+      font-size: 1.875rem;
+    }
   }
-  & a {
+  & a:not(:where([data-no-prose] *)) {
     text-decoration: underline;
     text-underline-offset: 0.15em;
   }
+  & :is(blockquote, [data-no-prose]) {
+    letter-spacing: normal;
+  }
   & blockquote {
     font-family: var(--font-display);
-    font-weight: 800;
+    letter-spacing: var(--tracking-display);
+    font-weight: 500;
     font-size: var(--text-dek);
     line-height: 1;
     border-left: 4px solid var(--color-yellow);
     padding-left: 1rem;
   }
-  /* Figma QUOTE (enlarged from its 36px): Black caps between centred chevrons, 20px gaps. */
+  /* Figma QUOTE (enlarged from its 36px): Ultra caps between centred chevrons, 20px gaps. */
   & blockquote.pull-quote {
     display: flex;
     flex-direction: column;
@@ -382,7 +438,6 @@
     font-weight: 900;
     font-size: calc(clamp(2.75rem, 2.2rem + 1.6vw, 3.5rem) * var(--type-scale, 1));
     line-height: 0.95;
-    letter-spacing: -0.01em;
     text-transform: uppercase;
   }
   & .pull-quote svg {
@@ -417,7 +472,7 @@
     margin-top: 0.5rem;
     opacity: 0.6;
   }
-  & iframe {
+  & iframe:not(:where([data-no-prose] *)) {
     width: 100%;
     aspect-ratio: 16 / 9;
     height: auto;
@@ -439,13 +494,13 @@
 }
 
 /* Intro copy on editorial pages (About, École Converse, programs): Favorit
-   Extrabold, first line indented, as in the Figma frames. */
+   Medium, first line indented, as in the Figma frames. */
 @utility prose-intro {
   font-family: var(--font-display);
-  font-weight: 800;
+  letter-spacing: var(--tracking-display);
+  font-weight: 500;
   font-size: clamp(1.125rem, 1rem + 1vw, 2.5rem);
   line-height: 0.95;
-  letter-spacing: -0.015em;
   & p {
     text-indent: 2.5em;
   }
@@ -454,5 +509,87 @@
   }
   & a {
     text-decoration: underline;
+  }
+}
+
+/* Intros on the redesigned pages: Favorit Ultra caps, the first line starting
+   at column 2 of the 12-column grid (Figma: every 2026 desktop frame). The
+   indent is one column plus one gap, so the block must span the full grid
+   width. Phones use the gutter as the gap, as 12 × 40px gaps won't fit. */
+@utility prose-lead {
+  --lead-gap: var(--spacing-gutter);
+  font-family: var(--font-display);
+  letter-spacing: var(--tracking-display);
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: var(--text-lead);
+  line-height: 0.95;
+  @media (width >= 64rem) {
+    --lead-gap: var(--spacing-col-gap);
+  }
+  & > :first-child {
+    text-indent: calc((100% - 11 * var(--lead-gap)) / 12 + var(--lead-gap));
+  }
+  & > * + * {
+    margin-top: 1em;
+  }
+  & a {
+    text-decoration: underline;
+    text-underline-offset: 0.12em;
+  }
+}
+
+/* Running copy in Inter Bold (Figma: ABOUT NEW values and principles bodies):
+   18px, tracked -3%, paragraphs a line apart. */
+@utility prose-sans {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-size: 1.125rem;
+  line-height: 1.15;
+  & > * + * {
+    margin-top: 1em;
+  }
+  & ul {
+    list-style: disc;
+    padding-left: 1.1em;
+  }
+  & li + li {
+    margin-top: 1em;
+  }
+  & strong {
+    display: block;
+  }
+  & a {
+    text-decoration: underline;
+    text-underline-offset: 0.12em;
+  }
+}
+
+/* Section copy beside a label (About / Approach / Donate lists): same caps,
+   a size down, paragraphs a line apart, bullets hanging. */
+@utility prose-body {
+  font-family: var(--font-display);
+  letter-spacing: var(--tracking-display);
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: var(--text-body);
+  line-height: 0.95;
+  & > * + * {
+    margin-top: 1em;
+  }
+  & ul {
+    list-style: disc;
+    padding-left: 1.1em;
+  }
+  & li + li {
+    margin-top: 1em;
+  }
+  & strong {
+    display: block;
+  }
+  & a {
+    text-decoration: underline;
+    text-underline-offset: 0.12em;
   }
 }

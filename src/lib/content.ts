@@ -3,8 +3,9 @@
    the same shape either way. Article, author and topic pages render on demand
    in a long-lived function, so identical queries are only shared while in
    flight — a warm function must never serve a result from an earlier request. */
-import type { Lang } from "../i18n";
+import { t, type Lang } from "../i18n";
 import { client } from "./sanity";
+import { getZeffyTotals } from "./zeffy";
 import * as fx from "./fixtures";
 import type {
   AboutData,
@@ -12,8 +13,9 @@ import type {
   ArticleCard,
   Category,
   ContactData,
+  DonateData,
+  StudioData,
   TaxonomyPage,
-  GetInvolvedData,
   GiveYourVoiceData,
   HomeData,
   IndexEntry,
@@ -26,6 +28,7 @@ import type {
   Program,
   Settings,
   Video,
+  VideoCard,
 } from "./types";
 import { imageUrl } from "./sanity";
 
@@ -65,7 +68,15 @@ const RICH = (field: string) => `${field}[$lang][]{ ..., _type == "figure" => ${
 const TRANSLATIONS = `"translations": [{ "language": "fr", "slug": slug.fr.current }, { "language": "en", "slug": slug.en.current }][defined(slug)]`;
 
 const ARTICLE_CARD = `{ _id, "title": title[$lang], ${SLUG}, "dek": dek[$lang], publishedAt, image ${IMG}, ${REF_CAT}, ${REF_TAGS}, ${REF_AUTH} }`;
-const VIDEO_CARD = `{ _id, "title": title[$lang], ${SLUG}, poster ${IMG}, duration, publishedAt, ${REF_CAT} }`;
+/* Videos show in both languages: a side that hasn't been written yet falls
+   back to the other one ("lang" says which the text is in). */
+const VPUB = `(defined(slug.fr.current) || defined(slug.en.current))`;
+const VIDEO_CARD = `{
+  _id, "title": coalesce(title[$lang], title.fr, title.en),
+  "slug": coalesce(slug[$lang].current, slug.fr.current, slug.en.current),
+  "lang": select(defined(title[$lang]) => $lang, defined(title.fr) => "fr", "en"),
+  poster ${IMG}, duration, publishedAt, kind, ${REF_CAT}
+}`;
 const PODCAST_CARD = `{ _id, "title": title[$lang], ${SLUG}, cover ${IMG}, "description": description[$lang], "episodeCount": count(episodes) }`;
 const PROGRAM_CARD = `{ _id, "title": title[$lang], ${SLUG}, image ${IMG}, linkTo }`;
 const PARTNER_STORY = `{ _id, "title": title[$lang], url, image ${IMG}, partner, partnerLogo ${IMG}, publishedAt }`;
@@ -113,12 +124,11 @@ export const getHome = (lang: Lang) =>
         count((page.topStories[]->)[${PUB}]) > 0 => (page.topStories[]->)[${PUB}]${ARTICLE_CARD},
         latest[1...7]
       ),
-      "support": page.support{ "title": title[$lang], "text": text[$lang], "cta": ${CTA()} },
       "ecole": page.ecole{
         "title": title[$lang], "text": text[$lang], image ${IMG}
       },
       "seo": ${SEO("page.seo")},
-      "videos": *[_type == "video" && ${PUB}] | order(publishedAt desc)[0...8] ${VIDEO_CARD},
+      "videos": *[_type == "video" && ${VPUB}] | order(publishedAt desc)[0...8] ${VIDEO_CARD},
       "podcasts": *[_type == "podcast" && ${PUB}] | order(order asc)[0...8] ${PODCAST_CARD},
       "partnerStories": *[_type == "partnerStory" && defined(title[$lang])] | order(publishedAt desc)[0...8] ${PARTNER_STORY},
       "categories": *[_type == "category" && defined(slug[$lang].current)] | order(order asc){
@@ -240,10 +250,19 @@ export const getAuthor = (lang: Lang, slug: string) =>
 
 /* ---- Videos ------------------------------------------------------------- */
 
+/* Every video as a card (the video index), newest first. */
+export const getVideoCards = (lang: Lang) =>
+  load<VideoCard[]>(
+    `*[_type == "video" && ${VPUB}] | order(publishedAt desc) ${VIDEO_CARD}`,
+    { lang },
+    () => fx.videos(lang),
+  );
+
 export const getVideos = (lang: Lang) =>
   load<Video[]>(
-    `*[_type == "video" && ${PUB}] | order(publishedAt desc){
-      ...${VIDEO_CARD}, "src": file.asset->url, videoUrl, ${BODY},
+    `*[_type == "video" && ${VPUB}] | order(publishedAt desc){
+      ...${VIDEO_CARD}, "playbackId": mux.asset->playbackId, "src": file.asset->url, videoUrl,
+      "body": coalesce(body[$lang], body.fr, body.en)[]{ ..., _type == "figure" => ${IMG} },
       "authorsFull": coalesce(authors[]->${PERSON}, []), ${TRANSLATIONS}, "seo": ${SEO()}
     }`,
     { lang },
@@ -285,7 +304,8 @@ export const getEcole = (lang: Lang) =>
     }{
       "title": page.title[$lang], "kicker": page.kicker[$lang], "image": page.image ${IMG}, "intro": page.${RICH("intro")},
       "cta": ${CTA("page.cta")}, "seo": ${SEO("page.seo")},
-      "why": page.why{ "title": title[$lang], "body": ${RICH("body")} },
+      "why": page.why{ "title": title[$lang], "body": ${RICH("body")}, image ${IMG}, "aside": ${RICH("aside")} },
+      "approach": page.approach{ "title": title[$lang], "body": ${RICH("body")}, image ${IMG} },
       "stats": coalesce(page.stats[defined(value) && defined(label[$lang])]{ value, "label": label[$lang] }, []),
       "steps": coalesce(page.steps[defined(title[$lang])]{ "title": title[$lang], "text": text[$lang] }, []),
       "programs": select(
@@ -316,16 +336,26 @@ export const getProgramSlugs = (lang: Lang) =>
         .map((p) => p.slug),
   );
 
-export const getProgram = (lang: Lang, slug: string) =>
-  load<Program | null>(
-    `*[${IS_PROGRAM} && slug[$lang].current == $slug && coalesce(linkTo, "self") == "self"][0]{
+/* A program page's fields; the filter picks the program. */
+const PROGRAM = `{
       ...${PROGRAM_CARD}, "tagline": tagline[$lang], ${BODY}, "cta": ${CTA()}, "seo": ${SEO()}, ${TRANSLATIONS},
       "form": select(defined(form.title[$lang]) || defined(form.text[$lang]) => form{ "title": title[$lang], "text": text[$lang] }),
       quote { image ${IMG}, "text": text[$lang], attribution, "source": source[$lang] },
       "video": select(defined(video.url) => video{ "title": title[$lang], "text": text[$lang], url, moreUrl, "moreLabel": moreLabel[$lang] }),
+      "about": ${RICH("about")},
       "articles": select(defined(series) => *[_type == "article" && ${PUB} && series._ref == ^.series._ref] | order(publishedAt desc)[0...3] ${ARTICLE_CARD}, []),
+      "musicVideos": coalesce(musicVideos[defined(url)]{
+        _key, "title": coalesce(title[$lang], title.fr), year, url, "text": text[$lang],
+        "artists": coalesce(artists[$lang], artists.fr), "mentor": coalesce(mentor[$lang], mentor.fr), poster ${IMG}
+      }, []),
+      "podcasts": coalesce((podcasts[]->)[${PUB}]${PODCAST_CARD}, []),
+      "alumni": coalesce(alumni[]->${PERSON}, []),
       support
-    }`,
+    }`;
+
+export const getProgram = (lang: Lang, slug: string) =>
+  load<Program | null>(
+    `*[${IS_PROGRAM} && slug[$lang].current == $slug && coalesce(linkTo, "self") == "self"][0]${PROGRAM}`,
     { lang, slug },
     () => {
       const program = fx.program(lang, slug);
@@ -333,12 +363,47 @@ export const getProgram = (lang: Lang, slug: string) =>
     },
   );
 
+/* The program whose card leads to the podcasts index, which shows its page.
+   Its chosen podcasts come first, in its order, then every other published
+   podcast, so none is left unreachable. Without such a program the index
+   still lists them all. */
+export const getPodcastsProgram = async (lang: Lang): Promise<Program> => {
+  const [program, all] = await Promise.all([
+    load<Program | null>(
+      `*[${IS_PROGRAM} && linkTo == "podcasts"][0]${PROGRAM}`,
+      { lang },
+      () => fx.program(lang, "podcasts"),
+    ),
+    getPodcasts(lang),
+  ]);
+  const chosen = program?.podcasts ?? [];
+  const ids = new Set(chosen.map((p) => p._id));
+  const podcasts = [...chosen, ...all.filter((p) => !ids.has(p._id))];
+  if (program) return { ...program, podcasts };
+  return {
+    _id: "podcasts",
+    title: t(lang).podcasts,
+    slug: "podcasts",
+    linkTo: "podcasts",
+    articles: [],
+    musicVideos: [],
+    podcasts,
+    alumni: [],
+    translations: [],
+  };
+};
+
 /* ---- Pages -------------------------------------------------------------- */
 
 export const getAbout = (lang: Lang) =>
   load<AboutData>(
     `*[_id == "aboutPage"][0]{
       "title": title[$lang], image ${IMG}, "intro": ${RICH("intro")}, "seo": ${SEO()},
+      "statements": coalesce(statements[defined(text[$lang])]{ _key, "text": text[$lang], "cta": ${CTA()} }, []),
+      principlesImage ${IMG},
+      "principles": coalesce(principles[defined(title[$lang])]{ _key, "title": title[$lang], "body": ${RICH("body")} }, []),
+      "valuesTitle": valuesTitle[$lang],
+      "values": coalesce(values[defined(title[$lang])]{ _key, "title": title[$lang], "text": text[$lang] }, []),
       "team": coalesce(team[]->${PERSON}, []),
       "collaborators": coalesce(collaborators[]->${PERSON}, []),
       "sections": coalesce(sections[defined(title[$lang])]{
@@ -352,26 +417,35 @@ export const getAbout = (lang: Lang) =>
     () => fx.about(lang),
   ).then((d) => d ?? fx.about(lang));
 
-const CARD = `{ "title": title[$lang], "text": text[$lang], "cta": ${CTA()}, ctaStyle, image ${IMG} }`;
-
-export const getGetInvolved = (lang: Lang) =>
-  load<GetInvolvedData>(
-    `*[_id == "getInvolvedPage"][0]{
-      "title": title[$lang], image ${IMG}, "intro": intro[$lang], "seo": ${SEO()},
-      "cards": coalesce(cards[]${CARD}, []),
-      "cardsAfter": coalesce(cardsAfter[]${CARD}, []),
-      donate {
-        "title": title[$lang], "text": text[$lang],
-        "options": coalesce(options[]{ _key, "label": label[$lang], "url": url[$lang] }, [])
-      },
-      volunteer {
-        "title": title[$lang], "intro": intro[$lang], "cta": ${CTA()},
-        "items": coalesce(items[]{ _key, "title": title[$lang], "text": text[$lang] }, [])
-      }
+export const getDonate = (lang: Lang) =>
+  load<DonateData | null>(
+    `*[_id == "donatePage"][0]{
+      "title": title[$lang], image ${IMG}, "intro": ${RICH("intro")}, "seo": ${SEO()},
+      "support": support{ "title": title[$lang], "text": text[$lang] },
+      "sections": coalesce(sections[defined(label[$lang])]{ _key, "label": label[$lang], "body": ${RICH("body")} }, []),
+      "zeffyForms": coalesce(zeffyForms{ monthly, annually, once }, {}),
+      "zeffyUrl": coalesce(zeffyUrl, *[_id == "siteSettings"][0].donateUrl),
+      goal, "presets": { "monthly": coalesce(presets.monthly, []), "annually": coalesce(presets.annually, []), "once": coalesce(presets.once, []) }
     }`,
     { lang },
-    () => fx.getInvolved(lang),
-  ).then((d) => d ?? fx.getInvolved(lang));
+    () => fx.donate(lang),
+  )
+    .then((d) => d ?? fx.donate(lang))
+    .then(async (d) => {
+      const f = d.zeffyForms ?? {};
+      const zeffy = await getZeffyTotals([f.monthly, f.annually, f.once, d.zeffyUrl], d.goal);
+      return zeffy ? { ...d, raised: zeffy.raised, goal: zeffy.goal } : d;
+    });
+
+export const getStudio = (lang: Lang) =>
+  load<StudioData | null>(
+    `*[_id == "studioPage"][0]{
+      "title": title[$lang], image ${IMG}, "kicker": kicker[$lang], "intro": intro[$lang], "seo": ${SEO()},
+      "studios": coalesce(studios[defined(name[$lang])]{ _key, "name": name[$lang], "text": text[$lang], image ${IMG}, bookUrl }, [])
+    }`,
+    { lang },
+    () => fx.studio(lang),
+  ).then((d) => d ?? fx.studio(lang));
 
 export const getGiveYourVoice = (lang: Lang) =>
   load<GiveYourVoiceData>(

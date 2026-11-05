@@ -1,17 +1,18 @@
 ---
-/* Figma: MC CONVERSE (HOMEPAGE 4959:3576) and 6B FORMATIONS — UI. Every block
-   below the title is optional, so one template covers all the programs. A
-   program with no body yet (Journalism) gets the "coming soon" note from the
-   placeholder sections instead. */
-import AjaxForm from "../components/AjaxForm.astro";
-import BackLink from "../components/BackLink.astro";
-import FormFields from "../components/FormFields.astro";
+/* Figma: École Converse — JOURNALISM, MC CONVERSE and PODCASTS (the last one
+   served as the podcasts index, /balados). One template:
+   title, the program's square, the intro, "About" with the join button, then
+   whichever of graduates' articles, music videos and podcasts the program
+   has, and its alumni. */
+import AlumniGrid from "../components/AlumniGrid.astro";
+import LabelRow from "../components/LabelRow.astro";
+import PageTitle from "../components/PageTitle.astro";
 import Picture from "../components/Picture.astro";
-import StoryRow from "../components/StoryRow.astro";
+import StoryLine from "../components/StoryLine.astro";
+import YouTubeEmbed from "../components/YouTubeEmbed.astro";
 import Layout from "../layouts/Layout.astro";
 import { href, otherLang, t, type Lang } from "../i18n";
-import { getSettings } from "../lib/content";
-import { embedSrc, renderRichText } from "../lib/portableText";
+import { renderRichText } from "../lib/portableText";
 import type { Program } from "../lib/types";
 
 interface Props {
@@ -22,176 +23,152 @@ const { lang, program } = Astro.props;
 const s = t(lang);
 const other = otherLang(lang);
 const translation = program.translations.find((x) => x.language === other);
-const video = program.video?.url ? { ...program.video, src: embedSrc(program.video.url) } : null;
-const settings = await getSettings(lang);
-const donateUrl = program.support
-  ? (settings.donateUrl ?? `${href(lang, "getInvolved")}#donate`)
-  : null;
+// The podcasts program is shown at the podcasts index, not under École.
+const alternate =
+  program.linkTo === "podcasts"
+    ? href(other, "podcasts")
+    : translation
+      ? href(other, "program", translation.slug)
+      : href(other, "ecole");
+const seeAll = href(lang, "search");
+const row = "pt-20 lg:pt-30";
 ---
 
 <Layout
   lang={lang}
+  mediaTint="var(--color-lilac)"
   title={program.title}
   description={program.tagline}
   image={program.image}
   seo={program.seo}
-  alternate={translation ? href(other, "program", translation.slug) : href(other, "ecole")}
+  alternate={alternate}
 >
-  <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
-    <div class="lg:col-span-8 lg:col-start-3 md:mx-auto md:max-w-2xl lg:mx-0 lg:max-w-none">
-      <div class="flex justify-center">
-        <BackLink href={href(lang, "ecole")} label={s.ecole} />
-      </div>
-
-      <h1 class="display pt-12 pb-12 text-center text-mega tracking-[-0.02em] text-balance lg:pt-16 lg:pb-16">
-        {program.title}
-      </h1>
-
-      {program.body ? (
-        <div
-          class="prose-intro mx-auto mt-8 max-w-[31rem] lg:max-w-3xl"
-          set:html={renderRichText(program.body)}
-        />
-      ) : (
-        <div class="flex flex-col items-center gap-4 pb-24 text-center">
-          <p class="label text-xs">{s.comingSoon}</p>
-          <p class="max-w-[28rem] text-sm font-medium leading-[1.35] lg:text-base">
-            {s.comingSoonText}
-          </p>
-          <a
-            href={`mailto:${settings.email}`}
-            class="display link-line decoration-2 text-[2.25rem] leading-[0.95] tracking-[-0.01em] lg:text-section"
-          >
-            {settings.email}
-          </a>
-        </div>
-      )}
-      {program.cta?.url && (
-        <p class="py-16 text-center">
-          <a
-            href={program.cta.url}
-            class="label inline-block bg-yellow px-5 py-3 text-xs hover:bg-ink hover:text-yellow lg:text-base"
-          >
-            {program.cta.label ?? s.applyCohort}
-          </a>
-        </p>
-      )}
-    </div>
+  <PageTitle>{program.title}</PageTitle>
+  <div class="px-5 lg:page-grid lg:px-page">
+    <Picture
+      img={program.image}
+      ratio={1}
+      eager
+      sizes="(min-width: 1024px) 30vw, 70vw"
+      fill="#b49a7b"
+      class="mx-auto w-[70%] lg:col-span-4 lg:col-start-5 lg:w-full"
+    />
+    {program.body && (
+      <div
+        class="prose-lead mt-10 lg:col-span-12 lg:mt-30"
+        set:html={renderRichText(program.body)}
+      />
+    )}
   </div>
 
-  {program.quote?.text && (
-    <figure class="px-5 lg:pt-10 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
-      <Picture
-        img={program.quote.image}
-        ratio={353 / 177}
-        class="lg:col-span-6 lg:col-start-4"
-        sizes="(min-width: 1024px) 50vw, 100vw"
-      />
-      <blockquote class="display mt-5 px-4 lg:pt-10 text-center text-lg leading-[0.95] lg:col-span-6 lg:col-start-4 lg:text-3xl">
-        {program.quote.text}
-      </blockquote>
-      <figcaption class="mt-5 px-4 lg:col-span-6 lg:col-start-4 lg:pt-5">
-        {program.quote.attribution && (
-          <p class="label text-lg text-center tracking-[-0.02em] leading-none">
-            {program.quote.attribution}
-          </p>
-        )}
-        {program.quote.source && (
-          <p class="font-display text-lg text-center font-medium tracking-[-0.02em] leading-none pt-2">
-            {program.quote.source}
-          </p>
-        )}
-      </figcaption>
-    </figure>
-  )}
-
-  {video?.src && (
-    <section
-      class="px-5 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5"
-      aria-labelledby="video-title"
-    >
-      <div class="lg:col-span-8 lg:col-start-3 md:mx-auto md:max-w-2xl lg:mx-0 lg:max-w-none">
-        <div class="mt-20 bg-ink">
-          <iframe
-            class="aspect-video w-full"
-            src={video.src}
-            loading="lazy"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            allowfullscreen
-            title={video.title ?? program.title}
-          ></iframe>
-        </div>
-        {video.moreUrl && (
-          <p class="mt-5 text-center">
-            <a
-              href={video.moreUrl}
-              target="_blank"
-              rel="noopener"
-              class="label inline-flex items-center gap-2 text-xs font-black underline underline-offset-[3px] hover:no-underline lg:text-sm"
-            >
-              {video.moreLabel ?? s.seeAll}
-            </a>
-          </p>
-        )}
-        {donateUrl && (
-          <p class="mt-10 text-center">
-            <a
-              href={donateUrl}
-              class="label inline-block rounded-[10px] border border-ink px-6 py-3 text-xs hover:bg-ink hover:text-yellow lg:text-sm"
-            >
-              {s.supportProjects}
-            </a>
-          </p>
-        )}
-      </div>
-    </section>
+  {(program.about || program.cta?.url) && (
+    <LabelRow label={s.aboutLabel} class={row}>
+      {/* Two columns of 4 across the row's 8 on desktop */}
+      {program.about && (
+        <div
+          class="text-copy font-bold leading-[1.15] tracking-[-0.03em] text-pretty lg:columns-2 lg:gap-10 [&>*+*]:mt-[1em]"
+          set:html={renderRichText(program.about)}
+        />
+      )}
+      {program.cta?.url && (
+        <a
+          href={program.cta.url}
+          class="label press mt-10 inline-grid place-items-center bg-lilac px-6 py-3.5 text-copy hover:bg-ink hover:text-lilac lg:px-8 lg:py-4"
+        >
+          {program.cta.label ?? s.joinEcole}
+        </a>
+      )}
+    </LabelRow>
   )}
 
   {program.articles.length > 0 && (
-    <section
-      class="px-5 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5"
-      aria-labelledby="program-articles"
-    >
-      <div class="lg:col-span-8 lg:col-start-3 md:mx-auto md:max-w-2xl lg:mx-0 lg:max-w-none">
-        <h2 id="program-articles" class="display mb-5 text-[1.875rem] leading-[0.95] lg:text-5xl">
-          {s.latestArticles}
-        </h2>
-        {program.articles.map((a) => (
-          <StoryRow article={a} lang={lang} />
-        ))}
-        <div class="border-t border-ink"></div>
-      </div>
-    </section>
+    <LabelRow class={row}>
+      <Fragment slot="label">
+        {s.gradArticles}
+        <a href={seeAll} class="mt-5 block opacity-50 hover:opacity-100 lg:mt-0">
+          {s.seeAll} <span class="nudge-x">→</span>
+        </a>
+      </Fragment>
+      {program.articles.map((a) => (
+        <StoryLine article={a} lang={lang} />
+      ))}
+      <div class="border-t border-ink"></div>
+    </LabelRow>
   )}
 
-  {program.form && (
-    <section
-      id="form"
-      class="scroll-mt-10 px-5 pt-10 pb-20 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5"
-      aria-labelledby="form-title"
-    >
-      <div class="lg:col-span-6 lg:col-start-4 md:mx-auto md:max-w-2xl lg:mx-0 lg:max-w-none">
-        <h2 id="form-title" class="display text-[1.875rem] leading-[0.95] lg:text-5xl">
-          {program.form.title}
-        </h2>
-        {program.form.text && (
-          <p class="mt-1 font-display text-base font-extrabold leading-[0.95] lg:text-xl">
-            {program.form.text}
-          </p>
-        )}
-        <AjaxForm action="/api/contact" lang={lang} class="mt-6">
-          <input type="hidden" name="kind" value="program" />
-          <input type="hidden" name="context" value={program.title} />
-          <FormFields lang={lang}>
-            <button
-              type="submit"
-              class="label mx-auto mt-4 h-[46px] w-[60%] rounded-[10px] bg-yellow text-sm hover:bg-ink hover:text-yellow disabled:opacity-60"
-            >
-              {s.submit}
-            </button>
-          </FormFields>
-        </AjaxForm>
-      </div>
-    </section>
+  {program.musicVideos.length > 0 && (
+    <LabelRow label={s.musicVideos} class={row}>
+      <ul class="flex flex-col gap-20 lg:gap-30">
+        {program.musicVideos.map((v) => (
+          <li>
+            <YouTubeEmbed url={v.url} title={v.title} poster={v.poster} lang={lang} />
+            <div class="mt-5 flex items-baseline justify-between gap-5">
+              <h3 class="display text-item">{v.title}</h3>
+              {v.year && <p class="display text-item">({v.year})</p>}
+            </div>
+            {v.text && (
+              <p class="label mt-5 text-copy leading-[0.95] lg:mt-10 lg:max-w-[75%]">{v.text}</p>
+            )}
+            {(v.artists || v.mentor) && (
+              <dl class="mt-5 grid grid-cols-[auto_1fr] gap-x-5 gap-y-2.5 font-display text-copy font-medium uppercase leading-[0.95] lg:mt-10 lg:grid-cols-8 lg:gap-x-10 lg:gap-y-5">
+                {v.artists && (
+                  <>
+                    <dt class="lg:col-span-2">{s.artists}</dt>
+                    <dd class="lg:col-span-5">{v.artists}</dd>
+                  </>
+                )}
+                {v.mentor && (
+                  <>
+                    <dt class="lg:col-span-2">{s.mentorArtist}</dt>
+                    <dd class="lg:col-span-5">{v.mentor}</dd>
+                  </>
+                )}
+              </dl>
+            )}
+          </li>
+        ))}
+      </ul>
+    </LabelRow>
   )}
+
+  {program.podcasts.length > 0 && (
+    <LabelRow label={s.podcasts} class={row}>
+      <ul class="grid gap-10 md:grid-cols-2 md:gap-x-5 lg:gap-x-10 lg:gap-y-20">
+        {program.podcasts.map((p) => (
+          <li>
+            <article class="group relative">
+              <Picture
+                img={p.cover}
+                ratio={1}
+                sizes="(min-width: 768px) 30vw, 100vw"
+                class="media-inset"
+              />
+              <a
+                href={href(lang, "podcast", p.slug)}
+                aria-label={p.title}
+                class="absolute inset-0 z-10"
+              ></a>
+              {p.description && (
+                <p class="mt-5 text-copy font-bold leading-[1.15] tracking-[-0.03em] text-pretty">
+                  {p.description}
+                </p>
+              )}
+              <p class="label mt-5 flex items-center gap-2 text-copy">
+                <span aria-hidden="true">▶</span>
+                {p.episodeCount} {s.episodes}
+              </p>
+            </article>
+          </li>
+        ))}
+      </ul>
+    </LabelRow>
+  )}
+
+  {program.alumni.length > 0 && (
+    <LabelRow label={s.alumni} class={row}>
+      <AlumniGrid people={program.alumni} lang={lang} />
+    </LabelRow>
+  )}
+
+  <div class="pb-20 lg:pb-30"></div>
 </Layout>

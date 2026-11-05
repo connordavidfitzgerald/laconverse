@@ -26,11 +26,11 @@ const page = await getGiveYourVoice(lang);
   <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
     <div class="lg:col-span-8 lg:col-start-3 md:mx-auto md:max-w-2xl lg:mx-0 lg:max-w-none">
       <p class="pt-5 text-center">
-        <BackLink href={href(lang, "getInvolved")} label={s.getInvolved} />
+        <BackLink href={href(lang, "about")} label={s.about} />
       </p>
-      <h1 class="display pt-5 text-center text-mega tracking-[-0.02em]">{page.title}</h1>
+      <h1 class="display pt-5 text-center text-mega">{page.title}</h1>
       {page.intro && (
-        <p class="mx-auto mt-2.5 max-w-md text-center font-display text-lg font-extrabold leading-[0.95] lg:max-w-2xl lg:text-intro">
+        <p class="mx-auto mt-2.5 max-w-md text-center font-display text-lg font-medium leading-[0.95] lg:max-w-2xl lg:text-intro">
           {page.intro}
         </p>
       )}
@@ -68,7 +68,7 @@ const page = await getGiveYourVoice(lang);
           {page.openApplication?.title}
         </h2>
         {page.openApplication?.text && (
-          <p class="mt-1 font-display text-sm font-extrabold leading-[0.95] lg:text-xl">
+          <p class="mt-1 font-display text-sm font-medium leading-[0.95] lg:text-xl">
             {page.openApplication.text}
           </p>
         )}
@@ -98,7 +98,7 @@ const page = await getGiveYourVoice(lang);
             sizes="(min-width: 1024px) 66vw, 100vw"
           />
           {page.culture.text && (
-            <p class="mt-5 font-display text-2xl font-bold leading-[0.95] lg:text-intro">
+            <p class="mt-5 font-display text-2xl font-medium leading-[0.95] lg:text-intro">
               {page.culture.text}
             </p>
           )}

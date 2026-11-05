@@ -1,7 +1,14 @@
 ---
-/* Figma: ABOUT (+ PARTNERS block). */
+/* Figma: ABOUT (2026 desktop frame). Title, illustration, the intro, two
+   statements stepping across the grid, then the values carousel and the
+   numbered principles beside their image. The team, partners and expanding sections follow on the same
+   grid. */
+import AlumniGrid from "../components/AlumniGrid.astro";
 import Icon from "../components/Icon.astro";
+import LabelRow from "../components/LabelRow.astro";
+import PageTitle from "../components/PageTitle.astro";
 import Picture from "../components/Picture.astro";
+import RailControls from "../components/RailControls.astro";
 import StoryRow from "../components/StoryRow.astro";
 import Layout from "../layouts/Layout.astro";
 import { href, otherLang, t, type Lang } from "../i18n";
@@ -16,63 +23,118 @@ interface Props {
 const { lang } = Astro.props;
 const s = t(lang);
 const page = await getAbout(lang);
+const title = page.title ?? s.about;
 const groups: [string, Person[]][] = [
   [s.ourTeam, page.team],
   [s.collaborators, page.collaborators],
 ];
+// The statements step right and down: cols 3–6, then 7–10, a row each
+// (the columns don't overlap, so the row is set explicitly).
+const statementCols = ["lg:col-start-3 lg:col-span-4", "lg:col-start-7 lg:col-span-4"];
 ---
 
-<Layout
-  lang={lang}
-  title={page.title ?? s.about}
-  seo={page.seo}
-  alternate={href(otherLang(lang), "about")}
->
-  <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
-    <div class="lg:col-span-12">
-      <h1 class="display pt-10 pb-16 text-center text-mega tracking-[-0.02em] lg:pt-16">
-        {page.title ?? s.about}
-      </h1>
-      <Picture img={page.image} ratio={7 / 5} eager sizes="(min-width: 1024px) 66vw, 100vw" />
-
-      <div
-        class="prose-intro mx-auto mt-20 max-w-[31rem] lg:max-w-3xl"
-        set:html={renderRichText(page.intro)}
-      />
-    </div>
+<Layout lang={lang} title={title} seo={page.seo} image={page.image} alternate={href(otherLang(lang), "about")}>
+  <PageTitle>{title}</PageTitle>
+  <div class="px-5 lg:px-page">
+    <Picture
+      img={page.image}
+      ratio={1648 / 924}
+      eager
+      sizes="100vw"
+      fill="var(--color-lilac)"
+      class="max-md:aspect-[4/3]!"
+    />
+    <div class="prose-lead mt-5 lg:mt-10" set:html={renderRichText(page.intro)} />
   </div>
+
+  {page.statements.length > 0 && (
+    <div class="flex flex-col gap-10 px-5 pt-20 lg:page-grid lg:gap-y-56 lg:px-page lg:pt-60">
+      {page.statements.map((st, i) => (
+        <div class:list={[statementCols[i % 2]]} style={`grid-row: ${i + 1}`}>
+          <p class="text-copy font-bold leading-[1.15] tracking-[-0.03em]">{st.text}</p>
+          {st.cta?.url && (
+            <a
+              href={st.cta.url}
+              class="label mt-5 inline-block text-copy font-medium underline underline-offset-[0.2em] hover:no-underline lg:mt-10"
+            >
+              {st.cta.label ?? s.learnMoreEcole} <span class="nudge-x">→</span>
+            </a>
+          )}
+        </div>
+      ))}
+    </div>
+  )}
+
+  <!-- Values (Figma: ABOUT NEW): heading over a rail of numbered yellow
+       cards that starts at the margin and bleeds off the right; swipe or
+       arrows on every size. -->
+  {page.values.length > 0 && (
+    <section class="overflow-hidden pt-20 lg:px-page lg:pt-60" aria-labelledby="about-values-title">
+      <div class="px-5 lg:px-0">
+        <div class="flex items-end justify-between gap-5">
+          <h2 id="about-values-title" class="display text-section max-w-[20ch] lg:max-w-[46.5vw]">
+            {page.valuesTitle ?? s.ourValues}
+          </h2>
+          <RailControls rail="about-values" count={page.values.length} lang={lang} class="shrink-0 max-md:hidden" />
+        </div>
+        <ol
+          id="about-values"
+          class="rail -mr-5 mt-10 gap-5 pr-5 lg:-mr-page lg:mt-20 lg:gap-10 lg:pr-page"
+        >
+          {page.values.map((v, i) => (
+            <li class="flex w-[88vw] shrink-0 flex-col gap-2.5 md:w-[60vw] lg:w-[40vw] lg:gap-5">
+              <span class="display text-2xl lg:text-[2.25rem]" aria-hidden="true">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <div class="flex-1 bg-yellow p-5 md:p-8 lg:p-14">
+                <h3 class="display text-2xl leading-[0.95] lg:text-[2.25rem]">{v.title}</h3>
+                {v.text && <p class="prose-sans mt-5 whitespace-pre-line lg:mt-10">{v.text}</p>}
+              </div>
+            </li>
+          ))}
+        </ol>
+        <RailControls rail="about-values" count={page.values.length} lang={lang} class="mt-5 md:hidden" />
+      </div>
+    </section>
+  )}
+
+  {page.principles.length > 0 && (
+    <LabelRow label={s.ourPrinciples} start={4} class="pt-20 lg:pt-60">
+      <Picture
+        img={page.principlesImage}
+        ratio={1226 / 690}
+        sizes="(min-width: 1024px) 71vw, 100vw"
+        class="mb-10 lg:mb-20"
+      />
+      <!-- Number, then title (Favorit) and body (Inter Bold) from the third column -->
+      <ol class="flex flex-col gap-10 lg:gap-20">
+        {page.principles.map((pr, i) => (
+          <li class="grid grid-cols-[2.5rem_1fr] gap-x-5 lg:grid-cols-9 lg:gap-x-10">
+            <span class="display text-2xl lg:col-span-2 lg:text-[2.25rem]" aria-hidden="true">
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <div class="lg:col-span-7 lg:grid lg:grid-cols-7 lg:gap-x-10">
+              <h3 class="display text-2xl leading-[0.95] lg:col-span-4 lg:text-[2.25rem]">{pr.title}</h3>
+              <!-- Title and body take 4 of the 7 columns -->
+              <div class="prose-sans mt-5 lg:col-span-4 lg:mt-10" set:html={renderRichText(pr.body)} />
+            </div>
+          </li>
+        ))}
+      </ol>
+    </LabelRow>
+  )}
 
   {groups
     .filter(([, list]) => list.length)
-    .map(([title, list]) => (
-      <section class="px-5 pt-16 lg:px-5 lg:pt-24">
-        <h2 class="label pb-2.5 text-md">{title}</h2>
-        <ul class="grid grid-cols-2 gap-x-2.5 gap-y-5 md:grid-cols-3 lg:grid-cols-5 lg:gap-x-5">
-          {list.map((p) => (
-            <li>
-              <a href={href(lang, "author", p.slug)} class="group block">
-                <Picture
-                  img={p.image}
-                  ratio={171 / 211}
-                  sizes="(min-width: 1024px) 20vw, 50vw"
-                  class="media-inset"
-                  imgClass="grayscale-0 group-hover:grayscale"
-                />
-                <p class="label mt-2.5 text-xl leading-none">{p.name}</p>
-                {p.role && (
-                  <p class="font-display text-xl font-medium uppercase leading-none">{p.role}</p>
-                )}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
+    .map(([label, list]) => (
+      <LabelRow label={label} class="pt-20 lg:pt-30">
+        <AlumniGrid people={list} lang={lang} />
+      </LabelRow>
     ))}
 
   {page.partners.length > 0 && (
-    <section class="px-5 pt-16 lg:px-5 lg:pt-24">
-      <h2 class="label pb-5 text-xs">Partners</h2>
-      <ul class="grid grid-cols-3 items-center gap-5 md:grid-cols-5 lg:grid-cols-8">
+    <LabelRow label={s.partners} class="pt-20 lg:pt-30">
+      <ul class="grid grid-cols-3 items-center gap-5 md:grid-cols-4 lg:grid-cols-6 lg:gap-10">
         {page.partners.map((p) => {
           const logo = imageUrl(p.logo, 300);
           return (
@@ -98,14 +160,14 @@ const groups: [string, Person[]][] = [
           );
         })}
       </ul>
-    </section>
+    </LabelRow>
   )}
 
   {page.sections.length > 0 && (
-    <section class="px-5 pt-16 pb-20 lg:px-5 lg:pt-24">
+    <section class="px-5 pt-20 pb-20 lg:px-page lg:pt-30 lg:pb-30">
       {page.sections.map((sec) => (
-        <details class="group border-ink [&+&]:border-t-0" data-accordion>
-          <summary class="display flex cursor-pointer list-none items-center justify-between text-[2.25rem] leading-[0.95] tracking-[-0.015em] lg:text-7xl [&::-webkit-details-marker]:hidden">
+        <details id={sec.kind === "positions" ? "careers" : sec._key} class="group scroll-mt-[var(--header-h-full)] border-ink [&+&]:border-t-0" data-accordion>
+          <summary class="display flex cursor-pointer list-none items-center justify-between text-[2.25rem] leading-[0.95] lg:text-7xl [&::-webkit-details-marker]:hidden">
             {sec.title}
             <Icon
               name="plus"
@@ -183,4 +245,8 @@ const groups: [string, Person[]][] = [
       }
     });
   });
+
+  // Footer links land on a section (#careers, the positions section): open it.
+  const target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+  if (target instanceof HTMLDetailsElement) target.open = true;
 </script>

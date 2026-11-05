@@ -59,16 +59,19 @@ const legacy = [
   ["/la-releve/ecole-converse", "/ecole-converse", "/en/ecole-converse"],
   ["/la-releve/[slug]", "/ecole-converse/[slug]", "/en/ecole-converse/[slug]"],
   ["/search", "/recherche", "/en/search"],
-  ["/je-donne", "/engagez-vous", "/en/get-involved"],
-  ["/communaute-converse", "/engagez-vous", "/en/get-involved"],
+  ["/je-donne", "/donner", "/en/donate"],
+  ["/communaute-converse", "/donner", "/en/donate"],
   ["/infolettre", "/", "/en"],
   ["/notre-financement", "/a-propos", "/en/about"],
   ["/prix-et-reconnaissances", "/a-propos", "/en/about"],
   ["/politique-de-confidentialite", "/a-propos", "/en/about"],
   ["/protection-des-donnees", "/a-propos", "/en/about"],
-  ["/studio", "/", "/en"],
+  ["/studio", "/studio-converse", "/en/studio-converse"],
   ["/en/a-propos", "", "/en/about"],
-  ["/en/engagez-vous", "", "/en/get-involved"],
+  // The Get involved page, replaced by Donate.
+  ["/engagez-vous", "/donner", "/en/donate"],
+  ["/en/get-involved", "", "/en/donate"],
+  ["/ecole-converse/podcasts", "/balados", "/en/podcasts"],
 ];
 /** @param {string} destination @returns {{ status: 301, destination: string }} */
 const moved = (destination) => ({ status: 301, destination });

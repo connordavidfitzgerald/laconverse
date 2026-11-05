@@ -29,11 +29,12 @@ import {
 import {
   aboutPageType,
   contactPageType,
-  getInvolvedPageType,
+  donatePageType,
   giveYourVoicePageType,
   homePageType,
   laRelevePageType,
   siteSettingsType,
+  studioPageType,
 } from "./singletons";
 
 /* One fixed document each, with the type name as its ID. */
@@ -42,7 +43,8 @@ export const singletonTypes = [
   "homePage",
   "aboutPage",
   "laRelevePage",
-  "getInvolvedPage",
+  "studioPage",
+  "donatePage",
   "giveYourVoicePage",
   "contactPage",
 ] as const;
@@ -63,7 +65,8 @@ export const schemaTypes: SchemaTypeDefinition[] = [
   homePageType,
   aboutPageType,
   laRelevePageType,
-  getInvolvedPageType,
+  studioPageType,
+  donatePageType,
   giveYourVoicePageType,
   contactPageType,
   figureType,

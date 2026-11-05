@@ -1,29 +1,26 @@
 ---
-/* The search page's category filter + story grid, filtering the full index
-   client-side. An optional search form goes in the default slot (it needs an
-   input with id "q"); without one only the categories filter. The index is
-   fetched on first use, so the server-rendered cards stand until then. */
+/* The search page (Figma: Sujet — gabarit): the search form (default slot,
+   with an input id="q") across the page, then the explorer list in cols 1–4
+   beside two-up story cards in 5–12 (the picked section's description sits
+   between the two), filtering the full index client-side.
+   The index is fetched on first use, so the server-rendered cards stand until
+   then. */
 import ArticleGrid from "./ArticleGrid.astro";
-import CategoryFilter from "./CategoryFilter.astro";
+import SectionIntro from "./SectionIntro.astro";
+import ExploreNav from "./ExploreNav.astro";
 import { t, type Lang } from "../i18n";
 import type { ArticleCard } from "../lib/types";
 
 interface Props {
   lang: Lang;
-  categories: { title: string; slug: string; count: number }[];
+  categories: { title: string; slug: string; description?: string | null; count: number }[];
   articles: ArticleCard[];
   total: number;
   /** Mirror the query and category in the URL (?q=, ?c=). */
   syncUrl?: boolean;
   /** Cards per page; `articles` should be the first page. */
   pageSize?: number;
-  /** Sort bar above the categories rather than under them (homepage). */
-  sortFirst?: boolean;
-  /** Passed to ArticleGrid. */
-  listClass?: string;
   moreLabel?: string;
-  /** Classes for the categories' wrapper (replace its default padding). */
-  filterClass?: string;
   /** Article ids to leave out of the index (already shown elsewhere on the page). */
   exclude?: string[];
   class?: string;
@@ -35,16 +32,11 @@ const {
   total,
   syncUrl = false,
   pageSize = 12,
-  sortFirst = false,
-  listClass,
   moreLabel,
-  filterClass = "lg:pt-35 lg:pb-30 py-20",
   exclude = [],
   class: className,
 } = Astro.props;
 const s = t(lang);
-const hasForm = Astro.slots.has("default");
-const grid = { lang, articles, total, listClass, moreLabel, managed: true };
 ---
 
 <article-search
@@ -58,25 +50,26 @@ const grid = { lang, articles, total, listClass, moreLabel, managed: true };
   data-exclude={exclude.length ? exclude.join(" ") : undefined}
 >
   <slot />
-  {sortFirst ? (
-    <ArticleGrid {...grid}>
-      <div slot="filter" class={filterClass}>
-        <CategoryFilter lang={lang} categories={categories} total={total} asFilter />
-      </div>
-    </ArticleGrid>
-  ) : (
-    <>
-      <div class={filterClass}>
-        <CategoryFilter lang={lang} categories={categories} total={total} asFilter />
-      </div>
-      <ArticleGrid {...grid} />
-    </>
-  )}
+  {/* The current section's description; update() swaps it by toggling
+      `hidden` on `[data-desc]`. */}
+  <section aria-live="polite">
+    {categories.map((c) => c.description && (
+      <SectionIntro lang={lang} category={c} data-desc={c.slug} hidden />
+    ))}
+  </section>
+  <div class="pt-10 lg:page-grid lg:pt-20" data-explore>
+    <ExploreNav lang={lang} categories={categories} asFilter class="pb-10 lg:sticky lg:top-[calc(var(--header-h)+2.5rem)] lg:col-span-4 lg:self-start lg:pb-0" />
+    <div class="lg:col-span-8 lg:col-start-5">
+      <ArticleGrid lang={lang} articles={articles} total={total} moreLabel={moreLabel} managed explore />
+    </div>
+  </div>
 </article-search>
 
 <script>
   import { fadeImages } from "../lib/motion";
   import { cardLinks, fold, loadIndex, type Entry } from "../lib/searchClient";
+  import { scrollToExplorer } from "../lib/smoothScroll";
+
 
   const articles = (el: HTMLElement) => el.querySelector("[data-list]")!.childElementCount;
 
@@ -111,10 +104,13 @@ const grid = { lang, articles, total, listClass, moreLabel, managed: true };
         }, 150);
       });
       this.querySelectorAll<HTMLAnchorElement>("[data-filter]").forEach((a) =>
-        a.addEventListener("click", (e) => {
+        a.addEventListener("click", async (e) => {
           e.preventDefault();
           this.category = a.dataset.filter ?? "";
-          this.update();
+          // After the update: the description above the row swaps in it, which
+          // moves the row.
+          await this.update();
+          scrollToExplorer(this, { onlyUp: true });
         }),
       );
       const more = this.querySelector<HTMLButtonElement>("[data-more]")!;
@@ -146,6 +142,9 @@ const grid = { lang, articles, total, listClass, moreLabel, managed: true };
       this.querySelectorAll<HTMLAnchorElement>("[data-filter]").forEach((a) =>
         a.setAttribute("aria-current", String((a.dataset.filter ?? "") === this.category)),
       );
+      this.querySelectorAll<HTMLElement>("[data-desc]").forEach((p) => {
+        p.hidden = p.dataset.desc !== this.category;
+      });
       if (this.hasAttribute("data-sync")) {
         const url = new URL(location.href);
         this.query ? url.searchParams.set("q", this.query) : url.searchParams.delete("q");
@@ -161,6 +160,8 @@ const grid = { lang, articles, total, listClass, moreLabel, managed: true };
       count.textContent = this.results.length
         ? `${this.results.length} ${this.dataset.results}`
         : this.dataset.none!;
+      // The bar is hidden beside the explorer; it only surfaces to say "no results".
+      count.parentElement!.classList.toggle("hidden", this.results.length > 0);
     }
 
     more(animate = true) {

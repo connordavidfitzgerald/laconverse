@@ -11,6 +11,7 @@
    likewise turning light past it). */
 import Icon from "./Icon.astro";
 import Logo from "./Logo.astro";
+import Wordmark from "./Wordmark.astro";
 import Socials from "./Socials.astro";
 import Spray from "./Spray.astro";
 import { href, langs, otherLang, t, type Lang } from "../i18n";
@@ -27,17 +28,14 @@ interface Props {
 const { lang, settings, alternate, tone = "light", compact = false } = Astro.props;
 const s = t(lang);
 const other = otherLang(lang);
-const donate = settings.donateUrl ?? `${href(lang, "getInvolved")}#donate`;
+const donate = href(lang, "donate");
 
 const primary = [
-  { label: s.videos, url: href(lang, "videos") },
+  { label: s.videos, url: href(lang, "videoIndex") },
   { label: s.podcasts, url: href(lang, "podcasts") },
-  { label: s.resources, url: href(lang, "resources") },
-  { label: s.events, url: href(lang, "events") },
   { label: s.involve, url: href(lang, "involve") },
   { label: s.ecole, url: href(lang, "ecole") },
-  // Studio has no page yet.
-  { label: s.studio, url: href(lang, "contact") },
+  { label: s.studio, url: href(lang, "studio") },
 ];
 
 const secondary = [
@@ -63,8 +61,16 @@ const secondary = [
       data-hdr-bar
       class="relative z-10 flex items-center justify-between gap-6 px-5 py-5 transition-[padding] duration-500 ease-power3-out lg:p-10 lg:group-data-compact/hdr:py-5"
     >
-      <a href={href(lang, "home")} class="block shrink-0" aria-label="La Converse — accueil">
-        <Logo class="h-[18px] w-auto" />
+      <a href={href(lang, "home")} class="flex shrink-0 items-center" aria-label="La Converse — accueil">
+        <Logo class="relative z-10 h-[18px] w-auto" />
+        <!-- The wordmark shows beside the mark at the top of the page and
+             slides left behind its mask (the box's left edge) once the page
+             scrolls, coming back at the top. -->
+        <span data-hdr-wordmark class="ml-2.5 block overflow-hidden">
+          <span data-hdr-wordmark-inner class="block">
+            <Wordmark class="block h-3 w-auto" />
+          </span>
+        </span>
       </a>
 
       <div class="flex items-center gap-5">
@@ -103,44 +109,15 @@ const secondary = [
           </span>
         </a>
 
-        <!-- Search: the round pill grows leftwards into a field. Phones search
+        <!-- Search: a round pill linking to the search page. Phones search
              from the menu instead. -->
-        <div class="hidden md:block">
-          <form
-            role="search"
-            action={href(lang, "search")}
-            method="get"
-            data-hdr-search
-            class="hdr-pill hdr-search flex h-[30px] items-center overflow-hidden rounded-full"
-          >
-            <label for="hdr-q" class="sr-only">
-              {s.search}
-            </label>
-            <input
-              id="hdr-q"
-              name="q"
-              type="search"
-              autocomplete="off"
-              enterkeyhint="search"
-              placeholder={s.searchPlaceholder}
-              tabindex="-1"
-              data-hdr-search-input
-              class="label min-w-0 flex-1 bg-transparent text-base font-black outline-none [&::-webkit-search-cancel-button]:hidden"
-            />
-            <button
-              type="button"
-              data-hdr-search-toggle
-              aria-expanded="false"
-              aria-controls="hdr-q"
-              aria-label={s.search}
-              class="grid size-[30px] shrink-0 place-items-center rounded-full"
-            >
-              <span data-hdr-search-icon class="grid place-items-center">
-                <Icon name="search" class="size-2.5" />
-              </span>
-            </button>
-          </form>
-        </div>
+        <a
+          href={href(lang, "search")}
+          aria-label={s.search}
+          class="hdr-pill hdr-search hidden size-[30px] shrink-0 place-items-center rounded-full md:grid"
+        >
+          <Icon name="search" class="size-2.5" />
+        </a>
 
         <button
           type="button"
@@ -237,7 +214,7 @@ const secondary = [
       </div>
     </div>
 
-    <div class="relative grid flex-1 gap-y-8 px-5 pt-2 pb-5 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-5 lg:gap-y-10 lg:px-10 lg:pt-10">
+    <div class="relative grid flex-1 gap-y-8 px-5 pt-2 pb-5 lg:grid-cols-12 lg:grid-rows-[auto_auto_1fr] lg:gap-x-5 lg:gap-y-10 lg:px-10 lg:pt-10">
       <form
         role="search"
         action={href(lang, "search")}
@@ -266,12 +243,12 @@ const secondary = [
 
       <!-- The article categories, large. -->
       <nav
-        class="flex flex-col items-start gap-4 lg:col-span-7 lg:row-span-2 lg:row-start-1"
+        class="flex flex-col items-start gap-4 lg:col-span-7 lg:row-span-3 lg:row-start-1"
         aria-label={s.articles}
         data-menu-nav
       >
         <ul
-          class="display text-[2rem] leading-[1.1] font-black tracking-[-0.015em] md:text-5xl lg:text-[clamp(2.5rem,4.5vw,4.5rem)] lg:leading-[0.98]"
+          class="display text-[2rem] leading-[1.1] font-black md:text-5xl lg:text-[clamp(2.5rem,4.5vw,4.5rem)] lg:leading-[0.98]"
         >
           {settings.menuCategories.map((c) => (
             <li>
@@ -318,42 +295,38 @@ const secondary = [
           ))}
         </ul>
       </nav>
-    </div>
 
-
-    <div
-      class="relative mx-5 mt-8 lg:mx-10 flex flex-col items-start gap-4 border-y border-ink py-4 text-left lg:flex-row lg:items-center lg:gap-6"
-      data-menu-fade
-    >
-      <div class="flex flex-col items-start gap-3">
-        <p class="display max-w-[22rem] text-lg leading-[0.95]">
-          {settings.voicePrompt ?? s.vnTitle}
-        </p>
+      <!-- Give your voice, boxed in ink under the site's pages. -->
+      <div
+        class="flex flex-row items-center gap-5 self-start bg-ink p-5 text-yellow lg:col-span-4 lg:col-start-9 lg:row-start-3"
+        data-menu-fade
+      >
         <button
           type="button"
-          data-voice-open="write"
-          class="label text-xs underline underline-offset-2"
+          data-voice-open
+          class="press grid size-[84px] shrink-0 place-items-center rounded-full bg-yellow text-ink hover:scale-105"
+          aria-label={s.vnOpen}
         >
-          {s.vnWrite}
+          <Icon name="mic" class="h-[23px] w-[22px]" />
         </button>
+        <div class="flex flex-col items-start gap-3">
+          <p class="display text-2xl leading-[0.95]">
+            {settings.voicePrompt ?? s.vnTitle}
+          </p>
+          <button
+            type="button"
+            data-voice-open="write"
+            class="label text-sm underline underline-offset-2"
+          >
+            {s.vnWrite}
+          </button>
+        </div>
       </div>
-      <button
-        type="button"
-        data-voice-open
-        class="press grid size-[84px] shrink-0 place-items-center rounded-full bg-ink text-paper hover:scale-105 lg:order-first"
-        aria-label={s.vnOpen}
-      >
-        <Icon name="mic" class="h-[23px] w-[22px]" />
-      </button>
     </div>
 
-    <div class="relative flex items-center justify-between px-5 py-5 lg:px-10" data-menu-fade>
-      <Socials
-        socials={settings.socials.filter((x) =>
-          ["whatsapp", "linkedin", "instagram"].includes(x.platform),
-        )}
-        variant="plain"
-      />
+
+    <div class="relative flex flex-wrap items-center justify-between gap-x-10 gap-y-4 px-5 py-5 lg:px-10" data-menu-fade>
+      <Socials socials={settings.socials} variant="text" size="text-2xl" />
       <a href={`mailto:${settings.email}`} class="display text-2xl leading-none">
         {settings.email}
       </a>
@@ -378,16 +351,9 @@ const secondary = [
       background-color 400ms var(--ease-power3-out),
       translate 500ms var(--ease-power3-out);
   }
-  [data-hdr][data-hidden] {
+  /* Slid away while the footer is under it. */
+  [data-hdr][data-past-footer] {
     translate: 0 -100%;
-    transition:
-      color 400ms var(--ease-power3-out),
-      background-color 400ms var(--ease-power3-out),
-      translate 350ms cubic-bezier(0.55, 0, 0.75, 0.2);
-  }
-  /* Tabbing into the bar always brings it back. */
-  [data-hdr]:focus-within {
-    translate: 0 0;
   }
   [data-hdr][data-tone="dark"] {
     --fg: var(--color-paper);
@@ -404,7 +370,7 @@ const secondary = [
     opacity: 0;
     transition: opacity 400ms var(--ease-power3-out);
   }
-  [data-hdr][data-tone="overlay"]:not([data-scrolled], [data-hidden])
+  [data-hdr][data-tone="overlay"]:not([data-scrolled])
     [data-hdr-scrim] {
     opacity: 1;
   }
@@ -420,53 +386,23 @@ const secondary = [
     color: var(--color-ink);
   }
 
-  /* Header search. Closed it's the 30px pill; open, it stretches leftwards
-     with a long expo tail, shoving the nav along in front of it, and the text
-     slides in a beat behind the edge. Closing draws it back a little quicker. */
-  .hdr-search {
-    width: 30px;
+  /* The wordmark beside the mark: out of sight once the bar compacts (past
+     the first few pixels of scroll, or always on compact pages). */
+  [data-hdr-wordmark-inner] {
     transition:
-      width 450ms cubic-bezier(0.65, 0, 0.35, 1),
-      color 400ms var(--ease-power3-out),
-      background-color 400ms var(--ease-power3-out),
-      scale 160ms ease-out;
+      translate 700ms cubic-bezier(0.65, 0, 0.35, 1),
+      visibility 0s linear 0s;
   }
-  [data-hdr]:not([data-search-open]) .hdr-search:hover {
+  [data-hdr][data-compact] [data-hdr-wordmark-inner] {
+    translate: -101% 0;
+    visibility: hidden;
+    transition:
+      translate 700ms cubic-bezier(0.65, 0, 0.35, 1),
+      visibility 0s linear 700ms;
+  }
+
+  .hdr-search:hover {
     scale: 1.1;
-  }
-  [data-hdr][data-search-open] .hdr-search {
-    width: clamp(12rem, 20vw, 20rem);
-    transition-duration: 650ms, 400ms, 400ms, 160ms;
-    transition-timing-function:
-      cubic-bezier(0.16, 1, 0.3, 1), var(--ease-power3-out), var(--ease-power3-out), ease-out;
-  }
-  [data-hdr-search-input] {
-    padding-left: 0;
-    opacity: 0;
-    translate: 0.75rem 0;
-    transition:
-      opacity 150ms ease-in,
-      translate 200ms ease-in;
-  }
-  [data-hdr-search-input]::placeholder {
-    color: currentColor;
-    opacity: 0.55;
-  }
-  [data-hdr][data-search-open] [data-hdr-search-input] {
-    padding-left: 1rem;
-    opacity: 1;
-    translate: 0 0;
-    transition:
-      opacity 300ms ease-out 180ms,
-      translate 500ms cubic-bezier(0.16, 1, 0.3, 1) 180ms;
-  }
-  /* The magnifier tips a quarter-turn as the field opens, like it's been
-     picked up. */
-  [data-hdr-search-icon] {
-    transition: rotate 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-  [data-hdr][data-search-open] [data-hdr-search-icon] {
-    rotate: 90deg;
   }
 
   /* Menu hover: the row under the pointer steps right a touch and the others
@@ -496,37 +432,34 @@ const secondary = [
   const FOCUSABLE = "a[href], button:not([disabled]), input, [tabindex]:not([tabindex='-1'])";
 
   /** Scroll state for the fixed bar: compacts it past the first few pixels,
-      slides it away while scrolling down and back on any scroll up, and, over
-      a hero (`overlay`, `yellow`), flips it to the light tone once the hero
-      has slid under the bar. It stays put while its search is open or it
-      holds focus, and on the video feed, which is sized around it. */
+      over a hero (`overlay`, `yellow`) flips it to the light tone once the
+      hero has slid under the bar, and slides it away once the footer has. */
   function watchScroll(header: HTMLElement) {
     const bar = header.querySelector<HTMLElement>("[data-hdr-bar]")!;
     const hero =
       header.dataset.tone === "overlay" || header.dataset.tone === "yellow"
         ? document.querySelector<HTMLElement>("[data-header-hero]")
         : null;
+    // The footer is sticky under the page (curtain reveal), so its own rect
+    // sits pinned on screen; the edge that matters is where the content ends.
+    const content = document.querySelector<HTMLElement>("[data-site-footer]")
+      ? document.getElementById("main")
+      : null;
     const always = header.dataset.compact === "always";
     let queued = false;
-    let lastY = scrollY;
     const update = () => {
       queued = false;
       if (!always) header.toggleAttribute("data-compact", scrollY > 24);
-      const y = Math.max(0, scrollY);
-      // A few pixels of slack so trackpad jitter doesn't flicker it.
-      if (Math.abs(y - lastY) > 6) {
-        const busy =
-          always ||
-          header.hasAttribute("data-search-open") ||
-          header.contains(document.activeElement);
-        header.toggleAttribute("data-hidden", !busy && y > lastY && y > bar.offsetHeight);
-        lastY = y;
-      }
       if (hero)
         header.toggleAttribute(
           "data-scrolled",
           hero.getBoundingClientRect().bottom <= bar.offsetHeight,
         );
+      if (content) {
+        const past = content.getBoundingClientRect().bottom <= bar.offsetHeight;
+        header.toggleAttribute("data-past-footer", past);
+        header.inert = past;
+      }
     };
     update();
     addEventListener(
@@ -540,101 +473,6 @@ const secondary = [
     );
   }
 
-  /** The pill that grows into a search field. First click opens it; with
-      text in it, the pill (or Enter) submits to the search page, which reads
-      `?q=`. Empty, the pill closes it again, as do Escape and clicking away. */
-  class HeaderSearch {
-    #header: HTMLElement;
-    #form: HTMLFormElement;
-    #input: HTMLInputElement;
-    #toggle: HTMLButtonElement;
-    #leaving = false;
-
-    constructor(header: HTMLElement) {
-      this.#header = header;
-      this.#form = header.querySelector<HTMLFormElement>("[data-hdr-search]")!;
-      this.#input = this.#form.querySelector<HTMLInputElement>("[data-hdr-search-input]")!;
-      this.#toggle = this.#form.querySelector<HTMLButtonElement>("[data-hdr-search-toggle]")!;
-
-      this.#toggle.addEventListener("click", (e) => {
-        if (!this.#isOpen) {
-          e.preventDefault();
-          this.open();
-        } else if (!this.#input.value.trim()) {
-          e.preventDefault();
-          this.close();
-        }
-      });
-      this.#form.addEventListener("submit", (e) => {
-        e.preventDefault();
-        if (this.#input.value.trim()) this.#submit();
-      });
-      this.#form.addEventListener("keydown", (e) => {
-        if (e.key !== "Escape" || !this.#isOpen) return;
-        e.stopPropagation();
-        this.close();
-        this.#toggle.focus();
-      });
-      this.#form.addEventListener("focusout", (e) => {
-        if (!this.#form.contains(e.relatedTarget as Node) && !this.#input.value.trim())
-          this.close();
-      });
-      document.addEventListener("pointerdown", (e) => {
-        if (this.#isOpen && !this.#form.contains(e.target as Node)) this.close();
-      });
-      // Coming back from the results via the back/forward cache: undo the
-      // send-off so the pill is closed and whole again.
-      addEventListener("pageshow", (e) => {
-        if (!e.persisted) return;
-        this.#leaving = false;
-        gsap.set([this.#form, this.#input, this.#form.querySelector("[data-hdr-search-icon]")], {
-          clearProps: "transform,opacity",
-        });
-        this.close();
-      });
-    }
-
-    get #isOpen() {
-      return this.#header.hasAttribute("data-search-open");
-    }
-
-    open() {
-      this.#header.setAttribute("data-search-open", "");
-      this.#toggle.type = "submit";
-      this.#toggle.setAttribute("aria-expanded", "true");
-      this.#input.tabIndex = 0;
-      this.#input.focus({ preventScroll: true });
-    }
-
-    close() {
-      if (!this.#isOpen || this.#leaving) return;
-      this.#header.removeAttribute("data-search-open");
-      this.#toggle.type = "button";
-      this.#toggle.setAttribute("aria-expanded", "false");
-      this.#input.tabIndex = -1;
-      this.#input.value = "";
-    }
-
-    /** A short send-off before navigating: the pill gives a squeeze, the
-        query slips left out of the field and the magnifier darts right,
-        as if carrying it off to the results. */
-    #submit() {
-      if (this.#leaving) return;
-      this.#leaving = true;
-      const url = new URL(this.#form.action);
-      url.searchParams.set("q", this.#input.value.trim());
-      const go = () => location.assign(url);
-      if (!d(1)) return go();
-      const icon = this.#form.querySelector("[data-hdr-search-icon]");
-      gsap
-        .timeline({ onComplete: go })
-        .to(this.#form, { scale: 0.96, duration: 0.1, ease: "power2.out" })
-        .to(this.#form, { scale: 1, duration: 0.35, ease: "back.out(3)" })
-        .to(this.#input, { x: -16, opacity: 0, duration: 0.25, ease: "power2.in" }, 0.05)
-        .to(icon, { x: 18, opacity: 0, duration: 0.22, ease: "power3.in" }, 0.08);
-    }
-  }
-
   class SiteHeader extends HTMLElement {
     #menu!: HTMLElement;
     #opener: HTMLElement | null = null;
@@ -643,7 +481,6 @@ const secondary = [
     connectedCallback() {
       const header = this.querySelector<HTMLElement>("[data-hdr]")!;
       watchScroll(header);
-      new HeaderSearch(header);
 
       this.#menu = this.querySelector<HTMLElement>("#site-menu")!;
       this.querySelectorAll<HTMLElement>("[data-menu-toggle]").forEach((b) =>

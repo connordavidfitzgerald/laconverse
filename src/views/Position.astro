@@ -34,7 +34,7 @@ const lists: [string, string[]][] = [
       <p class="pt-5 text-center">
         <BackLink href={href(lang, "giveYourVoice")} label={page.title ?? s.back} />
       </p>
-      <h1 class="display pt-5 text-center text-mega tracking-[-0.02em] text-balance">
+      <h1 class="display pt-5 text-center text-mega text-balance">
         {position.title}
       </h1>
       {position.meta && (
@@ -45,7 +45,7 @@ const lists: [string, string[]][] = [
         </p>
       )}
       {position.summary && (
-        <p class="mt-12 font-display text-xl font-bold leading-[0.95] lg:text-intro">
+        <p class="mt-12 font-display text-xl font-medium leading-[0.95] lg:text-intro">
           {position.summary}
         </p>
       )}
@@ -57,7 +57,7 @@ const lists: [string, string[]][] = [
             <h2 class="label text-[0.625rem] lg:text-xs">{title}</h2>
             <ul class="mt-4 flex flex-col gap-2">
               {items.map((it) => (
-                <li class="flex gap-2.5 font-display text-sm font-extrabold leading-[1.1] lg:text-lg">
+                <li class="flex gap-2.5 font-display text-sm font-medium leading-[1.1] lg:text-lg">
                   <Icon name="arrow" class="mt-1 h-2 w-2.5 shrink-0" />
                   {it}
                 </li>
@@ -71,7 +71,7 @@ const lists: [string, string[]][] = [
           {page.apply?.title ?? s.apply}
         </h2>
         {page.apply?.text && (
-          <p class="mt-1 font-display text-lg font-extrabold leading-[0.95] lg:text-xl">
+          <p class="mt-1 font-display text-lg font-medium leading-[0.95] lg:text-xl">
             {page.apply.text}
           </p>
         )}

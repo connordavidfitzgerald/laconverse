@@ -95,6 +95,10 @@ export interface VideoCard {
   _id: string;
   title: string;
   slug: string;
+  /** The language the title and text are in (the page's, else the other). */
+  lang?: "fr" | "en";
+  /** culture-g | actu | entrevues | dialogues (src/lib/videoKinds.ts). */
+  kind?: string | null;
   poster?: Img | null;
   duration?: number | null;
   publishedAt?: string | null;
@@ -102,6 +106,8 @@ export interface VideoCard {
 }
 
 export interface Video extends VideoCard {
+  /** Mux playback ID: streams from https://stream.mux.com/<id>.m3u8. */
+  playbackId?: string | null;
   src?: string | null;
   videoUrl?: string | null;
   body?: RichText | null;
@@ -173,12 +179,30 @@ export interface Program extends ProgramCard {
     moreUrl?: string | null;
     moreLabel?: string | null;
   } | null;
+  /** "About" copy beside its label, above the CTA. */
+  about?: RichText | null;
   /** Latest articles from the program's series. */
   articles: ArticleCard[];
+  /** MC Converse: the cohorts' music videos (YouTube). */
+  musicVideos: MusicVideo[];
+  /** Podcasts program: the shows its cohorts made. */
+  podcasts: PodcastCard[];
+  alumni: Person[];
   support?: boolean | null;
   form?: { title?: string | null; text?: string | null } | null;
   translations: Translation[];
   seo?: Seo | null;
+}
+
+export interface MusicVideo {
+  _key: string;
+  title: string;
+  year?: string | null;
+  url: string;
+  text?: string | null;
+  artists?: string | null;
+  mentor?: string | null;
+  poster?: Img | null;
 }
 
 export interface Position {
@@ -208,14 +232,6 @@ export interface Settings {
   seo?: Seo | null;
 }
 
-export interface Card {
-  title?: string | null;
-  image?: Img | null;
-  text?: string | null;
-  cta?: Cta | null;
-  ctaStyle?: "link" | "button" | null;
-}
-
 export interface HomeData {
   lead: ArticleCard | null;
   topStories: ArticleCard[];
@@ -223,7 +239,6 @@ export interface HomeData {
   podcasts: PodcastCard[];
   partnerStories: PartnerStory[];
   categories: (CategoryRef & { count: number })[];
-  support?: { title?: string | null; text?: string | null; cta?: Cta | null } | null;
   ecole?: {
     title?: string | null;
     image?: Img | null;
@@ -236,6 +251,13 @@ export interface AboutData {
   title?: string | null;
   image?: Img | null;
   intro?: RichText | null;
+  /** The two offset paragraphs under the intro; a link closes the second. */
+  statements: { _key: string; text: string; cta?: Cta | null }[];
+  principlesImage?: Img | null;
+  principles: { _key: string; title: string; body?: RichText | null }[];
+  /** The numbered values carousel under the principles. */
+  valuesTitle?: string | null;
+  values: { _key: string; title: string; text?: string | null }[];
   team: Person[];
   collaborators: Person[];
   sections: {
@@ -256,7 +278,14 @@ export interface EcoleData {
   image?: Img | null;
   intro?: RichText | null;
   cta?: Cta | null;
-  why?: { title?: string | null; body?: RichText | null } | null;
+  why?: {
+    title?: string | null;
+    body?: RichText | null;
+    image?: Img | null;
+    /** The copy beside the image, over the CTA. */
+    aside?: RichText | null;
+  } | null;
+  approach?: { title?: string | null; body?: RichText | null; image?: Img | null } | null;
   /** Key figures, e.g. { value: "50+", label: "alumni" }. */
   stats: { value: string; label: string }[];
   steps: { title: string; text?: string | null }[];
@@ -269,22 +298,6 @@ export interface EcoleData {
     partners: { name: string; logo?: Img | null; url?: string | null }[];
   } | null;
   form?: { title?: string | null; text?: string | null } | null;
-  seo?: Seo | null;
-}
-
-export interface GetInvolvedData {
-  title?: string | null;
-  image?: Img | null;
-  intro?: string | null;
-  cards: Card[];
-  donate?: { title?: string | null; text?: string | null; options: Cta[] } | null;
-  cardsAfter: Card[];
-  volunteer?: {
-    title?: string | null;
-    intro?: string | null;
-    items: { title: string; text?: string | null }[];
-    cta?: Cta | null;
-  } | null;
   seo?: Seo | null;
 }
 
@@ -317,4 +330,43 @@ export interface IndexEntry {
   /** Topic slugs. */
   g?: string[];
   a: PersonRef[];
+}
+
+export interface DonateData {
+  title?: string | null;
+  image?: Img | null;
+  intro?: RichText | null;
+  support?: { title?: string | null; text?: string | null } | null;
+  sections: { _key: string; label: string; body?: RichText | null }[];
+  /** One Zeffy form per frequency; `zeffyUrl` stands in for any missing. */
+  zeffyForms: ZeffyForms;
+  zeffyUrl?: string | null;
+  /** Dollars: Zeffy's goal for a single form, else the one set on the page. */
+  goal?: number | null;
+  /** Dollars raised on the Zeffy form (null without the API key). */
+  raised?: number | null;
+  /** Preset amounts per frequency (dollars), as on the Zeffy form. */
+  presets: DonatePresets;
+  seo?: Seo | null;
+}
+
+export interface ZeffyForms {
+  monthly?: string | null;
+  annually?: string | null;
+  once?: string | null;
+}
+
+export interface DonatePresets {
+  monthly: number[];
+  annually: number[];
+  once: number[];
+}
+
+export interface StudioData {
+  title?: string | null;
+  image?: Img | null;
+  kicker?: string | null;
+  intro?: string | null;
+  studios: { _key: string; name: string; text?: string | null; image?: Img | null; bookUrl?: string | null }[];
+  seo?: Seo | null;
 }

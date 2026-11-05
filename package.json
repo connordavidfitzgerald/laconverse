@@ -20,6 +20,8 @@
     "migrate:seed": "sanity dataset import .migration/out/seed.ndjson production --missing",
     "migrate:validate": "tsx --env-file=.env scripts/migrate-webflow/validate.ts",
     "migrate:merge-locales": "tsx --env-file=.env scripts/merge-locales/run.ts",
+    "shorts:import": "tsx --env-file=.env scripts/import-shorts.ts",
+    "about:values": "tsx --env-file=.env scripts/seed-about-values.ts",
     "tts": "tsx --env-file=.env scripts/tts/generate.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
@@ -42,10 +44,12 @@
     "astro": "^7.3.5",
     "groq": "^6.16.0",
     "gsap": "^3.15.0",
+    "hls.js": "^1.7.4",
     "lenis": "^1.3.26",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "sanity": "^6.16.0",
+    "sanity-plugin-mux-input": "^5.2.1",
     "styled-components": "^6.5.3",
     "tailwindcss": "^4.3.3"
   },

@@ -1,5 +1,5 @@
 /* Tells the newsroom about a new voice note or written story: an email (Resend)
-   and a WhatsApp message (Meta Cloud API, approved template). Each channel is
+   and a WhatsApp message (CallMeBot). Each channel is
    skipped when its env vars are missing, and failures are only logged — the
    submission is already stored in Sanity by then. See README → “Notifications”. */
 
@@ -22,7 +22,7 @@ const SITE = "https://laconverse.com";
 const escape = (s: string) =>
   s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
-/** WhatsApp template parameters can't hold newlines, tabs or 4+ spaces in a row. */
+/** Collapses whitespace and truncates, for the WhatsApp message. */
 const oneLine = (s: string, max: number) => {
   const flat = s.replace(/\s+/g, " ").trim();
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
@@ -85,37 +85,33 @@ async function email(n: Notice) {
 }
 
 async function whatsapp(n: Notice) {
-  const token = env("WHATSAPP_TOKEN");
-  const phoneId = env("WHATSAPP_PHONE_NUMBER_ID");
-  const to = env("WHATSAPP_TO");
-  if (!token || !phoneId || !to) return;
+  /* CallMeBot (unofficial, free): each recipient registers once and gets an
+     API key. CALLMEBOT_WHATSAPP = "15145550123:apikey,15145550124:apikey". */
+  const recipients = env("CALLMEBOT_WHATSAPP");
+  if (!recipients) return;
 
-  /* Matches the approved template (README → “Notifications”):
-     “La Converse — {{1}} de {{2}} ({{3}}) : {{4}}. Aussi envoyé à info@laconverse.com.” */
-  const params = [
-    n.kind === "voice" ? "Note vocale" : "Histoire écrite",
-    oneLine(n.name || "Anonyme", 100),
-    oneLine([n.email, n.phone].filter(Boolean).join(", ") || "—", 200),
-    n.audio ? n.audio.url : oneLine(n.message ?? "—", 700),
-  ];
+  const text = [
+    `La Converse — ${n.kind === "voice" ? "Note vocale" : "Histoire écrite"} de ${oneLine(n.name || "Anonyme", 100)}`,
+    [n.email, n.phone].filter(Boolean).join(", "),
+    n.audio ? `Écouter : ${n.audio.url}` : oneLine(n.message ?? "", 700),
+    `Studio : ${SITE}/admin/structure/submission;${n.id}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
 
-  for (const recipient of to.split(",").map((s) => s.replace(/[^\d]/g, "")).filter(Boolean)) {
-    const res = await fetch(`https://graph.facebook.com/v23.0/${phoneId}/messages`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: recipient,
-        type: "template",
-        template: {
-          name: env("WHATSAPP_TEMPLATE") ?? "nouvelle_soumission",
-          language: { code: env("WHATSAPP_TEMPLATE_LANG") ?? "fr" },
-          components: [
-            { type: "body", parameters: params.map((text) => ({ type: "text", text })) },
-          ],
-        },
-      }),
-    });
-    if (!res.ok) throw new Error(`WhatsApp ${res.status}: ${await res.text()}`);
+  for (const entry of recipients.split(",")) {
+    const [phone, apikey] = entry.split(":").map((s) => s.trim());
+    if (!phone || !apikey) continue;
+    const url = new URL("https://api.callmebot.com/whatsapp.php");
+    url.search = new URLSearchParams({
+      phone: `+${phone.replace(/[^\d]/g, "")}`,
+      text,
+      apikey,
+    }).toString();
+    const res = await fetch(url);
+    // CallMeBot answers 200 with an HTML page even for some errors.
+    const body = await res.text();
+    if (!res.ok || /error/i.test(body))
+      throw new Error(`CallMeBot ${res.status}: ${body.slice(0, 300)}`);
   }
 }

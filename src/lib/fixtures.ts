@@ -9,7 +9,8 @@ import type {
   ArticleCard,
   Category,
   ContactData,
-  GetInvolvedData,
+  DonateData,
+  StudioData,
   GiveYourVoiceData,
   HomeData,
   EcoleData,
@@ -460,8 +461,8 @@ export function podcast(lang: Lang, slug: string): Podcast | null {
 
 const PROGRAMS: (ProgramCard & { lang?: never })[] = [
   { _id: "program-journalism", title: "Journalism", slug: "journalism", image: null, linkTo: "self" },
-  { _id: "program-podcasts", title: "Podcasts", slug: "podcasts", image: null, linkTo: "podcasts" },
   { _id: "program-mc", title: "MC Converse", slug: "mc-converse", image: null, linkTo: "self" },
+  { _id: "program-podcasts", title: "Podcasts", slug: "podcasts", image: null, linkTo: "podcasts" },
 ];
 
 export const programs = (lang: Lang): ProgramCard[] =>
@@ -475,66 +476,117 @@ export const programs = (lang: Lang): ProgramCard[] =>
           : x.title,
   }));
 
+const ALUMNI = ["lela-savic", "nouri-nesrouche", "labib-benslama", "aya-boucenna"];
+
+const PROGRAM_COPY: Record<string, L<{ intro: string[]; about: string[] }>> = {
+  journalism: {
+    en: {
+      intro: [
+        "A founding pillar of École Converse since 2020, the journalism program aims to open up access to the profession and to change how journalism is practised.",
+        "Rooted in La Converse’s dialogue journalism and inspired by participatory approaches, the training encourages young people to develop their critical thinking, question dominant narratives and produce stories with communities.",
+      ],
+      about: [
+        "Through hands-on workshops and immersion in our newsroom, young people learn to research, verify and dig deeper into information, conduct interviews and develop their own story ideas. They discover a journalism that starts in the field, encourages public participation and brings the media closer to the communities it serves.",
+      ],
+    },
+    fr: {
+      intro: [
+        "Pilier fondateur de l’École Converse depuis 2020, le programme de journalisme vise à ouvrir l’accès à la profession et à changer la façon dont le journalisme se pratique.",
+        "Ancrée dans le journalisme de dialogue de La Converse et inspirée des approches participatives, la formation encourage les jeunes à développer leur esprit critique, à questionner les récits dominants et à produire des reportages avec les communautés.",
+      ],
+      about: [
+        "À travers des ateliers pratiques et une immersion dans notre salle de rédaction, les jeunes apprennent à chercher, vérifier et approfondir l’information, à mener des entrevues et à développer leurs propres idées de reportage. Ils et elles découvrent un journalisme qui part du terrain, encourage la participation du public et rapproche le média des communautés qu’il sert.",
+      ],
+    },
+  },
+  "mc-converse": {
+    en: {
+      intro: [
+        "MC Converse is the rap program of École Converse. Inspired by Kery James’s song Banlieusards, it invites young people to use rap to tell their lived experience, question injustice and take a critical look at the realities of their communities.",
+      ],
+      about: [
+        "Each cohort brings together seven young people with mentor artists — Raccoon in 2023 and 2024, then Meryem Saci and Birdzontrack since 2025 — around a shared project: writing a song and making a music video.",
+        "Through rap-writing workshops centred on listening, dialogue and sensitivity, the participants draw on their own experiences and those of their neighbourhoods to address realities often left out of the mainstream media.",
+        "With MC Converse, rap becomes a tool for expression, dialogue and social change.",
+      ],
+    },
+    fr: {
+      intro: [
+        "MC Converse est le volet rap de l’École Converse. Inspiré de la chanson Banlieusards de Kery James, il invite les jeunes à utiliser le rap pour raconter leur vécu, questionner les injustices et porter un regard critique sur les réalités de leurs communautés.",
+      ],
+      about: [
+        "Chaque cohorte réunit sept jeunes et des artistes mentors — Raccoon en 2023 et 2024, puis Meryem Saci et Birdzontrack depuis 2025 — autour d’un projet commun : écrire une chanson et réaliser un vidéoclip.",
+        "À travers des ateliers d’écriture rap axés sur l’écoute, le dialogue et la sensibilité, les participant·e·s puisent dans leur propre vécu et celui de leur quartier pour aborder des réalités souvent laissées de côté par les médias traditionnels.",
+        "Avec MC Converse, le rap devient un outil d’expression, de dialogue et de changement social.",
+      ],
+    },
+  },
+  podcasts: {
+    en: {
+      intro: [
+        "École Converse’s podcast program introduces young people to audio documentary journalism. Alongside experienced journalists, they learn the art of the interview, how to explore a subject in depth and how to build stories that bring different perspectives to the ear. Because of the closeness it creates and the room it gives to people’s voices, the podcast lets us approach human realities with nuance, sensitivity and depth.",
+      ],
+      about: [
+        "Each cohort brings together young people around a shared project: researching, recording and producing a documentary series, from the first interview to the final mix.",
+        "Through workshops on interviewing, sound and storytelling, the participants draw on their own experiences and those of their neighbourhoods to address realities often left out of the mainstream media.",
+      ],
+    },
+    fr: {
+      intro: [
+        "Le programme balado de l’École Converse initie les jeunes au journalisme documentaire audio. Aux côtés de journalistes d’expérience, ils et elles apprennent l’art de l’entrevue, à explorer un sujet en profondeur et à construire des récits qui font entendre d’autres perspectives. Par la proximité qu’il crée et la place qu’il laisse aux voix, le balado permet d’aborder les réalités humaines avec nuance, sensibilité et profondeur.",
+      ],
+      about: [
+        "Chaque cohorte réunit des jeunes autour d’un projet commun : rechercher, enregistrer et produire une série documentaire, de la première entrevue au mixage final.",
+        "À travers des ateliers d’entrevue, de son et de narration, les participant·e·s puisent dans leur propre vécu et celui de leur quartier pour aborder des réalités souvent laissées de côté par les médias traditionnels.",
+      ],
+    },
+  },
+};
+
+const PILE_OU_FACE: L<string> = {
+  en: "For this fourth cohort, six young artists come together around Pile ou face (“Heads or Tails”), a cypher about personal hardship, choices and the paths taken to keep moving forward. In their lyrics they take on struggles that are sometimes invisible, and remind us that every person has a story. A collective work driven by resilience and hope for better days.",
+  fr: "Pour cette quatrième cohorte, six jeunes artistes se réunissent autour de Pile ou face, un cypher sur les épreuves personnelles, les choix et les chemins empruntés pour continuer d’avancer. Dans leurs textes, ils et elles abordent des luttes parfois invisibles et nous rappellent que chaque personne a une histoire. Une œuvre collective portée par la résilience et l’espoir de jours meilleurs.",
+};
+
 export function program(lang: Lang, slug: string): Program | null {
   const card = programs(lang).find((x) => x.slug === slug);
-  if (!card) return null;
-  const base = {
+  const copy = PROGRAM_COPY[slug]?.[lang];
+  if (!card || !copy) return null;
+  const en = lang === "en";
+  return {
     ...card,
-    translations: [{ language: (lang === "en" ? "fr" : "en") as Lang, slug }],
+    tagline: null,
+    body: paras(...copy.intro),
+    about: paras(...copy.about),
+    cta: {
+      label: en ? "Join École Converse" : "Rejoindre l’École Converse",
+      url: "mailto:info@laconverse.com?subject=%C3%89cole%20Converse",
+    },
+    quote: null,
+    video: null,
+    articles: slug === "journalism" ? articles(lang).slice(0, 3) : [],
+    musicVideos:
+      slug === "mc-converse"
+        ? [0, 1].map((i) => ({
+            _key: `mv${i}`,
+            title: "Pile ou face",
+            year: "2025",
+            url: "https://www.youtube.com/watch?v=JGBQ7N8UTNY",
+            text: PILE_OU_FACE[lang],
+            artists: en
+              ? "De Lafe, Zdouki, Lex, Kevynx, Robin and JMK"
+              : "De Lafe, Zdouki, Lex, Kevynx, Robin et JMK",
+            mentor: "Meryem Saci",
+            poster: null,
+          }))
+        : [],
+    podcasts: slug === "podcasts" ? podcasts(lang) : [],
+    alumni: people(lang).filter((x) => ALUMNI.includes(x.slug)),
+    support: false,
+    form: null,
+    translations: [{ language: (en ? "fr" : "en") as Lang, slug }],
     seo: null,
   };
-  const apply = {
-    label: lang === "en" ? "Apply for our next cohort" : "Postulez pour la prochaine cohorte",
-    url: "#form",
-  };
-  if (slug === "mc-converse")
-    return {
-      ...base,
-      tagline: lang === "en" ? "Rap is journalism." : "Le rap, c’est du journalisme.",
-      body:
-        lang === "en"
-          ? paras(
-              "MC Converse is the rap stream of École Converse. Each cohort brings together seven young people and a mentor artist — Raccoon in 2023, Meryem Saci in 2025 — to write a song and shoot a video.",
-              "The workshops are built on sensitivity: participants draw on their own lives and their neighbourhoods to speak about realities mainstream media leave out. Rap becomes a space for dialogue and social change.",
-            )
-          : paras(
-              "MC Converse est le volet rap de l’École Converse. Chaque cohorte réunit sept jeunes et un·e artiste mentor — Raccoon en 2023, Meryem Saci en 2025 — pour écrire une chanson et tourner un clip.",
-              "Les ateliers misent sur la sensibilité : les participant·e·s puisent dans leur vécu et celui de leur quartier pour parler des réalités que les médias traditionnels laissent de côté. Le rap devient un espace de dialogue et de changement social.",
-            ),
-      cta: apply,
-      quote: {
-        image: null,
-        text:
-          lang === "en"
-            ? "“I aim to pass on a passion for words and writing to those younger and less experienced than myself. Through writing workshops — something I’ve been doing for years in various contexts — I teach everything I’ve learned and mastered since I first got into rap.”"
-            : "« Je veux transmettre la passion des mots et de l’écriture aux plus jeunes et aux moins expérimentés. À travers des ateliers d’écriture — ce que je fais depuis des années dans divers contextes — j’enseigne tout ce que j’ai appris et maîtrisé depuis mes débuts dans le rap. »",
-        attribution: "— Raccoon",
-        source:
-          lang === "en"
-            ? "(Shamyr Daléus-Louis in conversation with Melissa Haouari from La Converse)"
-            : "(Shamyr Daléus-Louis en conversation avec Melissa Haouari de La Converse)",
-      },
-      video: {
-        title: lang === "en" ? "Pioneers of journalistic rap" : "Les pionniers du rap journalistique",
-        text:
-          lang === "en"
-            ? "Since 2020, La Converse has been giving under-represented communities the tools to tell their own stories — through journalism, podcasting and rap."
-            : "Depuis 2020, La Converse outille les communautés invisibilisées pour qu’elles racontent leurs propres histoires — en journalisme, en balado et en rap.",
-        url: "https://www.youtube.com/watch?v=JGBQ7N8UTNY",
-        moreUrl: "https://www.youtube.com/playlist?list=PLqNdNoPxQBnb1cK649QXDhoDEo2FfQd5U",
-        moreLabel: lang === "en" ? "See all MC Converse videos" : "Voir toutes les vidéos MC Converse",
-      },
-      articles: articles(lang).slice(0, 3),
-      support: true,
-      form: {
-        title: lang === "en" ? "Join the next cohort" : "Rejoignez la prochaine cohorte",
-        text:
-          lang === "en"
-            ? "Got something to say? Tell us about yourself."
-            : "Vous avez quelque chose à dire ? Parlez-nous de vous.",
-      },
-    };
-  return { ...base, tagline: null, body: null, cta: null, quote: null, articles: [], form: null };
 }
 
 /* ---- Singletons --------------------------------------------------------- */
@@ -579,25 +631,224 @@ export const home = (lang: Lang): HomeData => {
       publishedAt: ARTS[i].date,
     })),
     categories: categories(lang),
-    support: null,
     ecole: null,
     seo: null,
   };
 };
 
+export const VALUES_TITLE: L<string> = {
+  fr: "Nos 10 valeurs pour un journalisme dialogue",
+  en: "Our 10 values for a journalism of dialogue",
+};
+
+export const VALUES: L<[string, string][]> = {
+  fr: [
+    [
+      "Un journalisme respectueux",
+      "En tant que média, nous sommes conscients que nos choix ont des répercussions sur la vie des gens. Pour nous, les mots et les actions ont leur importance. À La Converse, vous n’êtes pas des sujets d’articles, vous faites partie d’une communauté. Nous prenons le temps de vous écouter et nous travaillons avec vous avant, pendant et après la publication de nos reportages.",
+    ],
+    [
+      "Un journalisme propulsé par vos besoins",
+      "Nous ne croyons pas à la pornographie de la pauvreté. Nos reportages doivent répondre aux besoins, questions et préoccupations des collectivités. Notre équipe pratique un journalisme anti-oppressif, sensible au trauma, et elle comprend qu’il y a souvent des sous-courants historiques et politiques qui affectent les communautés d’aujourd’hui.",
+    ],
+    [
+      "Un journalisme relationnel",
+      "Nous ne nous contentons pas de survoler un sujet pour en extraire une histoire ; nous nous engageons à avoir des conversations consensuelles, à établir des relations humaines ainsi qu’à partager des histoires nuancées et inédites qui révèlent une palette de vérités.",
+    ],
+    [
+      "Un journalisme transparent",
+      "Les journalistes sont parmi les personnes dont on se méfie le plus aujourd’hui. Nous voulons regagner votre confiance en partageant avec vous la façon dont nous élaborons nos articles. Pourquoi choisit-on un sujet ? Comment effectue-t-on nos recherches ? Quelle est notre position ? Qu’est-ce qu’on ignore ? Quelles sont nos erreurs ? Qu’a-t-on appris ?",
+    ],
+    [
+      "Une approche ascendante",
+      "Nos sujets partent de vous. Nous nous concentrons sur les systèmes – et non sur les symptômes. Nous ne voulons pas parler des gens, nous voulons que les gens nous parlent de sujets importants pour eux.",
+    ],
+    [
+      "Une structure équitable",
+      "Être journaliste vient avec beaucoup de responsabilités. À La Converse, nous tenons à honorer cet engagement et à construire une équipe de journalistes représentatifs de notre société. Nous allons mettre en pratique la diversité et l’inclusion au-delà des mots-clés et des photos de groupe.",
+    ],
+    [
+      "L’impact avant les clics",
+      "Notre raison d’être est la recherche d’histoires non virales. Nous voulons prendre le temps de fouiller des sujets qui sont d’intérêt pour vous.",
+    ],
+    [
+      "L’introspection",
+      "À La Converse, nous essayerons toujours de mieux faire et de ne jamais partir du principe que nous avons toutes les réponses. Nous nous engageons à toujours remettre en question l’impact de nos choix afin de méditer sur les meilleures façons de vous servir.",
+    ],
+    [
+      "Une constante évolution",
+      "Nous valorisons les idées et écoutons les préoccupations de tous. Nous nous efforçons de créer une communauté dans laquelle le désaccord est accepté, la prise de risque encouragée, et l’échec considéré comme un apprentissage précieux. Participez à cette évolution avec nous.",
+    ],
+    [
+      "Collaborer pour avoir plus d’impact",
+      "Nous collaborons avec des organes de presse et d’autres organisations qui partagent nos valeurs afin de regrouper nos ressources, nos données et nos histoires. Dans la mesure du possible, nous mettons à la disposition du public les données à l’origine de nos enquêtes.",
+    ],
+  ],
+  en: [
+    [
+      "Respectful journalism",
+      "As a media outlet, we know our choices affect people’s lives. To us, words and actions matter. At La Converse, you are not the subjects of articles; you are part of a community. We take the time to listen to you, and we work with you before, during and after our stories are published.",
+    ],
+    [
+      "Journalism driven by your needs",
+      "We do not believe in poverty porn. Our reporting must answer the needs, questions and concerns of communities. Our team practises anti-oppressive, trauma-informed journalism, and understands that historical and political undercurrents often shape communities today.",
+    ],
+    [
+      "Relational journalism",
+      "We don’t skim the surface of a subject to extract a story; we commit to consensual conversations, to building human relationships, and to sharing nuanced, untold stories that reveal a range of truths.",
+    ],
+    [
+      "Transparent journalism",
+      "Journalists are among the most distrusted people today. We want to win back your trust by sharing how we put our stories together. Why do we choose a subject? How do we research it? Where do we stand? What don’t we know? What mistakes have we made? What have we learned?",
+    ],
+    [
+      "A bottom-up approach",
+      "Our stories start with you. We focus on systems, not symptoms. We don’t want to talk about people; we want people to talk to us about the issues that matter to them.",
+    ],
+    [
+      "An equitable structure",
+      "Being a journalist comes with great responsibility. At La Converse, we are determined to honour that commitment and build a team of journalists who reflect our society. We will put diversity and inclusion into practice beyond keywords and group photos.",
+    ],
+    [
+      "Impact before clicks",
+      "Our purpose is to seek out stories that aren’t viral. We want to take the time to dig into the subjects that matter to you.",
+    ],
+    [
+      "Introspection",
+      "At La Converse, we will always try to do better and never assume we have all the answers. We commit to always questioning the impact of our choices, so we can reflect on the best ways to serve you.",
+    ],
+    [
+      "Constant evolution",
+      "We value ideas and listen to everyone’s concerns. We strive to build a community where disagreement is accepted, risk-taking encouraged, and failure seen as a valuable lesson. Join us in this evolution.",
+    ],
+    [
+      "Collaborating for greater impact",
+      "We work with news organizations and other groups that share our values to pool our resources, data and stories. Wherever possible, we make the data behind our investigations available to the public.",
+    ],
+  ],
+};
+
+const PRINCIPLES: L<[string, string[]][]> = {
+  en: [
+    [
+      "Nothing but journalism",
+      [
+        "We do not publish opinion columns or open letters. We believe public debate has no shortage of opinions; what it too often lacks is journalism to inform them. Our work is to investigate, check the facts, bring in more perspectives and ask the questions that need asking, including of the institutions that hold power.",
+        "We do not try to tell people what to think, but to give them the means to form their own opinions.",
+      ],
+    ],
+    [
+      "No advertising. No sponsored content.",
+      [
+        "La Converse is an independent media outlet, with no advertising and no sponsored journalism.",
+        "We are funded by donations, philanthropy, some public grants, tax credits for journalism organizations and revenue from our activities, including talks, professional engagements and partnerships with École Converse.",
+        "No donor, partner or funder can intervene in our editorial decisions.",
+      ],
+    ],
+    [
+      "Our journalism starts on your doorstep",
+      [
+        "We believe story ideas should not be decided only in a newsroom. We go out to meet people in their neighbourhoods and communities to understand their concerns and the questions they want explored.",
+        "Doing journalism with communities is not just handing them a microphone. It means letting them shape the questions we ask, while keeping our responsibility to check the facts and hold institutions to account.",
+      ],
+    ],
+    [
+      "Not just reporting what is wrong",
+      [
+        "Injustice and inequality are more than statistics. Behind them are people, journeys and stories that deserve to be understood.",
+        "We explain systemic problems and their consequences, but we also shine a light on the people who act, create and open up new possibilities. And our work does not stop at reporting: we create spaces for meeting and dialogue around the issues facing our society.",
+      ],
+    ],
+    [
+      "Changing who tells the story, not just what is told",
+      [
+        "We believe changing journalism also means changing who practises it. Journalists’ experiences, knowledge and questions shape what becomes news in the public interest.",
+        "Through École Converse, we train young people from underrepresented communities to investigate, understand the issues facing their society and produce their own stories.",
+        "Our goal goes beyond training: we want them to see themselves as people who can inform, question institutions and contribute to public debate. Because changing who becomes a journalist also changes how our realities are seen.",
+      ],
+    ],
+  ],
+  fr: [
+    [
+      "Rien que du journalisme",
+      [
+        "Nous ne publions ni chroniques d’opinion ni lettres ouvertes. Le débat public ne manque pas d’opinions; ce qui lui manque trop souvent, c’est du journalisme pour les éclairer. Notre travail consiste à enquêter, vérifier les faits, ajouter des perspectives et poser les questions qui doivent l’être, y compris aux institutions qui détiennent le pouvoir.",
+        "Nous ne cherchons pas à dire aux gens quoi penser, mais à leur donner les moyens de se forger leur propre opinion.",
+      ],
+    ],
+    [
+      "Pas de publicité. Pas de contenu commandité.",
+      [
+        "La Converse est un média indépendant, sans publicité et sans journalisme commandité.",
+        "Nous sommes financés par des dons, la philanthropie, certaines subventions publiques, des crédits d’impôt pour les organisations journalistiques et les revenus de nos activités, dont des conférences, des mandats professionnels et des partenariats avec l’École Converse.",
+        "Aucun donateur, partenaire ou bailleur de fonds ne peut intervenir dans nos décisions éditoriales.",
+      ],
+    ],
+    [
+      "Notre journalisme commence au coin de votre rue",
+      [
+        "Nous croyons que les idées de reportage ne devraient pas se décider uniquement dans une salle de rédaction. Nous allons à la rencontre des gens dans leurs quartiers et leurs communautés pour comprendre leurs préoccupations et les questions qu’ils veulent voir explorées.",
+        "Faire du journalisme avec les communautés, ce n’est pas seulement leur tendre un micro. C’est les laisser façonner les questions que nous posons, tout en gardant notre responsabilité de vérifier les faits et de demander des comptes aux institutions.",
+      ],
+    ],
+    [
+      "Pas seulement rapporter ce qui ne va pas",
+      [
+        "L’injustice et les inégalités sont plus que des statistiques. Derrière elles, il y a des personnes, des parcours et des histoires qui méritent d’être compris.",
+        "Nous expliquons les problèmes systémiques et leurs conséquences, mais nous mettons aussi en lumière les personnes qui agissent, créent et ouvrent de nouveaux possibles. Et notre travail ne s’arrête pas au reportage : nous créons des espaces de rencontre et de dialogue autour des enjeux qui traversent notre société.",
+      ],
+    ],
+    [
+      "Changer qui raconte, pas seulement ce qui est raconté",
+      [
+        "Nous croyons que changer le journalisme, c’est aussi changer qui le pratique. Les expériences, les savoirs et les questions des journalistes façonnent ce qui devient une nouvelle d’intérêt public.",
+        "À travers l’École Converse, nous formons des jeunes issus de communautés sous-représentées à enquêter, à comprendre les enjeux de leur société et à produire leurs propres reportages.",
+        "Notre objectif va au-delà de la formation : nous voulons qu’ils et elles se voient comme des personnes capables d’informer, de questionner les institutions et de contribuer au débat public. Parce que changer qui devient journaliste change aussi la façon dont nos réalités sont vues.",
+      ],
+    ],
+  ],
+};
+
 export const about = (lang: Lang): AboutData => ({
-  title: lang === "en" ? "About" : "À propos",
+  title: lang === "en" ? "About us" : "À propos",
   image: null,
-  intro:
+  intro: paras(
     lang === "en"
-      ? paras(
-          "La Converse is an independent, non-profit news outlet in Montréal. We believe in the power of a people-first approach rooted in listening, understanding, and respect.",
-          "For us, transparent and fair news coverage means first and foremost that everyone’s stories are heard. In the service of our community, our reporting focuses not only on information, but also on proposing solutions and ideas to bridge the gaps in the issues we cover.",
-        )
-      : paras(
-          "La Converse est un média indépendant et sans but lucratif à Montréal. Nous croyons en la force d’une approche humaine, ancrée dans l’écoute, la compréhension et le respect.",
-          "Pour nous, une couverture transparente et juste signifie d’abord et avant tout que toutes les histoires soient entendues. Au service de notre communauté, nos reportages ne se limitent pas à informer : ils proposent aussi des pistes de solution pour combler les écarts dans les enjeux que nous couvrons.",
-        ),
+      ? "Founded in Montréal in 2020, La Converse is an independent non-profit media outlet that puts historically marginalized communities at the heart of its dialogue journalism. We believe in the power of journalism to help us understand the world, question power relations and contribute to social change."
+      : "Fondée à Montréal en 2020, La Converse est un média indépendant à but non lucratif qui place les communautés historiquement marginalisées au cœur de son journalisme de dialogue. Nous croyons au pouvoir du journalisme pour nous aider à comprendre le monde, questionner les rapports de pouvoir et contribuer au changement social.",
+  ),
+  statements:
+    lang === "en"
+      ? [
+          {
+            _key: "s1",
+            text: "We believe in journalism built with communities, not just about them. Through our reporting, investigations and initiatives, we work to deepen understanding of social realities, question power relations and create spaces for dialogue between people who rarely get the chance to meet.",
+          },
+          {
+            _key: "s2",
+            text: "We also believe journalism should be more accessible. That is why, through École Converse, we train young people from underrepresented communities and encourage them to take part in producing the news.",
+            cta: { label: "Learn more about École Converse", url: "/en/ecole-converse" },
+          },
+        ]
+      : [
+          {
+            _key: "s1",
+            text: "Nous croyons en un journalisme fait avec les communautés, et pas seulement à leur sujet. Par nos reportages, nos enquêtes et nos initiatives, nous travaillons à approfondir la compréhension des réalités sociales, à questionner les rapports de pouvoir et à créer des espaces de dialogue entre des personnes qui ont rarement l’occasion de se rencontrer.",
+          },
+          {
+            _key: "s2",
+            text: "Nous croyons aussi que le journalisme doit être plus accessible. C’est pourquoi, à travers l’École Converse, nous formons des jeunes issus de communautés sous-représentées et les encourageons à prendre part à la production de l’information.",
+            cta: { label: "En savoir plus sur l’École Converse", url: "/ecole-converse" },
+          },
+        ],
+  principlesImage: null,
+  principles: PRINCIPLES[lang].map(([title, body], i) => ({
+    _key: `p${i}`,
+    title,
+    body: paras(...body),
+  })),
+  valuesTitle: VALUES_TITLE[lang],
+  values: VALUES[lang].map(([title, text], i) => ({ _key: `v${i}`, title, text })),
   team: people(lang).filter((_, i) => PEOPLE[i].group === "team"),
   collaborators: people(lang).filter((_, i) => PEOPLE[i].group === "collaborator"),
   sections: [
@@ -631,29 +882,48 @@ export const ecole = (lang: Lang): EcoleData => {
     kicker: en
       ? "A program combining training, sensitivity and community."
       : "Une école qui allie formation, sensibilité et communauté.",
-    intro: en
-      ? paras(
-          "École Converse is a training program that brings communities into the conversation by training apprentice journalists to produce stories with the community, not just about it.",
-          "With streams in journalism, podcasting and creative writing, the school pays its participants for their work and creativity. Afterwards, they can go on to join the La Converse newsroom.",
-        )
-      : paras(
-          "L’École Converse est une école de formation qui inclut les communautés dans la réflexion en formant des apprenti·e·s journalistes à produire des reportages avec la communauté, et pas seulement à son sujet.",
-          "Avec des volets en journalisme, en balado et en écriture créative, l’École Converse rémunère ses participant·e·s pour leur travail et leur créativité. Par la suite, ils et elles peuvent se joindre à la salle de presse de La Converse.",
-        ),
+    intro: paras(
+      en
+        ? "École Converse is a training space designed by and for people from communities that are underrepresented in the media. Through training in journalism, podcasting, video and journalistic rap, the school supports a new generation of journalists and artists who want to reclaim their stories and explore new ways of telling the world."
+        : "L’École Converse est un espace de formation pensé par et pour les personnes issues de communautés sous-représentées dans les médias. À travers des formations en journalisme, en balado, en vidéo et en rap journalistique, elle accompagne une nouvelle génération de journalistes et d’artistes qui souhaitent se réapproprier leurs récits et explorer de nouvelles façons de raconter le monde.",
+    ),
     cta: {
-      label: en ? "Apply for our next cohort" : "Postulez pour la prochaine cohorte",
-      url: "#form",
+      label: en ? "Join École Converse" : "Rejoindre l’École Converse",
+      url: "mailto:info@laconverse.com?subject=%C3%89cole%20Converse",
     },
-    why: {
-      title: en ? "Why École Converse?" : "Pourquoi une École Converse?",
+    approach: {
+      title: en ? "Approach" : "Approche",
+      image: null,
       body: en
         ? paras(
-            "It all started with the desire to give overlooked communities the tools they need to reclaim their power in a media landscape where they are often silenced.",
-            "With École Converse, we want to give power back to communities left out of the discussions that concern them, and a platform to tell their own stories. Through sensitivity-based training, the school prepares the next generation of journalists to serve and cover communities traditionally left out of important conversations.",
+            "Our approach is based on learning by doing. Young people learn to produce stories with communities, through workshops, meetings with experienced journalists and time in the field.",
+            "We believe community involvement should not be a privilege — École Converse offers participation stipends that recognize the value of young people’s time and commitment. Their work is visible on La Converse’s platforms. For some, the experience also opens the door to professional collaborations or a place in our newsroom.",
           )
         : paras(
-            "Tout a commencé avec la volonté de donner aux communautés invisibilisées les outils dont elles ont besoin pour reprendre leur pouvoir dans un espace médiatique où elles sont souvent réduites au silence.",
-            "Avec l’École Converse, nous voulons redonner du pouvoir aux communautés exclues des discussions qui les concernent, et leur offrir une plateforme pour raconter leurs propres histoires. Grâce à une formation axée sur la sensibilité, l’École Converse forme la relève journalistique à servir et à couvrir les communautés traditionnellement laissées à l’écart des grandes conversations.",
+            "Notre approche repose sur l’apprentissage par la pratique. Les jeunes apprennent à produire des reportages avec les communautés, à travers des ateliers, des rencontres avec des journalistes d’expérience et du temps sur le terrain.",
+            "Nous croyons que l’engagement communautaire ne devrait pas être un privilège — l’École Converse offre des allocations de participation qui reconnaissent la valeur du temps et de l’engagement des jeunes. Leur travail est diffusé sur les plateformes de La Converse. Pour certain·e·s, l’expérience ouvre aussi la porte à des collaborations professionnelles ou à une place dans notre salle de rédaction.",
+          ),
+    },
+    why: {
+      title: en ? "Why École Converse?" : "Pourquoi l’École Converse?",
+      image: null,
+      body: en
+        ? paras(
+            "It all started with a conviction: the communities at the centre of the news should also have a say in how their realities are told. Yet their perspectives are still too often missing from newsrooms and from the decisions that shape the news.",
+            "With École Converse, we want to open new doors into journalism, and also rethink how it is practised. We believe in community-rooted journalism, built on listening, dialogue and collaboration with communities.",
+          )
+        : paras(
+            "Tout a commencé par une conviction : les communautés au cœur de l’actualité devraient aussi avoir leur mot à dire sur la façon dont leurs réalités sont racontées. Pourtant, leurs perspectives sont encore trop souvent absentes des salles de rédaction et des décisions qui façonnent l’information.",
+            "Avec l’École Converse, nous voulons ouvrir de nouvelles portes vers le journalisme, et aussi repenser la façon dont il se pratique. Nous croyons en un journalisme ancré dans les communautés, fondé sur l’écoute, le dialogue et la collaboration.",
+          ),
+      aside: en
+        ? paras(
+            "Beyond journalistic technique, we encourage young people to develop their curiosity, their critical thinking and their sense of responsibility toward the people whose stories they tell.",
+            "Our goal: Train a new generation able to tell the world in all its complexity and to contribute to journalism that is more representative, accessible and rooted in communities.",
+          )
+        : paras(
+            "Au-delà de la technique journalistique, nous encourageons les jeunes à développer leur curiosité, leur esprit critique et leur sens des responsabilités envers les personnes dont ils et elles racontent les histoires.",
+            "Notre objectif : former une nouvelle génération capable de raconter le monde dans toute sa complexité et de contribuer à un journalisme plus représentatif, accessible et ancré dans les communautés.",
           ),
     },
     stats: en
@@ -737,7 +1007,7 @@ export const ecole = (lang: Lang): EcoleData => {
         },
         {
           label: en ? "Donate" : "Faire un don",
-          url: en ? "/en/get-involved#donate" : "/engagez-vous#donate",
+          url: en ? "/en/donate" : "/donner",
         },
       ],
       partners: [{ name: "Fondation Filles d’Action", logo: null, url: null }],
@@ -751,84 +1021,6 @@ export const ecole = (lang: Lang): EcoleData => {
           title: "Rejoignez l’École Converse",
           text: "Parlez-nous un peu de vous et nous vous écrirons avant le début de la prochaine cohorte.",
         },
-    seo: null,
-  };
-};
-
-export const getInvolved = (lang: Lang): GetInvolvedData => {
-  const en = lang === "en";
-  const blurb = en
-    ? "Paid apprenticeships in journalism, podcasting and creative writing for young people who want to tell their community’s stories."
-    : "Des stages rémunérés en journalisme, en balado et en création littéraire pour les jeunes qui veulent raconter les histoires de leur communauté.";
-  return {
-    title: en ? "Get involved" : "Engagez-vous",
-    image: null,
-    intro: en
-      ? "La Converse is built with the communities it covers. Give, share your story, join the team or lend a hand — every contribution keeps independent journalism alive."
-      : "La Converse se construit avec les communautés qu’elle couvre. Donnez, racontez votre histoire, joignez l’équipe ou donnez un coup de main — chaque contribution garde le journalisme indépendant vivant.",
-    cards: [
-      {
-        title: en ? "Share your story" : "Racontez votre histoire",
-        image: null,
-        text: blurb,
-        cta: { label: en ? "Learn more" : "En savoir plus", url: "#voice" },
-        ctaStyle: "link",
-      },
-      {
-        title: en ? "Give your voice" : "Donnez votre voix",
-        image: null,
-        text: null,
-        cta: {
-          label: en ? "Join the team" : "Joignez l’équipe",
-          url: en ? "/en/get-involved/give-your-voice" : "/engagez-vous/donnez-votre-voix",
-        },
-        ctaStyle: "button",
-      },
-    ],
-    donate: {
-      title: en ? "Donate" : "Faire un don",
-      text: en
-        ? "Independent journalism can’t exist without its readers. Every donation funds reporting on the stories that go unheard."
-        : "Le journalisme indépendant ne peut exister sans ses lecteur·rice·s. Chaque don finance des reportages sur les histoires qu’on n’entend pas.",
-      options: [
-        { label: en ? "Monthly" : "Mensuel", url: "#" },
-        { label: en ? "Annual" : "Annuel", url: "#" },
-        { label: en ? "One-time" : "Unique", url: "#" },
-      ],
-    },
-    cardsAfter: [
-      {
-        title: "École Converse",
-        image: null,
-        text: blurb,
-        cta: {
-          label: en ? "Learn more" : "En savoir plus",
-          url: en ? "/en/ecole-converse" : "/ecole-converse",
-        },
-        ctaStyle: "link",
-      },
-    ],
-    volunteer: {
-      title: en ? "Volunteer" : "Bénévolat",
-      intro: en
-        ? "Lend us your time and skills. Here is where we need help the most."
-        : "Offrez-nous votre temps et vos talents. Voici où nous avons le plus besoin d’aide.",
-      items: en
-        ? [
-            { title: "Translation", text: "Making our articles accessible in more languages." },
-            { title: "Events", text: "Helping out at our public gatherings." },
-            { title: "Mentorship", text: "Supporting young journalists at École Converse." },
-          ]
-        : [
-            { title: "Traduction", text: "Rendre nos articles accessibles dans plus de langues." },
-            { title: "Événements", text: "Donner un coup de main lors de nos rassemblements." },
-            { title: "Mentorat", text: "Accompagner les jeunes journalistes de l’École Converse." },
-          ],
-      cta: {
-        label: en ? "Become a volunteer" : "Devenir bénévole",
-        url: en ? "/en/contact" : "/contact",
-      },
-    },
     seo: null,
   };
 };
@@ -940,3 +1132,140 @@ export const contact = (lang: Lang): ContactData => {
     seo: null,
   };
 };
+
+export const donate = (lang: Lang): DonateData => {
+  const en = lang === "en";
+  const list = (items: [string, string][]) =>
+    items.map(([lead, rest]) => ({
+      _type: "block",
+      _key: key(),
+      style: "normal",
+      listItem: "bullet",
+      level: 1,
+      markDefs: [],
+      children: [
+        { _type: "span", _key: key(), text: lead, marks: ["strong"] },
+        { _type: "span", _key: key(), text: ` ${rest}`, marks: [] },
+      ],
+    }));
+  return {
+    title: en ? "Donate" : "Je donne",
+    image: null,
+    intro: en
+      ? paras(
+          "Every contribution brings us closer to a stronger, more independent media outlet, able to continue its work for the long term.",
+          "Since we started, we have listened, told stories, created spaces for dialogue and brought other perspectives and solutions to light. Our journalism is rooted in marginalized communities and gives a voice to those we hear from too rarely. Since 2020, École Converse has also trained more than 100 young people in journalism, opening the profession to people from communities underrepresented in the media.",
+          "That is thanks to you. ♥",
+        )
+      : paras(
+          "Chaque contribution nous rapproche d’un média plus fort, plus indépendant, capable de poursuivre son travail à long terme.",
+          "Depuis nos débuts, nous avons écouté, raconté, créé des espaces de dialogue et mis en lumière d’autres perspectives et solutions. Notre journalisme est ancré dans les communautés marginalisées et donne la parole à celles et ceux qu’on entend trop rarement. Depuis 2020, l’École Converse a aussi formé plus de 100 jeunes au journalisme, ouvrant la profession aux personnes issues de communautés sous-représentées dans les médias.",
+          "C’est grâce à vous. ♥",
+        ),
+    support: {
+      title: en ? "Support La Converse" : "Soutenez La Converse",
+      text: en
+        ? "Every contribution brings us closer to a stronger, more independent media outlet, able to continue its work for the long term."
+        : "Chaque contribution nous rapproche d’un média plus fort, plus indépendant, capable de poursuivre son travail à long terme.",
+    },
+    sections: [
+      {
+        _key: "support",
+        label: en ? "What will your donation support?" : "Que soutiendra votre don?",
+        body: [
+          ...paras(
+            en
+              ? "All of La Converse’s revenue is reinvested in our mission and in running our organization. Your contribution allows us to:"
+              : "Tous les revenus de La Converse sont réinvestis dans notre mission et dans le fonctionnement de notre organisme. Votre contribution nous permet de :",
+          ),
+          ...list(
+            en
+              ? [
+                  ["Investigate and inform.", "Pay our journalists, dig deeper into issues, check the facts and question institutions."],
+                  ["Keep the dialogue going.", "Meet with communities and create spaces where people can talk about the issues that affect them."],
+                  ["Train the next generation.", "Support École Converse youth as they learn journalism and produce their own stories."],
+                  ["Build a lasting media outlet.", "Invest in the people, tools and resources our organization needs."],
+                ]
+              : [
+                  ["Enquêter et informer.", "Rémunérer nos journalistes, approfondir les enjeux, vérifier les faits et questionner les institutions."],
+                  ["Faire vivre le dialogue.", "Aller à la rencontre des communautés et créer des espaces où l’on peut parler des enjeux qui les touchent."],
+                  ["Former la relève.", "Soutenir les jeunes de l’École Converse dans leur apprentissage du journalisme et la production de leurs propres reportages."],
+                  ["Bâtir un média durable.", "Investir dans les personnes, les outils et les ressources dont notre organisme a besoin."],
+                ],
+          ),
+        ] as RichText,
+      },
+      {
+        _key: "about",
+        label: en ? "About us" : "À propos",
+        body: en
+          ? paras(
+              "La Converse is an independent non-profit media outlet. We do not run any advertising or sponsored journalism. We are funded by public donations, foundations, some government grants, tax credits for journalism organizations and revenue from our activities. No donor, partner or funder can choose our topics, steer our reporting or intervene in our editorial decisions.",
+              "The more we can count on direct support from our readers, the stronger our independence.",
+            )
+          : paras(
+              "La Converse est un média indépendant à but non lucratif. Nous ne diffusons aucune publicité ni aucun journalisme commandité. Nous sommes financés par les dons du public, des fondations, certaines subventions gouvernementales, des crédits d’impôt pour les organisations journalistiques et les revenus de nos activités. Aucun donateur, partenaire ou bailleur de fonds ne peut choisir nos sujets, orienter nos reportages ou intervenir dans nos décisions éditoriales.",
+              "Plus nous pouvons compter sur le soutien direct de nos lecteur·rice·s, plus notre indépendance est forte.",
+            ),
+      },
+    ],
+    zeffyForms: {},
+    zeffyUrl: null,
+    goal: 50000,
+    raised: 22135,
+    presets: { monthly: [5, 10, 15, 25], annually: [120, 200, 350, 500], once: [50, 100, 150, 200] },
+    seo: null,
+  };
+};
+
+const STUDIOS: { name: L<string>; text: L<string> }[] = [
+  {
+    name: { en: "Studio A", fr: "Studio A" },
+    text: {
+      en: "Surrounded by glass walls, this studio is bright and warm. With professional-grade equipment and a creative space to bring your vision to life, it gives your content better sound quality.",
+      fr: "Entouré de murs vitrés, ce studio est lumineux et chaleureux. Avec son équipement de qualité professionnelle et un espace créatif pour donner vie à votre vision, il offre à votre contenu une meilleure qualité sonore.",
+    },
+  },
+  {
+    name: { en: "Studio B", fr: "Studio B" },
+    text: {
+      en: "This private, spacious, fully equipped studio lets you do your best work. In a space designed for creators like you, you will find the comfort your ideas need to come to life.",
+      fr: "Privé, spacieux et entièrement équipé, ce studio vous permet de donner le meilleur de vous-même. Dans un espace pensé pour les créateur·rice·s comme vous, vous trouverez le confort dont vos idées ont besoin pour prendre vie.",
+    },
+  },
+  {
+    name: { en: "Chill space", fr: "Espace détente" },
+    text: {
+      en: "Get away from it all in our chill space. Designed for you to unwind, it leaves room for creativity and reflection, so you can create in comfort.",
+      fr: "Évadez-vous dans notre espace détente. Pensé pour décrocher, il laisse place à la créativité et à la réflexion, pour créer en tout confort.",
+    },
+  },
+  {
+    name: { en: "Shared workspace", fr: "Espace de travail partagé" },
+    text: {
+      en: "Our shared workspace offers a lively way to work. Designed to inspire, it lets you be productive while enjoying a collaborative space that makes your workday anything but ordinary.",
+      fr: "Notre espace de travail partagé offre une façon vivante de travailler. Pensé pour inspirer, il vous permet d’être productif·ve tout en profitant d’un espace collaboratif qui rend vos journées tout sauf ordinaires.",
+    },
+  },
+];
+
+export const studio = (lang: Lang): StudioData => ({
+  title: "Studio Converse",
+  image: null,
+  kicker:
+    lang === "en"
+      ? "Podcast studio in the heart of Little Italy, Montréal"
+      : "Studio de balado au cœur de la Petite Italie, Montréal",
+  intro:
+    lang === "en"
+      ? "Our state-of-the-art recording studios are now available for rental, production support and full production. Step into the studio of your choice, get comfortable and let the space carry you."
+      : "Nos studios d’enregistrement à la fine pointe sont maintenant offerts en location, en soutien à la production et en production complète. Entrez dans le studio de votre choix, installez-vous et laissez l’espace vous porter.",
+  studios: STUDIOS.map((x, i) => ({
+    _key: `studio${i}`,
+    name: x.name[lang],
+    text: x.text[lang],
+    image: null,
+    bookUrl: "mailto:info@laconverse.com?subject=Studio%20Converse",
+  })),
+  seo: null,
+});

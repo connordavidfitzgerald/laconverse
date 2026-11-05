@@ -6,26 +6,23 @@ import type { PodcastCard } from "../lib/types";
 interface Props {
   podcast: PodcastCard;
   lang: Lang;
+  /** Show the episode count under the title (off on the homepage). */
+  episodes?: boolean;
   class?: string;
 }
-const { podcast, lang, class: className } = Astro.props;
+const { podcast, lang, episodes = true, class: className } = Astro.props;
 ---
 
 <article class:list={["group relative flex flex-col gap-2.5 lg:gap-[17px]", className]}>
+  <a
+    href={href(lang, "podcast", podcast.slug)}
+    aria-label={podcast.title}
+    class="absolute inset-0 z-10"
+  ></a>
   <Picture
     img={podcast.cover}
     ratio={1}
     sizes="(min-width: 1024px) 20vw, 55vw"
     class="media-inset"
   />
-  <div class="flex flex-col gap-2.5 lg:gap-[5px]">
-    <h3 class="display text-card-sm">
-      <a href={href(lang, "podcast", podcast.slug)} class="title-line after:absolute after:inset-0">
-        {podcast.title}
-      </a>
-    </h3>
-    <p class="label text-xs opacity-60 lg:text-lg lg:font-extrabold">
-      {podcast.episodeCount} {t(lang).episodes}
-    </p>
-  </div>
 </article>

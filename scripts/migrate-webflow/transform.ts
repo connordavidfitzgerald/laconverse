@@ -854,46 +854,6 @@ for (const lang of ["fr", "en"] as Lang[]) {
       form: ecole.form ?? undefined,
     }),
   );
-  const gi = fx.getInvolved(lang);
-  const card = (c: (typeof gi.cards)[number], n: number, s: string) =>
-    compact({
-      _type: "card",
-      _key: key(s, String(n)),
-      title: c.title ?? undefined,
-      text: c.text ?? undefined,
-      cta: c.cta ? { _type: "cta", ...c.cta } : undefined,
-      ctaStyle: c.ctaStyle ?? undefined,
-    });
-  page(
-    lang,
-    compact({
-      _id: `getInvolvedPage-${lang}`,
-      _type: "getInvolvedPage",
-      language: lang,
-      title: gi.title ?? undefined,
-      intro: gi.intro ?? undefined,
-      cards: gi.cards.map((c, n) => card(c, n, `gi-${lang}`)),
-      cardsAfter: gi.cardsAfter.map((c, n) => card(c, n, `gia-${lang}`)),
-      donate: gi.donate
-        ? {
-            ...gi.donate,
-            options: withKeys(
-              gi.donate.options.map((o) => ({ _type: "cta", ...o })),
-              `don-${lang}`,
-            ),
-          }
-        : undefined,
-      volunteer: gi.volunteer
-        ? {
-            ...gi.volunteer,
-            items: withKeys(
-              gi.volunteer.items.map((it) => ({ _type: "item", ...it })),
-              `vol-${lang}`,
-            ),
-          }
-        : undefined,
-    }),
-  );
   const gyv = fx.giveYourVoice(lang);
   page(
     lang,

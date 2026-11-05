@@ -14,6 +14,7 @@ import { EnvelopeIcon } from "@sanity/icons/Envelope";
 import { LANGUAGES } from "../languages";
 import { frenchRequired, localeSlugField, perLanguage } from "./shared";
 import { FORMATS } from "../../lib/formats";
+import { VIDEO_KINDS } from "../../lib/videoKinds";
 
 const hiddenWebflowId = defineField({
   name: "webflowId",
@@ -288,10 +289,18 @@ export const videoType = defineType({
     slug,
     defineField({ name: "poster", type: "figure" }),
     defineField({
+      name: "mux",
+      title: "Video",
+      type: "mux.video",
+      description: "Upload the clip here: it streams from Mux at the right quality for each screen.",
+    }),
+    defineField({
       name: "file",
-      title: "Video file",
+      title: "Video file (legacy)",
       type: "file",
       options: { accept: "video/*" },
+      description: "Played only when there is no Mux video above.",
+      hidden: ({ value }) => !value,
     }),
     defineField({
       name: "videoUrl",
@@ -300,6 +309,16 @@ export const videoType = defineType({
       description: "YouTube, Vimeo or a direct .mp4 link.",
     }),
     defineField({ name: "duration", title: "Duration (seconds)", type: "number" }),
+    defineField({
+      name: "kind",
+      title: "Type",
+      type: "string",
+      options: {
+        list: VIDEO_KINDS.map(({ value, fr, en }) => ({ value, title: `${fr} / ${en}` })),
+        layout: "radio",
+        direction: "horizontal",
+      },
+    }),
     defineField({
       name: "category",
       title: "Section",
@@ -401,8 +420,53 @@ export const programType = defineType({
       type: "localeText",
       description: "Bold line under the image.",
     }),
-    defineField({ name: "body", type: "localeRichText" }),
+    defineField({ name: "body", title: "Intro", type: "localeRichText" }),
+    defineField({
+      name: "about",
+      type: "localeRichText",
+      description: "Beside the “About” label, over the button.",
+    }),
     defineField({ name: "cta", type: "localeCta" }),
+    defineField({
+      name: "musicVideos",
+      title: "Music videos",
+      type: "array",
+      of: [
+        defineArrayMember({
+          name: "musicVideo",
+          type: "object",
+          fields: [
+            defineField({ name: "title", type: "localeString" }),
+            defineField({ name: "year", type: "string" }),
+            defineField({
+              name: "url",
+              title: "YouTube URL",
+              type: "url",
+              validation: (r) => r.required(),
+            }),
+            defineField({ name: "text", type: "localeText" }),
+            defineField({ name: "artists", type: "localeString" }),
+            defineField({ name: "mentor", title: "Mentor artist", type: "localeString" }),
+            defineField({
+              name: "poster",
+              type: "figure",
+              description: "Optional. Defaults to the YouTube thumbnail.",
+            }),
+          ],
+          preview: { select: { title: "title.fr", subtitle: "year", media: "poster" } },
+        }),
+      ],
+    }),
+    defineField({
+      name: "podcasts",
+      type: "array",
+      of: [defineArrayMember({ type: "reference", to: [{ type: "podcast" }] })],
+    }),
+    defineField({
+      name: "alumni",
+      type: "array",
+      of: [defineArrayMember({ type: "reference", to: [{ type: "person" }] })],
+    }),
     defineField({
       name: "quote",
       type: "object",
@@ -452,7 +516,8 @@ export const programType = defineType({
       name: "linkTo",
       title: "Card links to",
       type: "string",
-      description: "Where the École Converse card goes. Defaults to this program's own page.",
+      description:
+        "Where the École Converse card goes. “Podcasts index” shows this program's page at /balados instead of under /ecole-converse.",
       options: {
         list: [
           { title: "This program page", value: "self" },

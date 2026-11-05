@@ -21,9 +21,9 @@ const [page, settings] = await Promise.all([getContact(lang), getSettings(lang)]
 >
   <div class="px-5 lg:px-5">
     <header class="pt-5 lg:pt-10">
-      <h1 class="display text-mega tracking-[-0.02em]">{page.title ?? s.contact}</h1>
+      <h1 class="display text-mega">{page.title ?? s.contact}</h1>
       {page.subtitle && (
-        <p class="mt-2.5 font-display text-2xl font-extrabold leading-[0.95] tracking-[-0.02em] lg:text-intro">
+        <p class="mt-2.5 font-display text-2xl font-medium leading-[0.95] lg:text-intro">
           {page.subtitle}
         </p>
       )}
@@ -41,7 +41,7 @@ const [page, settings] = await Promise.all([getContact(lang), getSettings(lang)]
       <p class="label mt-24 text-xs">{s.writeDirectly}</p>
       <a
         href={`mailto:${settings.email}`}
-        class="display mt-4 text-[2.25rem] leading-[0.95] tracking-[-0.01em] lg:text-section"
+        class="display mt-4 text-[2.25rem] leading-[0.95] lg:text-section"
       >
         {settings.email}
       </a>

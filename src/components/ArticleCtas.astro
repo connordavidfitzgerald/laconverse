@@ -6,9 +6,10 @@
    without JS the article simply reads uninterrupted. Wraps the prose element,
    which must carry `data-cta-body`. */
 import AjaxForm from "./AjaxForm.astro";
+import DonateWidget from "./DonateWidget.astro";
 import Icon from "./Icon.astro";
-import { href, t, type Lang } from "../i18n";
-import { getSettings } from "../lib/content";
+import { t, type Lang } from "../i18n";
+import { getDonate, getSettings } from "../lib/content";
 
 interface Props {
   lang: Lang;
@@ -19,33 +20,32 @@ interface Props {
 }
 const { lang, storyPrompt, every = 2 } = Astro.props;
 const s = t(lang);
-const settings = await getSettings(lang);
-const donate = settings.donateUrl ?? `${href(lang, "getInvolved")}#donate`;
+const [settings, donate] = await Promise.all([getSettings(lang), getDonate(lang)]);
 
-/* Figma: the three article CTAs (pink donate, yellow newsletter, black story).
-   Flat colour blocks, set entirely in Favorit and centred, with square
-   outlined buttons. The prose styles reach into anything inside the body, so
-   the panels reset what would leak (link underline, spacing). */
-const panel = "my-14! px-5 py-12 text-center font-display sm:px-10 sm:py-14";
-const title = "display font-black text-[1.75rem] tracking-[-0.02em] sm:text-[2.5rem]";
-const button =
-  "press label font-black inline-grid place-items-center border border-current px-5 py-2.5 text-[0.95rem] no-underline! hover:bg-ink hover:text-[var(--panel)]";
+/* The three article CTAs (donate, newsletter, share your story) share the
+   donate widget's look: white, ruled top and bottom, a Favorit title over a
+   caps line, then rounded mist/yellow tiles. The prose styles reach into the
+   body, so each panel opts out with `data-no-prose`. */
+const panel = "my-14! border-y border-ink py-10 sm:py-14";
+const title = "display max-w-[12em] text-[2.5rem] leading-[0.95]";
+const line = "label mt-5 text-copy leading-[0.95]";
+const tile =
+  "label flex h-14 items-center justify-center gap-2 rounded-xl px-5 text-copy transition-colors lg:rounded-[20px]";
+const mist = "bg-mist text-ink hover:bg-yellow/50";
+const yellow = "bg-yellow text-ink hover:bg-ink hover:text-yellow";
 ---
 
 <article-ctas data-every={every} class="block">
   <slot />
 
   <template>
-    <aside class:list={[panel, "bg-pink [--panel:var(--color-pink)]"]} aria-label={s.donate}>
-      <p class={title}>{s.ctaDonateTitle}</p>
-      <a href={donate} class:list={[button, "mt-7"]}>
-        {s.supportUs}
-      </a>
+    <aside data-no-prose class={panel} aria-label={s.donate}>
+      <DonateWidget lang={lang} data={donate} stacked />
     </aside>
   </template>
 
   <template>
-    <aside class:list={[panel, "bg-yellow [--panel:var(--color-yellow)]"]} aria-label={s.subscribe}>
+    <aside data-no-prose class={panel} aria-label={s.subscribe}>
       <p class={title}>{s.ctaNewsletterTitle}</p>
       <AjaxForm
         action={settings.newsletterAction ?? "/api/contact"}
@@ -55,7 +55,7 @@ const button =
       >
         <input type="hidden" name="kind" value="newsletter" />
         <input type="hidden" name="context" value="article" />
-        <div class="flex items-end gap-2.5 sm:gap-5">
+        <div class="grid gap-2.5 sm:grid-cols-[1fr_auto]">
           <input
             name="email"
             type="email"
@@ -63,9 +63,9 @@ const button =
             autocomplete="email"
             placeholder={s.email}
             aria-label={s.email}
-            class="display font-black min-w-0 flex-1 border-b border-ink bg-transparent pb-3 text-left text-2xl placeholder:text-ink outline-none focus:placeholder:text-ink/40 focus-visible:shadow-[0_1px_0_var(--color-ink)]"
+            class:list={[tile, mist, "min-w-0 justify-start placeholder:text-ink/50 outline-none focus-visible:ring-2 focus-visible:ring-ink [&:not(:placeholder-shown)]:normal-case"]}
           />
-          <button type="submit" class:list={[button, "shrink-0 sm:w-[10.5rem] disabled:opacity-50"]}>
+          <button type="submit" class:list={[tile, yellow, "press disabled:opacity-50 sm:w-[10.5rem]"]}>
             {s.subscribe}
           </button>
         </div>
@@ -74,22 +74,18 @@ const button =
   </template>
 
   <template>
-    <aside class:list={[panel, "bg-ink text-yellow"]} aria-label={s.vnFab}>
+    <aside data-no-prose class={panel} aria-label={s.vnFab}>
       <p class={title}>{storyPrompt || s.vnTitle}</p>
-      <div class="mt-7 flex flex-col items-center gap-2.5">
-        <button
-          type="button"
-          data-voice-open
-          aria-label={s.vnOpen}
-          class="press grid size-[60px] place-items-center rounded-full bg-yellow text-ink hover:scale-105"
-        >
-          <Icon name="mic" class="h-4 w-4" />
+      <p class={line}>{s.ctaStoryText}</p>
+      <div class="mt-10 grid grid-cols-2 gap-2.5">
+        <button type="button" data-voice-open class:list={[tile, yellow, "press"]}>
+          <Icon name="mic" class="size-4" />
+          {s.vnTap}
         </button>
-        <button type="button" data-voice-open="write" class="label font-black text-xs underline underline-offset-2">
+        <button type="button" data-voice-open="write" class:list={[tile, mist, "press"]}>
           {s.vnWrite}
         </button>
       </div>
-      <p class="display font-black mt-7 text-lg/[0.95] tracking-[-0.02em]">{s.ctaStoryText}</p>
     </aside>
   </template>
 </article-ctas>

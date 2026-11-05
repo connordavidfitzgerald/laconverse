@@ -54,11 +54,6 @@ export function cardLinks(node: DocumentFragment, e: Entry, lang: string) {
       dot.classList.add(dotClass(e.c[0].slug));
     }
   } else chip.remove();
-  const author = node.querySelector<HTMLAnchorElement>("[data-author]")!;
-  if (e.a[0]) {
-    author.href = p.author + e.a[0].slug;
-    author.textContent = e.a[0].name;
-  } else author.remove();
   const time = node.querySelector<HTMLTimeElement>("[data-date]")!;
   time.dateTime = e.p;
   time.textContent = dates[lang as "en" | "fr"].format(new Date(e.p));

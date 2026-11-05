@@ -97,7 +97,7 @@ export const localeCtaType = defineType({
       name: "url",
       title: "URL",
       type: "localeString",
-      description: "Full URL, or a site path like /engagez-vous (FR) and /en/get-involved (EN).",
+      description: "Full URL, or a site path like /donner (FR) and /en/donate (EN).",
     }),
   ],
   preview: {
@@ -218,7 +218,7 @@ export const ctaType = defineType({
       name: "url",
       title: "URL",
       type: "string",
-      description: "Full URL, or a site path like /get-involved.",
+      description: "Full URL, or a site path like /donner.",
     }),
   ],
 });

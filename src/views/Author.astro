@@ -27,9 +27,9 @@ const settings = await getSettings(lang);
 >
   <header class="flex flex-col items-center gap-5 px-5 pt-5 text-center lg:pt-10">
     {person.role && <span class="label bg-yellow px-2.5 py-1.5 text-xs">{person.role}</span>}
-    <h1 class="display text-mega tracking-[-0.02em] text-balance">{person.name}</h1>
+    <h1 class="display text-mega text-balance">{person.name}</h1>
     {person.bio && (
-      <p class="max-w-md font-display text-lg font-extrabold leading-[0.95] tracking-[-0.01em] lg:max-w-xl lg:text-2xl">
+      <p class="max-w-md font-display text-lg font-medium leading-[0.95] lg:max-w-xl lg:text-2xl">
         {person.bio}
       </p>
     )}

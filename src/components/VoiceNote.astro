@@ -26,7 +26,7 @@ const home = Astro.url.pathname.replace(/\/$/, "") === href(lang, "home").replac
 const BARS = 32;
 
 const field =
-  "display w-full border-b border-ink bg-transparent pb-2 text-2xl leading-none tracking-[-0.01em] placeholder:text-ink/40 outline-none focus:border-b-2";
+  "display w-full border-b border-ink bg-transparent pb-2 text-2xl leading-none placeholder:text-ink/40 outline-none focus:border-b-2";
 ---
 
 <voice-note
@@ -103,7 +103,7 @@ const field =
           <div class="flex w-full flex-1 flex-col items-center justify-center pt-10">
             <h2
               id="vn-title"
-              class="display text-[2rem] leading-[0.95] tracking-[-0.01em] text-balance md:text-4xl"
+              class="display text-[2rem] leading-[0.95] text-balance md:text-4xl"
             >
               {s.vnTitle}
             </h2>
@@ -495,12 +495,19 @@ const field =
         },
         { passive: true },
       );
-      const foot = document.querySelector("body > footer");
-      if (foot)
+      // The footer is sticky under the page (curtain reveal), so it always
+      // intersects the viewport; it's actually showing once the end of
+      // `main` has lifted off the bottom of the screen.
+      const main = document.querySelector("body > footer") && document.getElementById("main");
+      if (main) {
+        const sentinel = document.createElement("div");
+        sentinel.setAttribute("aria-hidden", "true");
+        main.append(sentinel);
         new IntersectionObserver(([entry]) => {
-          footer = entry.isIntersecting;
+          footer = entry.isIntersecting || entry.boundingClientRect.top < 0;
           update();
-        }).observe(foot);
+        }).observe(sentinel);
+      }
     }
 
     /** On load the corner button grows in larger than life with its note

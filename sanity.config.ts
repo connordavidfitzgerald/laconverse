@@ -1,6 +1,7 @@
 import { defineConfig } from "sanity";
 import { structureTool } from "sanity/structure";
 import { visionTool } from "@sanity/vision";
+import { muxInput } from "sanity-plugin-mux-input";
 
 import { schemaTypes, singletonTypes } from "./src/sanity/schemaTypes";
 import { structure } from "./src/sanity/structure";
@@ -20,7 +21,14 @@ export default defineConfig({
   dataset: env("PUBLIC_SANITY_DATASET") || "production",
   basePath: "/admin",
 
-  plugins: [structureTool({ structure }), autoTranslate(), visionTool()],
+  plugins: [
+    structureTool({ structure }),
+    autoTranslate(),
+    /* Videos stream from Mux (HLS); the API token lives in the `secrets.mux`
+       document, set from the plugin's setup screen or `npm run shorts:import`. */
+    muxInput({ max_resolution_tier: "1080p", acceptedMimeTypes: ["video/*"] }),
+    visionTool(),
+  ],
 
   schema: {
     types: schemaTypes,
