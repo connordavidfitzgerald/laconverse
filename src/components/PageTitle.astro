@@ -1,0 +1,17 @@
+---
+/* The centred page title every redesigned page opens with (Figma: 120px
+   Favorit Ultra, 80px under the header, 80px over the hero). */
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<h1
+  class:list={[
+    "display px-5 pt-10 pb-10 text-center text-page text-balance lg:px-page lg:pt-20 lg:pb-20",
+    className,
+  ]}
+>
+  <slot />
+</h1>

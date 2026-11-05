@@ -1,0 +1,54 @@
+---
+/* "Explorer": the sections list beside the story grid (Figma: HOME, Sujet —
+   gabarit). Real links to each section; `data-filter` lets a parent (the
+   homepage explorer, the search page) filter in place instead. `asFilter`
+   points the links at the search page (?c=) rather than the section pages.
+   The default slot goes under the list (the homepage's "see all"). */
+import { href, t, type Lang } from "../i18n";
+
+interface Props {
+  lang: Lang;
+  categories: { title: string; slug: string; description?: string | null }[];
+  /** The current section's slug; "" (the default) for All, null for none. */
+  current?: string | null;
+  asFilter?: boolean;
+  /** The page `asFilter` links point at (default: the search page). */
+  filterBase?: string;
+  class?: string;
+}
+const {
+  lang,
+  categories,
+  current = "",
+  asFilter = false,
+  filterBase,
+  class: className,
+} = Astro.props;
+const s = t(lang);
+const base = asFilter && filterBase ? filterBase : href(lang, "search");
+const link = (slug: string) =>
+  !slug ? base : asFilter ? `${base}?c=${slug}` : href(lang, "category", slug);
+---
+
+<nav class={className} aria-labelledby="explore-title">
+  <h2 id="explore-title" class="label text-sm lg:text-base">{s.explore}</h2>
+  <ul
+    class="mt-2.5 flex flex-wrap gap-x-3 font-display text-lg font-medium uppercase leading-[1.05] lg:mt-4 lg:flex-col lg:text-[1.5rem]"
+    data-filter-list
+  >
+    {[{ slug: "", title: s.all }, ...categories].map((c) => (
+      <li>
+        <a
+          href={link(c.slug)}
+          data-filter={c.slug}
+          aria-current={current === c.slug ? "true" : "false"}
+          class="group/f inline-flex items-center gap-2.5 hover:opacity-60 aria-[current=true]:font-black"
+        >
+          <span aria-hidden="true" class="hidden size-[0.53em] bg-yellow group-aria-[current=true]/f:block"></span>
+          {c.title}
+        </a>
+      </li>
+    ))}
+  </ul>
+  <slot />
+</nav>

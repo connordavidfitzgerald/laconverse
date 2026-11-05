@@ -1,0 +1,420 @@
+---
+/* "Support La Converse" (Figma: HOME and DONATE): the title and a line on the
+   left, the amount raised (from Zeffy) against the goal and the giving choices on the right. Payment
+   happens on Zeffy: picking an amount opens, in a dialog, the Zeffy form for
+   the chosen frequency (one form each) with that amount filled in, so the
+   donor only chooses once.
+   Without a Zeffy URL the amounts lead to the Donate page. Phones move the
+   line under the giving choices. `stacked` keeps
+   the phone layout at every size, for narrow homes like the article column. */
+import Icon from "./Icon.astro";
+import { href, t, type Lang } from "../i18n";
+import type { DonateData } from "../lib/types";
+
+interface Props {
+  lang: Lang;
+  data: DonateData;
+  stacked?: boolean;
+  class?: string;
+}
+const { lang, data, stacked = false, class: className } = Astro.props;
+const s = t(lang);
+const en = lang === "en";
+const title = data.support?.title ?? (en ? "Support La Converse" : "Soutenez La Converse");
+// The verb on its own line, then the name and the heart (Figma: two lines).
+const [head, ...rest] = title.split(" ");
+const last = rest.join(" ");
+const raised = data.raised ?? null;
+const goal = data.goal && data.goal > 0 ? data.goal : null;
+const money = (n: number) =>
+  new Intl.NumberFormat(en ? "en-CA" : "fr-CA", {
+    style: "currency",
+    currency: "CAD",
+    maximumFractionDigits: 0,
+  }).format(n);
+/* Each frequency has its own presets, the same as the Zeffy form's (set
+   under Donate → Zeffy in the Studio); these are Zeffy's as a fallback. */
+/* Zeffy's shareable link (zeffy.com/<locale>/donation-form/<slug>) has an
+   embeddable twin under /embed/; anything else is framed as given. */
+const toEmbed = (url: string | null | undefined) =>
+  url?.replace(
+    /zeffy\.com\/(?:[a-z]{2}-[A-Z]{2}\/)?(donation-form|ticketing|peer-to-peer)\//,
+    "zeffy.com/embed/$1/",
+  ) || undefined;
+/* Each frequency opens its own Zeffy form (the fallback form for any
+   without one), so the donor's choice carries over. */
+const p = data.presets;
+const forms = data.zeffyForms ?? {};
+const frequencies = [
+  {
+    value: "monthly",
+    label: s.monthly,
+    amounts: p?.monthly?.length ? p.monthly : [5, 10, 15, 25],
+    embed: toEmbed(forms.monthly ?? data.zeffyUrl),
+  },
+  {
+    value: "annually",
+    label: s.annually,
+    amounts: p?.annually?.length ? p.annually : [120, 200, 350, 500],
+    embed: toEmbed(forms.annually ?? data.zeffyUrl),
+  },
+  {
+    value: "once",
+    label: s.oneTime,
+    amounts: p?.once?.length ? p.once : [50, 100, 150, 200],
+    embed: toEmbed(forms.once ?? data.zeffyUrl),
+  },
+];
+const hasForm = frequencies.some((f) => f.embed);
+const fallback = href(lang, "donate");
+const titleId = `donate-title-${Math.random().toString(36).slice(2, 8)}`;
+const tileH = stacked ? "h-14" : "h-14 lg:h-[103px]";
+const tile =
+  "label flex items-center justify-center gap-2 rounded-xl text-copy text-ink bg-mist transition-colors hover:bg-wine/15 lg:rounded-[20px] aria-pressed:bg-wine aria-pressed:text-paper aria-checked:bg-wine aria-checked:text-paper";
+---
+
+<donate-widget
+  data-no-prose
+  class:list={["flex flex-col", !stacked && "lg:page-grid", className]}
+>
+  <div class:list={["contents", !stacked && "lg:col-span-4 lg:flex lg:flex-col lg:justify-between"]}>
+    <h2
+      class:list={[
+        "display max-w-[9em] text-[clamp(2.5rem,12vw,3rem)] leading-[0.95]",
+        !stacked && "lg:text-[clamp(3rem,5vw,4.5rem)]",
+      ]}
+    >
+      {head}{" "}
+      <span class="whitespace-nowrap lg:block">
+        {last}
+        <Icon
+          name="heart"
+          class="ml-3 inline-block h-[0.7em] w-[0.8em] -translate-y-[0.05em] text-pink"
+        />
+      </span>
+    </h2>
+    {data.support?.text && (
+      <p
+        class:list={[
+          "prose-sans order-1 mt-5",
+          !stacked && "lg:order-none lg:mt-10 lg:pr-10",
+        ]}
+      >
+        {data.support.text}
+      </p>
+    )}
+  </div>
+
+  <div class:list={["mt-10", !stacked && "lg:col-span-8 lg:col-start-5 lg:mt-0"]}>
+    <!-- Raised so far (Zeffy), then the goal, both on the right; the bar only
+         with a goal -->
+    {raised !== null && (
+      <div class="flex items-end justify-end gap-6 lg:gap-10">
+        <p class="label text-copy">
+          <span class="mr-2 lg:mr-3">{s.raised}</span>
+          {goal ? (
+            money(raised)
+          ) : (
+            <span class:list={["text-[1.75rem]", !stacked && "lg:text-[3rem]"]}>
+              {money(raised)}
+            </span>
+          )}
+        </p>
+        {goal && (
+          <p class="label text-copy">
+            /{" "}
+            <span class:list={["text-[1.75rem]", !stacked && "lg:text-[3rem]"]}>
+              {money(goal)}
+            </span>
+          </p>
+        )}
+      </div>
+    )}
+    {raised !== null && goal && (
+      <div
+        role="meter"
+        aria-label={s.raised}
+        aria-valuemin="0"
+        aria-valuemax={goal}
+        aria-valuenow={Math.min(raised, goal)}
+        aria-valuetext={`${money(raised)} / ${money(goal)}`}
+        class:list={["mt-2.5 h-7 rounded-[10px] bg-wine p-1", !stacked && "lg:h-10 lg:p-[5px]"]}
+      >
+        <div
+          class="h-full min-w-6 rounded-md bg-pink"
+          style={`width: ${Math.min(raised / goal, 1) * 100}%`}
+        ></div>
+      </div>
+    )}
+
+    <!-- How often -->
+    <div
+      role="radiogroup"
+      aria-label={s.frequency}
+      class="mt-2.5 grid grid-cols-3 gap-2.5"
+      data-frequency
+    >
+      {frequencies.map((f, i) => (
+        <button
+          type="button"
+          role="radio"
+          aria-checked={i === 0 ? "true" : "false"}
+          tabindex={i === 0 ? 0 : -1}
+          data-value={f.value}
+          data-embed={f.embed}
+          class:list={[tile, "group/tile", tileH]}
+        >
+          <Icon name="heart" class="hidden h-4 w-[18px] text-pink group-aria-checked/tile:block" />
+          {f.label}
+        </button>
+      ))}
+    </div>
+
+    <!-- How much: the chosen frequency's presets (the others hidden) and a
+         custom amount, in one row (phones: two by two, custom across the
+         last); each opens the form -->
+    <div class="mt-2.5 grid grid-cols-2 gap-2.5 md:grid-cols-5" aria-label={s.amount} role="group">
+      {frequencies.flatMap((f, fi) =>
+        f.amounts.map((n, i) => (
+          <a
+            href={fallback}
+            data-amount={n}
+            data-freq={f.value}
+            hidden={fi !== 0}
+            aria-pressed={fi === 0 && i === 0 ? "true" : "false"}
+            class:list={[tile, "group/tile", tileH]}
+          >
+            <Icon name="heart" class="hidden h-4 w-[18px] text-pink group-aria-pressed/tile:block" />
+            {money(n)}
+          </a>
+        )),
+      )}
+      <a
+        href={fallback}
+        data-amount=""
+        aria-pressed="false"
+        class:list={[tile, "group/tile col-span-2 md:col-span-1", tileH]}
+      >
+        <Icon name="heart" class="hidden h-4 w-[18px] text-pink group-aria-pressed/tile:block" />
+        {s.customAmount}
+      </a>
+    </div>
+
+    <!-- Give: opens the form with the choices above -->
+    <a
+      href={fallback}
+      data-give
+      class:list={[
+        "label mt-2.5 flex items-center justify-center gap-2 rounded-xl bg-mist text-copy text-ink transition-colors hover:bg-ink hover:text-paper lg:rounded-[20px]",
+        tileH,
+      ]}
+    >
+      <Icon name="heart" class="h-4 w-[18px] text-pink" />
+      {s.donate}
+    </a>
+  </div>
+
+  {hasForm && (
+    <dialog
+      data-donate
+      class="m-auto h-[min(90dvh,60rem)] w-[min(100vw-1.25rem,44rem)] max-w-none overflow-hidden rounded-2xl bg-paper p-0 text-ink backdrop:bg-ink/60 lg:rounded-[20px]"
+      aria-labelledby={titleId}
+    >
+      <div class="flex h-full flex-col">
+        <!-- Our header: the title and close -->
+        <div class="bg-wine px-5 pt-5 pb-4 text-paper lg:px-8 lg:pt-7 lg:pb-6">
+          <div class="flex items-start justify-between gap-5">
+            <h2
+              id={titleId}
+              class="display text-[2rem] leading-[0.9] lg:text-[2.75rem]"
+            >
+              {title}
+              <Icon
+                name="heart"
+                class="ml-2 inline-block h-[0.65em] w-[0.75em] -translate-y-[0.05em] text-pink"
+              />
+            </h2>
+            <button
+              type="button"
+              data-close
+              class="press -mt-1 -mr-1 grid size-9 shrink-0 place-items-center rounded-full bg-paper/10 hover:bg-paper hover:text-wine"
+              aria-label={s.close}
+            >
+              <Icon name="close" class="size-3.5" />
+            </button>
+          </div>
+        </div>
+        <!-- Zeffy's form; the heart beats behind it until it has loaded -->
+        <div class="relative min-h-0 flex-1">
+          <div
+            data-loading
+            class="absolute inset-0 grid place-items-center transition-opacity duration-300"
+            aria-hidden="true"
+          >
+            <Icon name="heart" class="h-6 w-7 animate-pulse text-pink" />
+          </div>
+          <iframe
+            data-frame
+            title={s.donate}
+            class="relative size-full opacity-0 transition-opacity duration-300"
+            allow="payment"
+          ></iframe>
+        </div>
+      </div>
+    </dialog>
+  )}
+</donate-widget>
+
+<style>
+  dialog[data-donate]::backdrop {
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+  }
+  dialog[data-donate][open]:not([data-leaving])::backdrop {
+    opacity: 1;
+  }
+  @starting-style {
+    dialog[data-donate][open]::backdrop {
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  import { d, gsap } from "../lib/motion";
+
+  class DonateWidget extends HTMLElement {
+    connectedCallback() {
+      const freq = [...this.querySelectorAll<HTMLButtonElement>("[data-frequency] [role=radio]")];
+      const amounts = [...this.querySelectorAll<HTMLAnchorElement>("[data-amount]")];
+      const dialog = this.querySelector("dialog");
+      const frame = this.querySelector<HTMLIFrameElement>("[data-frame]");
+
+      // Radio group: click or arrow keys, roving tabindex. Picking a
+      // frequency shows its presets, keeping the same place in the row (or
+      // the custom amount) chosen.
+      const pick = (btn: HTMLButtonElement) => {
+        const visible = () => amounts.filter((a) => !a.hidden && a.dataset.amount);
+        const pressed = amounts.find((a) => a.getAttribute("aria-pressed") === "true");
+        const at = pressed?.dataset.amount ? visible().indexOf(pressed) : -1;
+        freq.forEach((b) => {
+          const on = b === btn;
+          b.setAttribute("aria-checked", String(on));
+          b.tabIndex = on ? 0 : -1;
+        });
+        amounts.forEach((a) => {
+          if (a.dataset.freq) a.hidden = a.dataset.freq !== btn.dataset.value;
+        });
+        if (at >= 0) {
+          const now = visible();
+          mark(now[Math.min(at, now.length - 1)]);
+        }
+      };
+      freq.forEach((btn, i) => {
+        btn.addEventListener("click", () => pick(btn));
+        btn.addEventListener("keydown", (e) => {
+          const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+          if (!step) return;
+          e.preventDefault();
+          const next = freq[(i + step + freq.length) % freq.length];
+          pick(next);
+          next.focus();
+        });
+      });
+
+      // The Zeffy form for the current choices: the chosen frequency's own
+      // form, with the preset filled in through Zeffy's `Amount` link
+      // parameter (its documented prefill); a custom amount leaves it empty.
+      // Null when that frequency has no form (the tiles then lead to the
+      // Donate page).
+      const formUrl = () => {
+        const f = freq.find((b) => b.getAttribute("aria-checked") === "true");
+        if (!dialog || !frame || !f?.dataset.embed) return null;
+        const a = amounts.find((x) => x.getAttribute("aria-pressed") === "true");
+        const url = new URL(f.dataset.embed);
+        if (a?.dataset.amount) url.searchParams.set("Amount", a.dataset.amount);
+        return url.href;
+      };
+      // Loads it into the frame, the heart beating until it has; the same
+      // form is not reloaded.
+      const loading = this.querySelector<HTMLElement>("[data-loading]");
+      const load = (url: string) => {
+        if (!frame || frame.src === url) return;
+        frame.classList.add("opacity-0");
+        loading?.classList.remove("opacity-0");
+        frame.onload = () => {
+          frame.classList.remove("opacity-0");
+          loading?.classList.add("opacity-0");
+        };
+        frame.src = url;
+      };
+      const open = (url: string) => {
+        load(url);
+        dialog!.showModal();
+        gsap.fromTo(
+          dialog,
+          { opacity: 0, y: 16 },
+          { opacity: 1, y: 0, duration: d(0.4), ease: "power3.out", clearProps: "transform" },
+        );
+      };
+      // Loads the default choice's form once the widget is near the screen,
+      // so a first open is usually instant.
+      if (frame) {
+        const io = new IntersectionObserver(
+          (entries) => {
+            if (!entries.some((e) => e.isIntersecting)) return;
+            io.disconnect();
+            const url = formUrl();
+            if (url && !frame.src) load(url);
+          },
+          { rootMargin: "300px" },
+        );
+        io.observe(this);
+      }
+      const close = () => {
+        if (!dialog?.open || dialog.dataset.leaving !== undefined) return;
+        dialog.dataset.leaving = "";
+        gsap.to(dialog, {
+          opacity: 0,
+          y: 12,
+          duration: d(0.25),
+          ease: "power2.in",
+          onComplete: () => {
+            dialog.close();
+            delete dialog.dataset.leaving;
+            gsap.set(dialog, { clearProps: "opacity,transform" });
+          },
+        });
+      };
+
+      amounts.forEach((a) => {
+        a.addEventListener("click", (e) => {
+          mark(a);
+          const url = formUrl();
+          if (!url) return;
+          e.preventDefault();
+          open(url);
+        });
+      });
+      this.querySelector("[data-give]")?.addEventListener("click", (e) => {
+        const url = formUrl();
+        if (!url) return;
+        e.preventDefault();
+        open(url);
+      });
+      const mark = (a: HTMLAnchorElement) =>
+        amounts.forEach((x) => x.setAttribute("aria-pressed", String(x === a)));
+
+      this.querySelector("[data-close]")?.addEventListener("click", close);
+      // Esc and a click on the backdrop close too, eased the same way.
+      dialog?.addEventListener("cancel", (e) => {
+        e.preventDefault();
+        close();
+      });
+      dialog?.addEventListener("click", (e) => {
+        if (e.target === dialog) close();
+      });
+    }
+  }
+  customElements.define("donate-widget", DonateWidget);
+</script>

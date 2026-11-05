@@ -1,0 +1,72 @@
+---
+/* A YouTube video that loads nothing from YouTube until it's played: the
+   poster (its own image, or YouTube's thumbnail) with a play button, swapped
+   for the privacy-enhanced player on click. */
+import Icon from "./Icon.astro";
+import Picture from "./Picture.astro";
+import { t, type Lang } from "../i18n";
+import { embedSrc } from "../lib/portableText";
+import type { Img } from "../lib/types";
+
+interface Props {
+  url: string;
+  title: string;
+  lang: Lang;
+  poster?: Img | null;
+  class?: string;
+}
+const { url, title, lang, poster, class: className } = Astro.props;
+const src = embedSrc(url);
+const id = src?.match(/youtube-nocookie\.com\/embed\/([^?/]+)/)?.[1];
+---
+
+{src && (
+  <you-tube
+    data-src={`${src}${src.includes("?") ? "&" : "?"}autoplay=1&rel=0`}
+    data-title={title}
+    class:list={["group relative block aspect-video overflow-hidden bg-ink", className]}
+  >
+    {poster?.asset ? (
+      <Picture img={poster} ratio={16 / 9} sizes="(min-width: 1024px) 63vw, 100vw" class="size-full" />
+    ) : id ? (
+      <img
+        src={`https://i.ytimg.com/vi/${id}/maxresdefault.jpg`}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        class="absolute inset-0 size-full object-cover"
+      />
+    ) : null}
+    <button
+      type="button"
+      class="absolute inset-0 grid place-items-center"
+      aria-label={`${t(lang).playVideo}: ${title}`}
+    >
+      <span class="press grid size-16 place-items-center rounded-full bg-paper text-ink transition-transform duration-300 group-hover:scale-110 lg:size-24">
+        <Icon name="play" class="ml-1 size-5 lg:size-7" />
+      </span>
+    </button>
+  </you-tube>
+)}
+
+<script>
+  class YouTube extends HTMLElement {
+    connectedCallback() {
+      this.querySelector("button")?.addEventListener(
+        "click",
+        () => {
+          const frame = document.createElement("iframe");
+          frame.src = this.dataset.src!;
+          frame.title = this.dataset.title ?? "";
+          frame.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+          frame.allowFullscreen = true;
+          frame.className = "absolute inset-0 size-full";
+          this.replaceChildren(frame);
+          frame.focus();
+        },
+        { once: true },
+      );
+    }
+  }
+  customElements.define("you-tube", YouTube);
+</script>

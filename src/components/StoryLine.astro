@@ -1,0 +1,47 @@
+---
+/* A ruled story row (Figma: HOME explore list, JOURNALISM recent articles):
+   image on the left, chip and date over the title on the right, "Voir →" at
+   the foot. Phones keep the compact StoryRow proportions. The data-* hooks
+   let the homepage Explorer reuse a blank row as its client-side template
+   (filled by `cardLinks` in lib/searchClient). */
+import Chip from "./Chip.astro";
+import Picture from "./Picture.astro";
+import { formatDate, href, t, type Lang } from "../i18n";
+import type { ArticleCard } from "../lib/types";
+
+interface Props {
+  article: ArticleCard;
+  lang: Lang;
+}
+const { article, lang } = Astro.props;
+const [category] = article.categories;
+---
+
+<article class="group relative grid grid-cols-2 gap-5 border-t border-ink py-5 lg:grid-cols-8 lg:gap-x-10 lg:py-10">
+  <Picture
+    img={article.image}
+    ratio={382 / 226}
+    sizes="(min-width: 1024px) 23vw, 45vw"
+    class="media-inset lg:col-span-3"
+  />
+  <div class="flex flex-col gap-2.5 lg:col-span-5 lg:gap-5">
+    <div class="flex items-center justify-between gap-2">
+      {category ? <Chip category={category} lang={lang} class="relative z-10 text-[1rem]!" data-chip /> : <span />}
+      <time
+        data-date
+        datetime={article.publishedAt}
+        class="label hidden text-[1rem] font-medium whitespace-nowrap md:block"
+      >
+        {formatDate(lang, article.publishedAt)}
+      </time>
+    </div>
+    <h3 class="display text-lg leading-[0.95] md:text-2xl lg:text-[2.25rem]">
+      <a href={href(lang, "article", article.slug)} data-title class="title-line after:absolute after:inset-0">
+        {article.title}
+      </a>
+    </h3>
+    <p class="label mt-auto hidden text-copy lg:block" aria-hidden="true">
+      {t(lang).read} <span class="nudge-x">→</span>
+    </p>
+  </div>
+</article>

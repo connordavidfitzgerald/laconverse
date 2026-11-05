@@ -1,0 +1,31 @@
+---
+/* Four portraits with name and role (Figma: program pages' alumni row).
+   Phones: two across. */
+import Picture from "./Picture.astro";
+import { href, type Lang } from "../i18n";
+import type { Person } from "../lib/types";
+
+interface Props {
+  people: Person[];
+  lang: Lang;
+}
+const { people, lang } = Astro.props;
+---
+
+<ul class="grid grid-cols-2 gap-x-2.5 gap-y-5 md:grid-cols-4 lg:gap-x-10">
+  {people.map((p) => (
+    <li>
+      <a href={href(lang, "author", p.slug)} class="group block">
+        <Picture
+          img={p.image}
+          ratio={240 / 300}
+          sizes="(min-width: 1024px) 15vw, 50vw"
+          class="media-inset"
+          imgClass="grayscale-0 group-hover:grayscale"
+        />
+        <p class="label mt-2.5 text-sm leading-[0.95] lg:text-lg">{p.name}</p>
+        {p.role && <p class="label text-sm leading-[0.95] opacity-50 lg:text-lg">{p.role}</p>}
+      </a>
+    </li>
+  ))}
+</ul>

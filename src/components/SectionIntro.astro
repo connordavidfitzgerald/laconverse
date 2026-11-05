@@ -1,0 +1,23 @@
+---
+/* A section's chip over its description, between the search bar and the
+   explorer (search page, section and topic pages). Topics have no section
+   page to link to, so they go without the chip. */
+import Chip from "./Chip.astro";
+import type { Lang } from "../i18n";
+
+interface Props {
+  lang: Lang;
+  category: { title: string; slug: string; description?: string | null };
+  chip?: boolean;
+  hidden?: boolean;
+  [attr: `data-${string}`]: unknown;
+}
+const { lang, category, chip = true, hidden, ...rest } = Astro.props;
+---
+
+<div hidden={hidden} class="pt-10 lg:pt-20" {...rest}>
+  {chip && <Chip category={category} lang={lang} size="md" class="mb-4 lg:mb-6" />}
+  <p class="max-w-[30em] font-display text-lead font-black uppercase">
+    {category.description}
+  </p>
+</div>

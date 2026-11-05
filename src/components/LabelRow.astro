@@ -1,0 +1,38 @@
+---
+/* The redesigned pages' section shape: a small label in cols 1–4, the content
+   from col 5 to the margin. Phones stack the label over the content.
+   `start` moves the content (Studio's cards start at col 3, About's
+   principles at col 4). */
+interface Props {
+  label?: string | null;
+  start?: 3 | 4 | 5;
+  id?: string;
+  class?: string;
+  labelClass?: string;
+}
+const { label, start = 5, id, class: className, labelClass } = Astro.props;
+const content = { 3: "lg:col-start-3", 4: "lg:col-start-4", 5: "lg:col-start-5" }[start];
+const hasLabel = !!label || Astro.slots.has("label");
+const labelSpan = { 3: "lg:col-span-2", 4: "lg:col-span-3", 5: "lg:col-span-4" }[start];
+---
+
+<section
+  id={id}
+  class:list={["px-5 lg:page-grid lg:px-page", className]}
+  aria-label={label ?? undefined}
+>
+  {hasLabel && (
+    <h2
+      class:list={[
+        "label pb-5 text-copy leading-[0.95] lg:col-start-1 lg:row-start-1 lg:pb-0 lg:pr-5",
+        labelSpan,
+        labelClass,
+      ]}
+    >
+      <slot name="label">{label}</slot>
+    </h2>
+  )}
+  <div class:list={["lg:col-end-13 lg:row-start-1", content]}>
+    <slot />
+  </div>
+</section>

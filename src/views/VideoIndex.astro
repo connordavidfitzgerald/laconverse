@@ -1,0 +1,91 @@
+---
+/* Every video as a card, laid out like the search page without the search:
+   the page title, then the sticky list of video types (Actu, Culture G…, the
+   label the cards carry) beside the cards. Picking one filters in place (?c=
+   in the URL); each card opens its video in the feed (/videos#slug), narrowed
+   to the picked type (/videos?c=…#slug). */
+import ExploreNav from "../components/ExploreNav.astro";
+import VideoCard from "../components/VideoCard.astro";
+import Layout from "../layouts/Layout.astro";
+import { href, otherLang, t, type Lang } from "../i18n";
+import { getVideoCards } from "../lib/content";
+import { VIDEO_KINDS } from "../lib/videoKinds";
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+const videos = await getVideoCards(lang);
+// Only the types that have a video, in the types' own order.
+const used = new Set(videos.map((v) => v.kind));
+const kinds = VIDEO_KINDS.filter((k) => used.has(k.value)).map((k) => ({
+  title: k[lang],
+  slug: k.value,
+}));
+const page = href(lang, "videoIndex");
+---
+
+<Layout lang={lang} title={s.videos} alternate={href(otherLang(lang), "videoIndex")}>
+  <video-index class="block px-5 pt-5 pb-20 lg:px-page lg:pt-[55px] lg:pb-30">
+    <h1 class="display text-mega">{s.videos}</h1>
+    <div class="pt-10 lg:page-grid lg:pt-20" data-explore>
+      <ExploreNav
+        lang={lang}
+        categories={kinds}
+        asFilter
+        filterBase={page}
+        class="pb-10 lg:sticky lg:top-[calc(var(--header-h)+2.5rem)] lg:col-span-4 lg:self-start lg:pb-0"
+      />
+      <ul class="grid grid-cols-2 gap-x-5 gap-y-4 md:grid-cols-3 lg:col-span-8 lg:col-start-5 lg:gap-x-10">
+        {videos.map((v) => (
+          <li data-kind={v.kind ?? ""}>
+            <VideoCard video={v} lang={lang} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  </video-index>
+</Layout>
+
+<script>
+  import { fadeImages } from "../lib/motion";
+  import { scrollToExplorer } from "../lib/smoothScroll";
+
+  class VideoIndex extends HTMLElement {
+    connectedCallback() {
+      const links = this.querySelectorAll<HTMLAnchorElement>("[data-filter]");
+      links.forEach((a) =>
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
+          this.filter(a.dataset.filter ?? "");
+          scrollToExplorer(this);
+        }),
+      );
+      const initial = new URLSearchParams(location.search).get("c") ?? "";
+      if (initial) this.filter(initial, false);
+    }
+
+    filter(kind: string, animate = true) {
+      this.querySelectorAll<HTMLAnchorElement>("[data-filter]").forEach((a) =>
+        a.setAttribute("aria-current", String((a.dataset.filter ?? "") === kind)),
+      );
+      const shown: Element[] = [];
+      this.querySelectorAll<HTMLElement>("[data-kind]").forEach((li) => {
+        li.hidden = Boolean(kind) && li.dataset.kind !== kind;
+        if (!li.hidden) shown.push(li);
+      });
+      if (animate) fadeImages(shown);
+      // Cards open the feed narrowed to the same type (/videos?c=…#slug).
+      this.querySelectorAll<HTMLAnchorElement>("[data-kind] h3 a").forEach((a) => {
+        const link = new URL(a.href);
+        kind ? link.searchParams.set("c", kind) : link.searchParams.delete("c");
+        a.href = link.pathname + link.search + link.hash;
+      });
+      const url = new URL(location.href);
+      kind ? url.searchParams.set("c", kind) : url.searchParams.delete("c");
+      history.replaceState(null, "", url);
+    }
+  }
+  customElements.define("video-index", VideoIndex);
+</script>
