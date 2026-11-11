@@ -1,0 +1,37 @@
+---
+/* The raised-so-far line of the donate widget (amount raised, then the goal),
+   right-aligned and bottom-aligned. Shared so DonateWidget can set it beside
+   its title (stacked, in the article column) or above the bar. */
+import { t, type Lang } from "../i18n";
+
+interface Props {
+  lang: Lang;
+  raised: number;
+  goal: number | null;
+  /** Keep the phone size at every width (DonateWidget's `stacked`). */
+  stacked?: boolean;
+  class?: string;
+}
+const { lang, raised, goal, stacked = false, class: className } = Astro.props;
+const s = t(lang);
+const money = (n: number) =>
+  new Intl.NumberFormat(lang === "en" ? "en-CA" : "fr-CA", {
+    style: "currency",
+    currency: "CAD",
+    maximumFractionDigits: 0,
+  }).format(n);
+const big = ["text-[1.75rem]", !stacked && "lg:text-[3rem]"];
+---
+
+<div class:list={["flex items-end justify-end gap-6 lg:gap-10", className]}>
+  <p class="label text-copy">
+    <span class="mr-2 lg:mr-3">{s.raised}</span>
+    {goal ? money(raised) : <span class:list={big}>{money(raised)}</span>}
+  </p>
+  {goal && (
+    <p class="label text-copy">
+      /{" "}
+      <span class:list={big}>{money(goal)}</span>
+    </p>
+  )}
+</div>
