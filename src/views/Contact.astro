@@ -1,6 +1,15 @@
 ---
-/* Figma: 9 CONTACT — UI. */
+/* Figma: CONTACT (2026 desktop frame). The centred title, the illustration
+   full width, the lead, then the email centred with the yellow voice-note
+   button under it, and a closing row: socials on the left, the "want to…?"
+   links on the right. The illustration and lead come from Sanity, falling
+   back to the tin-can phones and the copy in i18n. */
+import { Image } from "astro:assets";
+import contactImage from "../assets/contact.jpg";
 import Icon from "../components/Icon.astro";
+import PageTitle from "../components/PageTitle.astro";
+import Picture from "../components/Picture.astro";
+import Socials from "../components/Socials.astro";
 import Layout from "../layouts/Layout.astro";
 import { href, otherLang, t, type Lang } from "../i18n";
 import { getContact, getSettings } from "../lib/content";
@@ -11,53 +20,81 @@ interface Props {
 const { lang } = Astro.props;
 const s = t(lang);
 const [page, settings] = await Promise.all([getContact(lang), getSettings(lang)]);
+const title = page.title ?? s.contact;
+const intro = page.intro ?? s.contactIntro;
+const links = page.links.filter((l) => l.cta?.url);
+const frame = "aspect-[1648/924] w-full max-md:aspect-[4/3]";
 ---
 
 <Layout
   lang={lang}
-  title={page.title ?? s.contact}
+  title={title}
+  description={page.subtitle ?? intro}
+  image={page.image}
   seo={page.seo}
   alternate={href(otherLang(lang), "contact")}
 >
-  <div class="px-5 lg:px-5">
-    <header class="pt-5 lg:pt-10">
-      <h1 class="display text-mega">{page.title ?? s.contact}</h1>
-      {page.subtitle && (
-        <p class="mt-2.5 font-display text-2xl font-medium leading-[0.95] lg:text-intro">
-          {page.subtitle}
-        </p>
-      )}
-    </header>
-
-    <div class="flex flex-col items-center py-16 text-center lg:py-24">
-      <button
-        type="button"
-        data-voice-open
-        class="press grid size-[111px] place-items-center rounded-full bg-ink text-paper hover:scale-105 lg:size-40"
-        aria-label={s.vnOpen}
-      >
-        <Icon name="mic" class="h-[30px] w-[29px] lg:h-11 lg:w-10" />
-      </button>
-      <p class="label mt-24 text-xs">{s.writeDirectly}</p>
-      <a
-        href={`mailto:${settings.email}`}
-        class="display mt-4 text-[2.25rem] leading-[0.95] lg:text-section"
-      >
-        {settings.email}
-      </a>
+  <PageTitle>{title}</PageTitle>
+  <div class="px-5 lg:px-page">
+    {page.image ? (
+      <Picture
+        img={page.image}
+        ratio={1648 / 924}
+        sizes="100vw"
+        widths={[640, 960, 1280, 1920, 2560]}
+        eager
+        class="max-md:aspect-[4/3]!"
+      />
+    ) : (
+      <Image
+        src={contactImage}
+        alt=""
+        widths={[640, 960, 1280, contactImage.width]}
+        sizes="100vw"
+        loading="eager"
+        class:list={[frame, "object-cover"]}
+      />
+    )}
+    <div class="prose-lead mt-5 lg:mt-10">
+      <p>{intro}</p>
     </div>
+  </div>
 
-    {page.links.length > 0 && (
-      <ul class="grid grid-cols-2 gap-5 pb-16 lg:grid-cols-4 lg:pb-24">
-        {page.links.map((l) => (
+  <!-- The email, then the voice-note button under it -->
+  <div class="flex flex-col items-center px-5 pt-30 text-center lg:px-page lg:pt-60">
+    <a
+      href={`mailto:${settings.email}`}
+      aria-label={`${s.writeDirectly}: ${settings.email}`}
+      class="display link-line decoration-2 text-lead break-all"
+    >
+      {settings.email}
+    </a>
+    <button
+      type="button"
+      data-voice-open
+      class="press mt-5 grid size-24 place-items-center rounded-full bg-yellow text-ink hover:scale-105 lg:mt-10 lg:size-30"
+      aria-label={s.vnOpen}
+    >
+      <Icon name="mic" class="h-7 w-6 lg:h-8 lg:w-7" />
+    </button>
+  </div>
+
+  <!-- Socials left, the page's links right -->
+  <div
+    class="flex flex-col gap-5 px-5 pt-30 pb-10 lg:flex-row lg:items-end lg:justify-between lg:px-page lg:pt-60"
+  >
+    {settings.socials.length > 0 && <Socials socials={settings.socials} variant="text" />}
+    {links.length > 0 && (
+      <ul class="flex flex-wrap gap-x-5 lg:gap-x-10">
+        {links.map((l) => (
           <li>
-            {l.prompt && <p class="text-xs font-medium leading-[1.35] lg:text-sm">{l.prompt}</p>}
-            {l.cta?.url && (
-              <a href={l.cta.url} class="label mt-1 inline-flex items-center gap-1 text-sm">
-                {l.cta.label}
-                <Icon name="arrow-ne" class="nudge-ne size-2" />
-              </a>
-            )}
+            <a
+              href={l.cta!.url!}
+              class="link-line decoration-2 label inline-flex items-center gap-1 text-2xl lg:text-3xl"
+            >
+              {l.cta!.label}
+              <span aria-hidden="true" class="nudge-ne inline-block font-medium">↗</span>
+            </a>
           </li>
         ))}
       </ul>

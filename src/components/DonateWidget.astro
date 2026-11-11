@@ -7,6 +7,7 @@
    Without a Zeffy URL the amounts lead to the Donate page. Phones move the
    line under the giving choices. `stacked` keeps
    the phone layout at every size, for narrow homes like the article column. */
+import DonateRaised from "./DonateRaised.astro";
 import Icon from "./Icon.astro";
 import { href, t, type Lang } from "../i18n";
 import type { DonateData } from "../lib/types";
@@ -78,9 +79,33 @@ const tile =
   class:list={["flex flex-col", !stacked && "lg:page-grid", className]}
 >
   <div class:list={["contents", !stacked && "lg:col-span-4 lg:flex lg:flex-col lg:justify-between"]}>
+    {stacked && raised !== null ? (
+      /* Stacked (article column): the amount raised sits on the title's
+         line, both bottom-aligned. */
+      <div class="flex flex-wrap items-end justify-between gap-x-5 gap-y-2.5">
+      <h2
+        class:list={[
+          "display max-w-[9em] text-[2.5rem] leading-[0.95] sm:text-[3.25rem]",
+          !stacked && "lg:text-[clamp(3rem,5vw,4.5rem)]",
+        ]}
+      >
+        {head}{" "}
+        <span class="whitespace-nowrap lg:block">
+          {last}
+          <Icon
+            name="heart"
+            class="ml-3 inline-block h-[0.7em] w-[0.8em] -translate-y-[0.05em] text-pink"
+          />
+        </span>
+      </h2>
+        <DonateRaised lang={lang} raised={raised} goal={goal} stacked class="ml-auto" />
+      </div>
+    ) : (
     <h2
       class:list={[
-        "display max-w-[9em] text-[clamp(2.5rem,12vw,3rem)] leading-[0.95]",
+        "display max-w-[9em] leading-[0.95]",
+        // Stacked (article): the story call-out's title size.
+        stacked ? "text-[2.5rem] sm:text-[3.25rem]" : "text-[clamp(2.5rem,12vw,3rem)]",
         !stacked && "lg:text-[clamp(3rem,5vw,4.5rem)]",
       ]}
     >
@@ -93,6 +118,7 @@ const tile =
         />
       </span>
     </h2>
+    )}
     {data.support?.text && (
       <p
         class:list={[
@@ -105,30 +131,16 @@ const tile =
     )}
   </div>
 
-  <div class:list={["mt-10", !stacked && "lg:col-span-8 lg:col-start-5 lg:mt-0"]}>
-    <!-- Raised so far (Zeffy), then the goal, both on the right; the bar only
-         with a goal -->
-    {raised !== null && (
-      <div class="flex items-end justify-end gap-6 lg:gap-10">
-        <p class="label text-copy">
-          <span class="mr-2 lg:mr-3">{s.raised}</span>
-          {goal ? (
-            money(raised)
-          ) : (
-            <span class:list={["text-[1.75rem]", !stacked && "lg:text-[3rem]"]}>
-              {money(raised)}
-            </span>
-          )}
-        </p>
-        {goal && (
-          <p class="label text-copy">
-            /{" "}
-            <span class:list={["text-[1.75rem]", !stacked && "lg:text-[3rem]"]}>
-              {money(goal)}
-            </span>
-          </p>
-        )}
-      </div>
+  <div
+    class:list={[
+      stacked && raised !== null ? "mt-5" : "mt-10",
+      !stacked && "lg:col-span-8 lg:col-start-5 lg:mt-0",
+    ]}
+  >
+    <!-- Raised so far (Zeffy), then the goal, both on the right (stacked:
+         beside the title instead); the bar only with a goal -->
+    {raised !== null && !stacked && (
+      <DonateRaised lang={lang} raised={raised} goal={goal} />
     )}
     {raised !== null && goal && (
       <div
@@ -204,10 +216,7 @@ const tile =
     <a
       href={fallback}
       data-give
-      class:list={[
-        "label mt-2.5 flex items-center justify-center gap-2 rounded-xl bg-mist text-copy text-ink transition-colors hover:bg-ink hover:text-paper lg:rounded-[20px]",
-        tileH,
-      ]}
+      class:list={["btn mt-2.5 flex w-full", stacked && "btn-compact"]}
     >
       <Icon name="heart" class="h-4 w-[18px] text-pink" />
       {s.donate}

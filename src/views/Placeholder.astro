@@ -1,8 +1,7 @@
 ---
-/* Stand-in for a section that's on its way (S'outiller, Se réunir,
-   S'impliquer): the Contact page's title block and a pointer to the newsroom.
+/* Stand-in for a section that's on its way (S'outiller, Se réunir):
+   the Contact page's title block and a pointer to the newsroom.
    Each section swaps this for its own view once it has content. */
-import Icon from "../components/Icon.astro";
 import Layout from "../layouts/Layout.astro";
 import { href, otherLang, t, type Lang, type RouteKey } from "../i18n";
 import { getSettings } from "../lib/content";
@@ -40,7 +39,7 @@ const settings = await getSettings(lang);
       </a>
       <a href={href(lang, "contact")} class="label mt-2 inline-flex items-center gap-1 text-sm">
         {s.contact}
-        <Icon name="arrow-ne" class="nudge-ne size-2" />
+        <span aria-hidden="true" class="nudge-ne inline-block font-medium">↗</span>
       </a>
     </div>
   </div>

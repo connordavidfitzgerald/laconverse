@@ -21,8 +21,7 @@ const { why, approach } = page;
 const hasWhy = Boolean(why?.title || why?.body);
 const programUrl = (p: { slug: string; linkTo?: string | null }) =>
   p.linkTo === "podcasts" ? href(lang, "podcasts") : href(lang, "program", p.slug);
-const button =
-  "label press inline-grid place-items-center bg-lilac px-6 py-3.5 text-copy hover:bg-ink hover:text-lilac lg:px-8 lg:py-4";
+const button = "btn btn-lilac press w-cols-3";
 ---
 
 <Layout

@@ -1998,5 +1998,13 @@
   {
     "source": "/en/tag/sagesse-du-hood",
     "destination": "/en/category/neighbourhoods"
+  },
+  {
+    "source": "/s-impliquer",
+    "destination": "/donner"
+  },
+  {
+    "source": "/en/take-part",
+    "destination": "/en/donate"
   }
 ]

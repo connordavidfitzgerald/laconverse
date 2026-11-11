@@ -59,7 +59,13 @@ const field =
         data-fab-disc
         class="relative grid size-[52px] lg:size-[64px] place-items-center rounded-full bg-yellow text-ink shadow-[0_8px_24px_-8px_rgb(0_0_0/0.5)] transition-transform duration-200 ease-out group-hover:scale-105 group-active:scale-95"
       >
-        <span data-fab-icon class="grid place-items-center">
+        <!-- Radar pulse, three blips once the intro lands (`pingFab`). -->
+        <span
+          aria-hidden="true"
+          data-fab-ping
+          class="pointer-events-none absolute inset-0 hidden rounded-full bg-yellow/50"
+        ></span>
+        <span data-fab-icon class="relative grid place-items-center">
           <Icon name="mic" class="h-[16px] w-[15px] lg:h-[20px] lg:w-[19px]" />
         </span>
       </span>
@@ -199,7 +205,7 @@ const field =
                   <button
                     type="button"
                     data-redo
-                    class="press label flex h-[46px] items-center justify-center gap-2 rounded-[10px] border border-ink text-lg hover:bg-ink hover:text-yellow"
+                    class="press label flex h-14 items-center justify-center gap-2 rounded-xl border border-ink text-copy hover:bg-ink hover:text-paper lg:rounded-[20px]"
                   >
                     <Icon name="redo" class="size-4" />
                     {s.vnRedo}
@@ -207,7 +213,7 @@ const field =
                   <button
                     type="button"
                     data-next
-                    class="press label flex h-[46px] items-center justify-center gap-2 rounded-[10px] bg-ink text-lg text-paper"
+                    class="btn btn-compact press w-full"
                   >
                     {s.vnSubmit}
                     <Icon name="arrow" class="nudge-x h-3 w-4" />
@@ -252,7 +258,7 @@ const field =
                   </div>
                   <button
                     type="submit"
-                    class="press label mt-8 h-[46px] w-full rounded-[10px] bg-ink text-lg text-paper disabled:opacity-60"
+                    class="btn btn-compact press mt-8 w-full"
                   >
                     {s.vnSend}
                   </button>
@@ -291,7 +297,7 @@ const field =
               </div>
               <button
                 type="submit"
-                class="press label mt-8 h-[46px] w-full rounded-[10px] bg-ink text-lg text-paper disabled:opacity-60"
+                class="btn btn-compact press mt-8 w-full"
               >
                 {s.vnSend}
               </button>
@@ -533,7 +539,8 @@ const field =
           .to(disc, { scale: 1, duration: 0.5, ease: "back.out(2.5)" })
           .to(icon, { scale: 1, opacity: 1, duration: 0.35 }, 0.1)
           .set(icon, { clearProps: "all" })
-          .set(disc, { clearProps: "transform,transition" });
+          .set(disc, { clearProps: "transform,transition" })
+          .call(() => this.pingFab());
         return;
       }
 
@@ -581,7 +588,20 @@ const field =
         .set([text, icon], { clearProps: "all" })
         .set(label, { clearProps: "opacity,transform" })
         .set(disc, { clearProps: "transform" })
-        .set([disc, label], { clearProps: "clipPath,transition" }, "+=0.05");
+        .set([disc, label], { clearProps: "clipPath,transition" }, "+=0.05")
+        .call(() => this.pingFab());
+    }
+
+    /** The question call-out's radar pulse on the launcher: three blips,
+        then gone. Skipped with reduced motion (no intro runs). */
+    pingFab() {
+      const ping = this.fab?.querySelector<HTMLElement>("[data-fab-ping]");
+      if (!ping) return;
+      ping.classList.remove("hidden");
+      ping.classList.add("animate-ping");
+      ping.style.animationDuration = "1.5s";
+      ping.style.animationIterationCount = "3";
+      ping.addEventListener("animationend", () => ping.remove(), { once: true });
     }
 
     /** `el`'s shape as a clip on the dialog, plus the shift that carries the

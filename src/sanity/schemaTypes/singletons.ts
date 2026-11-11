@@ -417,6 +417,12 @@ export const contactPageType = defineType({
     title,
     defineField({ name: "subtitle", type: "localeString" }),
     defineField({
+      name: "image",
+      type: "figure",
+      description: "The illustration under the title (defaults to the tin-can phones).",
+    }),
+    defineField({ name: "intro", type: "localeText", description: "The lead under the illustration." }),
+    defineField({
       name: "links",
       type: "array",
       of: [

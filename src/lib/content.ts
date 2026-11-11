@@ -60,7 +60,11 @@ const SEO = (path = "seo") =>
 /* An article has one section; the site's card shape takes a list. */
 const REF_CAT = `"categories": select(defined(category) => [category->${TAX}], [])`;
 const REF_TAGS = `"tags": coalesce(tags[]->${TAX}, [])`;
-const REF_AUTH = `"authors": coalesce(authors[]->{ name, "slug": slug.current }, [])`;
+/* "La Converse" as a byline is the newsroom itself: articles don't show it. */
+const NOT_HOUSE = `[lower(name) != "la converse"]`;
+const REF_AUTH = `"authors": coalesce(authors[]->{ name, "slug": slug.current }, [])${NOT_HOUSE}`;
+/* Unfiltered, for the index's author filter (the La Converse author page). */
+const REF_AUTH_ALL = `"authors": coalesce(authors[]->{ name, "slug": slug.current }, [])`;
 const PERSON = `{ name, "slug": slug.current, image ${IMG}, "role": role[$lang], "bio": bio[$lang], email }`;
 const BODY = `"body": body[$lang][]{ ..., _type == "figure" => ${IMG}, _type == "audio" => { ..., "src": file.asset->url } }`;
 const RICH = (field: string) => `${field}[$lang][]{ ..., _type == "figure" => ${IMG} }`;
@@ -84,6 +88,8 @@ const POSITION = `{ _id, "title": title[$lang], ${SLUG}, "meta": meta[$lang], "s
 
 const ARTICLES = `*[_type == "article" && ${PUB}] | order(publishedAt desc)`;
 /* This language's articles that reference the document in scope. */
+/* Hidden sections (Coulisses) label stories but stay out of menus and filters. */
+const LISTED = `hidden != true`;
 const REFERRING = `*[_type == "article" && ${PUB} && references(^._id)]`;
 
 /* ---- Global ------------------------------------------------------------- */
@@ -94,20 +100,22 @@ export const getSettings = (lang: Lang) =>
       "email": coalesce(email, "info@laconverse.com"), donateUrl, newsletterAction,
       "voicePrompt": voicePrompt[$lang],
       "socials": coalesce(socials[defined(url)]{ platform, url }, []),
-      "menuCategories": coalesce(menuCategories[]->${TAX}, *[_type == "category"] | order(order asc)${TAX}),
+      "menuCategories": coalesce(menuCategories[]->${TAX}, *[_type == "category" && ${LISTED}] | order(order asc)${TAX}),
       "seo": ${SEO()}
     }`,
     { lang },
     () => fx.settings(lang),
   ).then((s) => s ?? fx.settings(lang));
 
-export const getCategories = (lang: Lang) =>
+/** Sections for menus and filters; `all` adds the hidden ones (Coulisses),
+    which still have a page for their chip to link to. */
+export const getCategories = (lang: Lang, all = false) =>
   load<(Category & { count: number })[]>(
-    `*[_type == "category" && defined(slug[$lang].current)] | order(order asc){
+    `*[_type == "category" && defined(slug[$lang].current) && ($all || ${LISTED})] | order(order asc){
       "title": title[$lang], "slug": slug[$lang].current, "description": description[$lang],
       "count": count(${REFERRING})
     }`,
-    { lang },
+    { lang, all },
     () => fx.categories(lang),
   );
 
@@ -131,7 +139,7 @@ export const getHome = (lang: Lang) =>
       "videos": *[_type == "video" && ${VPUB}] | order(publishedAt desc)[0...8] ${VIDEO_CARD},
       "podcasts": *[_type == "podcast" && ${PUB}] | order(order asc)[0...8] ${PODCAST_CARD},
       "partnerStories": *[_type == "partnerStory" && defined(title[$lang])] | order(publishedAt desc)[0...8] ${PARTNER_STORY},
-      "categories": *[_type == "category" && defined(slug[$lang].current)] | order(order asc){
+      "categories": *[_type == "category" && defined(slug[$lang].current) && ${LISTED}] | order(order asc){
         ...${TAX}, "count": count(${REFERRING})
       }
     }`,
@@ -157,7 +165,7 @@ export const getArticle = (lang: Lang, slug: string) =>
       "storyPrompt": storyPrompt[$lang],
       "photographers": coalesce(photographers[]->{ name, "slug": slug.current }, []),
       "illustrators": coalesce(illustrators[]->{ name, "slug": slug.current }, []),
-      "authorsFull": coalesce(authors[]->${PERSON}, [])
+      "authorsFull": coalesce(authors[]->${PERSON}, [])${NOT_HOUSE}
     }`,
     { lang, slug },
     () => fx.article(lang, slug),
@@ -186,8 +194,10 @@ export const getLatest = (lang: Lang, count = 12) =>
 
 /** Every article as a compact card — the search page and "load more" read this. */
 export async function getIndex(lang: Lang): Promise<IndexEntry[]> {
-  const cards = await load<ArticleCard[]>(`${ARTICLES} ${ARTICLE_CARD}`, { lang }, () =>
-    fx.articles(lang),
+  const cards = await load<ArticleCard[]>(
+    `${ARTICLES} ${ARTICLE_CARD.replace(REF_AUTH, REF_AUTH_ALL)}`,
+    { lang },
+    () => fx.articles(lang),
   );
   return cards.map((a) => ({
     id: a._id,
@@ -466,7 +476,8 @@ export const getGiveYourVoice = (lang: Lang) =>
 export const getContact = (lang: Lang) =>
   load<ContactData>(
     `*[_id == "contactPage"][0]{
-      "title": title[$lang], "subtitle": subtitle[$lang], "seo": ${SEO()},
+      "title": title[$lang], "subtitle": subtitle[$lang], image ${IMG}, "intro": intro[$lang],
+      "seo": ${SEO()},
       "links": coalesce(links[]{ _key, "prompt": prompt[$lang], "cta": ${CTA()} }, [])
     }`,
     { lang },

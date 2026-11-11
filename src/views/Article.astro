@@ -112,7 +112,7 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
       )}
       <!-- Desktop (Figma: header · Écouter la douleur des Palestiniens):
            cols 3–10 (2–11 on small laptops, which the frame doesn't cover),
-           chip, the photo, title and dek, then the byline and the
+           the photo, chip, title and dek, then the byline and the
            transparency note, 40px apart. The title is 72px at 1728. -->
       <div
         class:list={[
@@ -120,10 +120,6 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
           hero ? "lg:pt-[150px]" : "lg:pt-[60px]",
         ]}
       >
-        {article.categories[0] && (
-          <Chip category={article.categories[0]} lang={lang} class="text-sm! lg:text-md!" />
-        )}
-
         {article.image && (
           <figure class="hidden w-full lg:block">
             <Picture
@@ -140,6 +136,9 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
               </figcaption>
             )}
           </figure>
+        )}
+        {article.categories[0] && (
+          <Chip category={article.categories[0]} lang={lang} class="text-sm! lg:text-md!" />
         )}
         <div class="flex flex-col items-center gap-5">
           <h1 class="display text-hero font-black lg:text-[clamp(3rem,4.17vw,4.5rem)]">
@@ -317,7 +316,7 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
         <!-- Colophon: ruled label/value rows (the LabelRow shape, inside the
              reading column), then the notes under the last rule. -->
         <footer class="mt-16 mb-20 lg:mb-30">
-          <dl class="label text-copy leading-[0.95]">
+          <dl class="label text-copy font-medium leading-[0.95]">
             <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] items-baseline gap-5 border-t border-ink py-4">
               <dt class="opacity-50">{s.published}</dt>
               <dd class="flex items-baseline justify-between gap-5">
@@ -348,7 +347,7 @@ const kicker = [formatLabel(article.format, lang), article.series?.title]
           </dl>
           <div class="border-t border-ink"></div>
           {(article.localJournalismInitiative || article.machineTranslated) && (
-            <div class="label mt-4 flex flex-col text-sm leading-[0.95] opacity-50">
+            <div class="label mt-4 flex flex-col text-sm font-medium leading-[0.95] opacity-50">
               {article.localJournalismInitiative && <p>{s.lji}</p>}
               {article.machineTranslated && <p>{s.translatedFrom}</p>}
             </div>

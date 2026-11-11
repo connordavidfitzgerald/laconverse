@@ -1,109 +1,94 @@
 ---
-/* Figma: 8A DONNEZ VOTRE VOIX — UI (careers). */
+/* Careers, on the contact page's shape: the centred title, a full-width photo
+   (École Converse's "why" photo), the intro as the lead, then two label rows (label left, content right):
+   the open positions, and the open application with its form. */
 import AjaxForm from "../components/AjaxForm.astro";
-import BackLink from "../components/BackLink.astro";
 import FormFields from "../components/FormFields.astro";
-import Icon from "../components/Icon.astro";
+import LabelRow from "../components/LabelRow.astro";
+import PageTitle from "../components/PageTitle.astro";
 import Picture from "../components/Picture.astro";
 import Layout from "../layouts/Layout.astro";
 import { href, otherLang, t, type Lang } from "../i18n";
-import { getGiveYourVoice } from "../lib/content";
+import { getEcole, getGiveYourVoice } from "../lib/content";
 
 interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
 const s = t(lang);
-const page = await getGiveYourVoice(lang);
+const [page, ecole] = await Promise.all([getGiveYourVoice(lang), getEcole(lang)]);
+const title = page.title ?? s.careers;
+const image = ecole.why?.image ?? null;
+const app = page.openApplication;
 ---
 
 <Layout
   lang={lang}
-  title={page.title}
+  mediaTint="var(--color-lilac)"
+  title={title}
+  description={page.intro}
+  image={image}
   seo={page.seo}
   alternate={href(otherLang(lang), "giveYourVoice")}
 >
-  <div class="px-5 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5">
-    <div class="lg:col-span-8 lg:col-start-3 md:mx-auto md:max-w-2xl lg:mx-0 lg:max-w-none">
-      <p class="pt-5 text-center">
-        <BackLink href={href(lang, "about")} label={s.about} />
-      </p>
-      <h1 class="display pt-5 text-center text-mega">{page.title}</h1>
-      {page.intro && (
-        <p class="mx-auto mt-2.5 max-w-md text-center font-display text-lg font-medium leading-[0.95] lg:max-w-2xl lg:text-intro">
-          {page.intro}
-        </p>
-      )}
-
-      {page.positions.length > 0 && (
-        <section class="mt-20" aria-labelledby="open">
-          <h2 id="open" class="label text-[0.625rem] lg:text-xs">
-            {s.openPositions}
-          </h2>
-          <ul class="mt-5 flex flex-col gap-5">
-            {page.positions.map((p) => (
-              <li>
-                <a
-                  href={href(lang, "position", p.slug)}
-                  class="group flex items-start justify-between gap-5"
-                >
-                  <span>
-                    <span class="display block text-2xl leading-[0.95] lg:text-4xl">{p.title}</span>
-                    {p.meta && (
-                      <span class="label block text-[0.625rem] opacity-60 lg:text-xs">
-                        {p.meta}
-                      </span>
-                    )}
-                  </span>
-                  <Icon name="arrow-ne" class="nudge-ne mt-1 size-2.5 shrink-0 lg:size-4" />
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <section class="mt-20" aria-labelledby="open-app">
-        <h2 id="open-app" class="display text-[1.875rem] leading-[0.95] lg:text-5xl">
-          {page.openApplication?.title}
-        </h2>
-        {page.openApplication?.text && (
-          <p class="mt-1 font-display text-sm font-medium leading-[0.95] lg:text-xl">
-            {page.openApplication.text}
-          </p>
-        )}
-        <AjaxForm action="/api/contact" lang={lang} class="mt-6">
-          <input type="hidden" name="kind" value="application" />
-          <input type="hidden" name="context" value="Open application" />
-          <FormFields lang={lang}>
-            <button
-              type="submit"
-              class="press label mt-4 h-[76px] w-full rounded-[10px] bg-yellow text-sm hover:bg-ink hover:text-yellow disabled:opacity-60"
-            >
-              {s.submit}
-            </button>
-          </FormFields>
-        </AjaxForm>
-      </section>
-
-      {page.culture && (
-        <section class="mt-20 pb-20" aria-labelledby="culture">
-          <h2 id="culture" class="display text-[1.875rem] leading-[0.95] lg:text-5xl">
-            {page.culture.title}
-          </h2>
-          <Picture
-            img={page.culture.image}
-            ratio={353 / 235}
-            class="mt-2.5"
-            sizes="(min-width: 1024px) 66vw, 100vw"
-          />
-          {page.culture.text && (
-            <p class="mt-5 font-display text-2xl font-medium leading-[0.95] lg:text-intro">
-              {page.culture.text}
-            </p>
-          )}
-        </section>
-      )}
-    </div>
+  <PageTitle>{title}</PageTitle>
+  <div class="px-5 lg:px-page">
+    <Picture
+      img={image}
+      ratio={1648 / 924}
+      sizes="100vw"
+      widths={[640, 960, 1280, 1920, 2560]}
+      eager
+      fill="var(--color-lilac)"
+      class="max-md:aspect-[4/3]!"
+    />
+    {page.intro && (
+      <div class="prose-lead mt-5 lg:mt-10">
+        <p>{page.intro}</p>
+      </div>
+    )}
   </div>
+
+  <!-- Open positions: the label in cols 1–4, the post titles from col 5 -->
+  {page.positions.length > 0 && (
+    <LabelRow label={s.openPositions} class="pt-30 lg:pt-60">
+      <ul class="flex flex-col">
+        {page.positions.map((p) => (
+          <li>
+            <a
+              href={href(lang, "position", p.slug)}
+              class="display link-line decoration-2 block text-lead leading-[0.95] text-balance"
+            >
+              {p.title}{" "}
+              <span aria-hidden="true" class="nudge-ne inline-block font-medium">↗</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </LabelRow>
+  )}
+
+  <!-- Open application: same row shape, its title as the label, the line
+       and the form beside it -->
+  <LabelRow label={app?.title} class="pt-30 lg:pt-60">
+    {app?.text && (
+      <p class="text-copy font-bold leading-[1.15] tracking-[-0.03em] text-pretty lg:max-w-[75%]">
+        {app.text}
+      </p>
+    )}
+    <AjaxForm action="/api/contact" lang={lang} class={app?.text ? "mt-10 lg:mt-15" : undefined}>
+      <input type="hidden" name="kind" value="application" />
+      <input type="hidden" name="context" value="Open application" />
+      <FormFields lang={lang}>
+        <button
+          type="submit"
+          class="btn press mt-5 self-start w-cols-3"
+        >
+          {s.submit}
+        </button>
+      </FormFields>
+    </AjaxForm>
+  </LabelRow>
+
+  <div class="pb-20 lg:pb-30"></div>
 </Layout>

@@ -11,6 +11,7 @@
    `?c=<type>` (from the video index's filter) keeps only that type. */
 import AuthorCard from "../components/AuthorCard.astro";
 import Chip from "../components/Chip.astro";
+import Icon from "../components/Icon.astro";
 import Picture from "../components/Picture.astro";
 import ShareButton from "../components/ShareButton.astro";
 import Layout from "../layouts/Layout.astro";
@@ -37,7 +38,7 @@ const videos = await getVideos(lang);
   voiceLauncher={false}
   smoothScroll={false}
 >
-  <video-feed class="flex flex-col items-center gap-(--feed-gap) py-(--feed-gap) [--feed-gap:1.25rem] lg:[--feed-gap:2rem]">
+  <video-feed class="@container flex flex-col items-center gap-(--feed-gap) py-(--feed-gap) [--feed-gap:1.25rem] lg:[--feed-gap:2rem]">
     {videos.map((v, i) => {
       const excerpt = plainText(v.body).slice(0, 200);
       const stream = v.playbackId ? `https://stream.mux.com/${v.playbackId}.m3u8` : null;
@@ -52,12 +53,12 @@ const videos = await getVideos(lang);
           id={v.slug}
           data-kind={v.kind ?? ""}
           lang={v.lang && v.lang !== lang ? v.lang : undefined}
-          class="group/slide relative h-(--feed-h) w-full max-w-[calc(var(--feed-h)*9/16)] snap-center overflow-hidden [--feed-h:calc(100dvh-var(--header-h)-2*var(--feed-gap))] [--shrink:0.4] lg:flex lg:w-auto lg:max-w-none lg:items-start lg:gap-10 lg:overflow-visible"
+          class="group/slide relative h-(--slide-h) w-full max-w-[calc(var(--feed-h)*9/16)] snap-center overflow-hidden [--feed-h:calc(100dvh-var(--header-h)-2*var(--feed-gap))] [--shrink:0.4] [--slide-h:var(--feed-h)] lg:[--slide-h:min(var(--feed-h),calc((100cqw-2*var(--spacing-margin)-var(--text-w)-2.5rem)*16/9))] lg:[--text-w:clamp(20rem,36cqw,36rem)] lg:flex lg:w-auto lg:max-w-none lg:items-start lg:gap-10 lg:overflow-visible"
           data-slide
         >
           <div
             data-stage
-            class="absolute inset-0 overflow-hidden lg:relative lg:inset-auto lg:h-full lg:w-[calc(var(--feed-h)*9/16)] lg:shrink-0"
+            class="absolute inset-0 overflow-hidden lg:relative lg:inset-auto lg:h-full lg:w-[calc(var(--slide-h)*9/16)] lg:shrink-0"
           >
             <!-- The clip itself. With the write-up open on a phone it
                  shrinks to the top of the frame, Instagram-style, and the
@@ -91,9 +92,9 @@ const videos = await getVideos(lang);
                   <Picture img={v.poster} class="absolute! inset-0 size-full" ratio={9 / 16} />
                   <span
                     aria-hidden="true"
-                    class="absolute left-1/2 top-1/2 grid size-16 -translate-1/2 place-items-center rounded-full bg-ink/60 text-2xl text-paper transition-colors group-hover:bg-ink/80"
+                    class="absolute left-1/2 top-1/2 grid size-16 -translate-1/2 place-items-center rounded-full bg-ink/60 text-paper transition-colors group-hover:bg-ink/80"
                   >
-                    ▶
+                    <Icon name="play" class="ml-1 size-5" />
                   </span>
                 </button>
               ) : (
@@ -114,31 +115,36 @@ const videos = await getVideos(lang);
             <a
               href={href(lang, "home")}
               data-exit
-              class="press label absolute left-4 top-4 rounded-full bg-ink/60 px-3 py-1.5 text-xs text-paper hover:bg-ink/80"
+              aria-label={s.back}
+              class="press absolute left-4 top-4 grid size-9 place-items-center rounded-full bg-ink/60 text-paper hover:bg-ink/80"
             >
-              <span class="nudge-back">←</span> {s.back}
+              <span class="nudge-back"><Icon name="arrow" class="size-3.5 rotate-180" /></span>
             </a>
 
             {playable && (
               <button
                 type="button"
                 data-playback
-                class="press label absolute right-4 top-14 overflow-hidden rounded-full bg-ink/60 px-3 py-1.5 text-xs text-paper hover:bg-ink/80"
+                aria-label={s.pause}
+                class="press group/btn absolute right-4 top-15 grid size-9 place-items-center rounded-full bg-ink/60 text-paper hover:bg-ink/80"
                 data-on={s.pause}
                 data-off={s.play}
               >
-                {s.pause}
+                <Icon name="pause" class="size-3 group-data-[state=off]/btn:hidden" />
+                <Icon name="play" class="ml-0.5 hidden size-3 group-data-[state=off]/btn:block" />
               </button>
             )}
             {playable && (
               <button
                 type="button"
                 data-sound
-                class="press label absolute right-4 top-4 overflow-hidden rounded-full bg-ink/60 px-3 py-1.5 text-xs text-paper hover:bg-ink/80"
+                aria-label={s.mute}
+                class="press group/btn absolute right-4 top-4 grid size-9 place-items-center rounded-full bg-ink/60 text-paper hover:bg-ink/80"
                 data-on={s.mute}
                 data-off={s.unmute}
               >
-                {s.mute}
+                <Icon name="sound" class="size-4 group-data-[state=off]/btn:hidden" />
+                <Icon name="muted" class="hidden size-4 group-data-[state=off]/btn:block" />
               </button>
             )}
           </div>
@@ -149,7 +155,7 @@ const videos = await getVideos(lang);
                the title folds it. -->
           <div
             data-text
-            class="absolute inset-x-0 bottom-0 cursor-pointer px-5 pt-6 pb-[30px] text-paper [scrollbar-width:none] group-data-open/slide:top-[calc(var(--feed-h)*var(--shrink)+2.25rem)] group-data-open/slide:cursor-auto group-data-open/slide:overflow-y-auto group-data-open/slide:overscroll-contain group-data-open/slide:pt-0 group-data-open/slide:pb-10 lg:static lg:max-h-full lg:w-[30rem] xl:w-[36rem] lg:overflow-y-auto lg:overscroll-contain lg:p-0"
+            class="absolute inset-x-0 bottom-0 cursor-pointer px-5 pt-6 pb-[30px] text-paper [scrollbar-width:none] group-data-open/slide:top-[calc(var(--slide-h)*var(--shrink)+2.25rem)] group-data-open/slide:cursor-auto group-data-open/slide:overflow-y-auto group-data-open/slide:overscroll-contain group-data-open/slide:pt-0 group-data-open/slide:pb-10 lg:static lg:max-h-full lg:w-(--text-w) lg:overflow-y-auto lg:overscroll-contain lg:p-0"
           >
             {kind && (
               <p lang={lang} class="label mb-2 inline-flex items-baseline gap-[0.45em] text-xs font-black">
@@ -220,7 +226,14 @@ const videos = await getVideos(lang);
 </Layout>
 
 <script>
-  import { d, gsap, reduced, swapText } from "../lib/motion";
+  import { d, gsap, reduced } from "../lib/motion";
+
+  /* The corner controls are icons: the one shown and the label say what
+     pressing does (`data-on` while playing / with sound, `data-off` not). */
+  function setState(b: HTMLButtonElement, on: boolean) {
+    b.dataset.state = on ? "on" : "off";
+    b.setAttribute("aria-label", on ? b.dataset.on! : b.dataset.off!);
+  }
 
   /* A Mux stream is attached once, the first time it's needed, through
      hls.js (fetched once) wherever Media Source is available. Native HLS is
@@ -343,7 +356,7 @@ const videos = await getVideos(lang);
         const v = b.parentElement!.querySelector("video")!;
         if (reduced()) {
           held.add(v);
-          b.textContent = b.dataset.off!;
+          setState(b, false);
         }
         b.addEventListener("click", () => {
           if (v.paused) {
@@ -354,8 +367,8 @@ const videos = await getVideos(lang);
             v.pause();
           }
         });
-        v.addEventListener("play", () => swapText(b, b.dataset.on!));
-        v.addEventListener("pause", () => swapText(b, b.dataset.off!));
+        v.addEventListener("play", () => setState(b, true));
+        v.addEventListener("pause", () => setState(b, false));
       });
 
       // Embeds: swap the poster for the player when it's pressed.
@@ -380,7 +393,7 @@ const videos = await getVideos(lang);
         const v = b.parentElement!.querySelector("video")!;
         let wasMuted = v.muted;
         v.addEventListener("volumechange", () => {
-          if (v.muted !== wasMuted) swapText(b, v.muted ? b.dataset.on! : b.dataset.off!);
+          if (v.muted !== wasMuted) setState(b, !v.muted);
           wasMuted = v.muted;
         });
         b.addEventListener("click", () => {

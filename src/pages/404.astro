@@ -13,7 +13,7 @@ const lang = Astro.url.pathname.startsWith("/en") ? "en" : "fr";
         ? "This page doesn’t exist, or it has moved."
         : "Cette page n’existe pas ou a été déplacée."}
     </p>
-    <a href={href(lang, "home")} class="label mt-10 bg-yellow px-5 py-3 text-sm">
+    <a href={href(lang, "home")} class="btn mt-10 w-cols-3">
       {lang === "en" ? "Back to the homepage" : "Retour à l’accueil"}
     </a>
   </div>

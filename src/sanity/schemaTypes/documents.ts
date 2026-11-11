@@ -90,7 +90,7 @@ export const articleType = defineType({
     defineField({
       name: "category",
       title: "Section",
-      description: "The rubrique the story is filed under. Leave empty for La Converse's own news.",
+      description: "The rubrique the story is filed under. La Converse's own news goes under Coulisses.",
       type: "reference",
       to: [{ type: "category" }],
     }),
@@ -214,6 +214,13 @@ export const categoryType = defineType({
       name: "order",
       type: "number",
       description: "Position in the menu and filters.",
+    }),
+    defineField({
+      name: "hidden",
+      title: "Hide from menus and filters",
+      type: "boolean",
+      description: "Stories still show it on their cards and it keeps its page (e.g. Coulisses).",
+      initialValue: false,
     }),
     hiddenWebflowId,
   ],

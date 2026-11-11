@@ -28,11 +28,6 @@ const settings = await getSettings(lang);
   <header class="flex flex-col items-center gap-5 px-5 pt-5 text-center lg:pt-10">
     {person.role && <span class="label bg-yellow px-2.5 py-1.5 text-xs">{person.role}</span>}
     <h1 class="display text-mega text-balance">{person.name}</h1>
-    {person.bio && (
-      <p class="max-w-md font-display text-lg font-medium leading-[0.95] lg:max-w-xl lg:text-2xl">
-        {person.bio}
-      </p>
-    )}
     {person.email && (
       <a
         href={`mailto:${person.email}`}
@@ -44,11 +39,17 @@ const settings = await getSettings(lang);
     )}
     <Picture
       img={person.image}
-      ratio={1}
       class="mt-5 w-full max-w-[353px] lg:max-w-[480px]"
       sizes="480px"
       eager
     />
+    <!-- Bio under the portrait, body copy like the rest of the site (Inter
+         Bold, `prose-sans`), left-aligned to the portrait's width. -->
+    {person.bio && (
+      <p class="prose-sans w-full max-w-[353px] text-left whitespace-pre-line lg:max-w-[480px]">
+        {person.bio}
+      </p>
+    )}
   </header>
 
   <section class="px-5 pt-16 lg:px-5 lg:pt-24" aria-labelledby="by">
@@ -64,7 +65,9 @@ const settings = await getSettings(lang);
     />
   </section>
 
-  <div class="px-5 py-10 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5 lg:py-20">
+  <!-- Bottom padding = the load-more gap above the band (its py-30 + this
+       wrapper's top padding): 160px, 200px on desktop. -->
+  <div class="px-5 pt-10 pb-40 lg:grid lg:grid-cols-12 lg:gap-x-5 lg:px-5 lg:pt-20 lg:pb-50">
     <SupportBand lang={lang} donateUrl={settings.donateUrl} class="lg:col-span-8 lg:col-start-3" />
   </div>
 </Layout>

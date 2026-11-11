@@ -37,7 +37,7 @@ const names: Record<string, string> = {
         class:list={["link-line decoration-2 label inline-flex items-center gap-1", size]}
       >
         {names[platform] ?? platform}
-        <Icon name="arrow-ne" class="nudge-ne size-4" />
+        <span aria-hidden="true" class="nudge-ne inline-block font-medium">↗</span>
       </a>
     </li>
   ) : (

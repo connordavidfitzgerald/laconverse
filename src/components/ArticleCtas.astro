@@ -1,6 +1,6 @@
 ---
 /* Calls to action woven into the article body: after roughly every two
-   screens of reading, the next one of donate → newsletter → share your story
+   screens of reading, the next one of share your story → donate → newsletter
    drops in after a paragraph (never after a heading, never in the last half
    screen). Screens differ per device, so placement is measured in the browser;
    without JS the article simply reads uninterrupted. Wraps the prose element,
@@ -22,24 +22,71 @@ const { lang, storyPrompt, every = 2 } = Astro.props;
 const s = t(lang);
 const [settings, donate] = await Promise.all([getSettings(lang), getDonate(lang)]);
 
-/* The three article CTAs (donate, newsletter, share your story) share the
-   donate widget's look: white, ruled top and bottom, a Favorit title over a
-   caps line, then rounded mist/yellow tiles. The prose styles reach into the
+/* Donate and newsletter share the donate widget's look: white, ruled top and
+   bottom, a Favorit title, then rounded mist tiles. Share your story
+   stands apart as a black call-out (see its template). The prose styles reach into the
    body, so each panel opts out with `data-no-prose`. */
 const panel = "my-14! border-y border-ink py-10 sm:py-14";
 const title = "display max-w-[12em] text-[2.5rem] leading-[0.95]";
-const line = "label mt-5 text-copy leading-[0.95]";
 const tile =
   "label flex h-14 items-center justify-center gap-2 rounded-xl px-5 text-copy transition-colors lg:rounded-[20px]";
 const mist = "bg-mist text-ink hover:bg-yellow/50";
-const yellow = "bg-yellow text-ink hover:bg-ink hover:text-yellow";
 ---
 
 <article-ctas data-every={every} class="block">
   <slot />
 
   <template>
-    <aside data-no-prose class={panel} aria-label={s.donate}>
+    <!-- Share your story: a black call-out (like the menu's), the article's
+         own question in yellow, then the recorder — a big pulsing mic with
+         its label — and a pill to write instead. -->
+    <aside
+      data-no-prose
+      class="my-14! flex flex-col items-center overflow-hidden rounded-[20px] bg-ink p-6 text-center text-paper sm:p-10"
+      aria-label={s.vnFab}
+    >
+      <p class="display max-w-[14em] text-balance text-[2.5rem] leading-[0.95] text-yellow sm:text-[3.25rem]">
+        {storyPrompt || s.vnTitle}
+      </p>
+      <p class="prose-sans mt-5 max-w-[30em] text-paper/80">{s.ctaStoryText}</p>
+
+      <!-- Two round buttons: the mic records a voice note, the pen writes. -->
+      <div class="mt-8 flex w-full items-center justify-center gap-4 border-t border-paper/20 pt-8 sm:mt-10">
+        <button
+          type="button"
+          data-voice-open
+          title={s.vnOpen}
+          class="press group relative grid size-[84px] shrink-0 place-items-center rounded-full bg-yellow text-ink transition-transform hover:scale-105"
+          aria-label={s.vnOpen}
+        >
+          <span
+            aria-hidden="true"
+            class="absolute inset-0 animate-ping rounded-full bg-yellow/40 [animation-duration:2s] motion-reduce:hidden"
+          ></span>
+          <Icon name="mic" class="relative h-[23px] w-[22px]" />
+        </button>
+        <button
+          type="button"
+          data-voice-open="write"
+          title={s.vnWrite}
+          class="press grid size-[84px] shrink-0 place-items-center rounded-full border border-paper/40 text-paper transition-[transform,background-color,border-color,color] hover:scale-105 hover:border-yellow hover:bg-yellow hover:text-ink"
+          aria-label={s.vnWrite}
+        >
+          <Icon name="pen" class="h-[23px] w-[22px]" />
+        </button>
+      </div>
+    </aside>
+  </template>
+
+  <template>
+    <!-- Donate: a light grey rounded box, the same shape as the story
+         call-out; its grey tiles turn white so they stand out (chosen ones
+         keep their wine). -->
+    <aside
+      data-no-prose
+      class="my-14! overflow-hidden rounded-[20px] bg-mist p-6 text-ink sm:p-10 [&_:is(.bg-mist,.btn):not([aria-pressed=true],[aria-checked=true],:hover)]:bg-paper"
+      aria-label={s.donate}
+    >
       <DonateWidget lang={lang} data={donate} stacked />
     </aside>
   </template>
@@ -65,7 +112,7 @@ const yellow = "bg-yellow text-ink hover:bg-ink hover:text-yellow";
             aria-label={s.email}
             class:list={[tile, mist, "min-w-0 justify-start placeholder:text-ink/50 outline-none focus-visible:ring-2 focus-visible:ring-ink [&:not(:placeholder-shown)]:normal-case"]}
           />
-          <button type="submit" class:list={[tile, yellow, "press disabled:opacity-50 sm:w-[10.5rem]"]}>
+          <button type="submit" class="btn btn-compact press w-full sm:w-[10.5rem]">
             {s.subscribe}
           </button>
         </div>
@@ -73,21 +120,6 @@ const yellow = "bg-yellow text-ink hover:bg-ink hover:text-yellow";
     </aside>
   </template>
 
-  <template>
-    <aside data-no-prose class={panel} aria-label={s.vnFab}>
-      <p class={title}>{storyPrompt || s.vnTitle}</p>
-      <p class={line}>{s.ctaStoryText}</p>
-      <div class="mt-10 grid grid-cols-2 gap-2.5">
-        <button type="button" data-voice-open class:list={[tile, yellow, "press"]}>
-          <Icon name="mic" class="size-4" />
-          {s.vnTap}
-        </button>
-        <button type="button" data-voice-open="write" class:list={[tile, mist, "press"]}>
-          {s.vnWrite}
-        </button>
-      </div>
-    </aside>
-  </template>
 </article-ctas>
 
 <script>

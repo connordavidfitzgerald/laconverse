@@ -68,7 +68,7 @@
   --text-hero: clamp(2.75rem, 1.536rem + 4.944vw, 6.875rem); /* 44 → 110 */
   --text-hero--line-height: 0.95;
   --text-mega: clamp(2.25rem, 9.288vw - 0.03rem, 10rem); /* 36 → 160 */
-  --text-mega--line-height: 1;
+  --text-mega--line-height: 0.95;
   /* Desktop poster titles on the homepage: 216 at the 1728 artboard, capped. */
   --text-poster: min(12.5vw, 15rem);
   --text-poster--line-height: 0.82;
@@ -92,7 +92,7 @@
   /* The redesigned pages (Figma: 2026 desktop frames). One family, Favorit
      Ultra caps throughout; these are its five steps. */
   --text-page: clamp(2.75rem, 1.35rem + 5.7vw, 7.5rem); /* 44 → 120: page titles */
-  --text-page--line-height: 1.1;
+  --text-page--line-height: 0.95;
   --text-lead: clamp(1.5rem, 1.058rem + 1.798vw, 3rem); /* 24 → 48: intros */
   --text-lead--line-height: 0.95;
   --text-item: clamp(2rem, 1.706rem + 1.199vw, 3rem); /* 32 → 48: card titles */
@@ -332,6 +332,63 @@
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--spacing-col-gap);
+}
+
+/* One column of the page grid, for things sized to the grid outside it. */
+:root {
+  --grid-col: calc((100vw - 2 * var(--spacing-page) - 11 * var(--spacing-col-gap)) / 12);
+}
+
+/* Buttons: the homepage donate widget's tiles (Figma: HOME), site-wide — a
+   mist rounded tile, Favorit caps, inked on hover. 56px tall, 103px from lg;
+   `btn-compact` keeps 56px at every size (narrow homes: article column,
+   voice-note panel). Pair with `w-cols-N` for the width. */
+@utility btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 3.5rem;
+  padding-inline: 1.25rem;
+  border-radius: 0.75rem;
+  background-color: var(--btn-bg, var(--color-mist));
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  letter-spacing: var(--tracking-display);
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: var(--text-copy);
+  line-height: 1;
+  text-align: center;
+  max-width: 100%;
+  &:hover:not(:disabled) {
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+  @media (width >= 64rem) {
+    height: var(--btn-h-lg, 103px);
+    border-radius: 20px;
+  }
+}
+@utility btn-compact {
+  --btn-h-lg: 3.5rem;
+}
+/* École Converse and its programs: lilac instead of mist. */
+@utility btn-lilac {
+  --btn-bg: var(--color-lilac);
+}
+
+/* Width of N page-grid columns (and the gaps between) from lg; full width
+   below, like the donate widget's tiles on phones. */
+@utility w-cols-* {
+  width: 100%;
+  @media (width >= 64rem) {
+    width: calc(--value(integer) * var(--grid-col) + (--value(integer) - 1) * var(--spacing-col-gap));
+  }
 }
 
 /* Horizontal rails (videos, podcasts, partners) scroll sideways on every size. */

@@ -858,17 +858,6 @@ export const about = (lang: Lang): AboutData => ({
       kind: "series",
       articles: articles(lang).slice(0, 3),
     },
-    {
-      _key: "careers",
-      title: lang === "en" ? "Careers" : "Carrières",
-      kind: "positions",
-      positions: giveYourVoice(lang).positions,
-    },
-    {
-      _key: "funding",
-      title: lang === "en" ? "Funding" : "Financement",
-      body: paras(lang === "en" ? "Content coming from the CMS." : "Contenu à venir du CMS."),
-    },
   ],
   partners: [],
   seo: null,
@@ -1111,6 +1100,8 @@ export const contact = (lang: Lang): ContactData => {
   return {
     title: "Contact",
     subtitle: en ? "Questions? Leave us a message." : "Des questions? Laissez-nous un message.",
+    image: null,
+    intro: null,
     links: [
       {
         prompt: en ? "Want to write for La Converse?" : "Envie d’écrire pour La Converse?",

@@ -1,15 +1,14 @@
 ---
 /* Figma: ABOUT (2026 desktop frame). Title, illustration, the intro, two
    statements stepping across the grid, then the values carousel and the
-   numbered principles beside their image. The team, partners and expanding sections follow on the same
+   numbered principles beside their image. The team, partners and news follow on the same
    grid. */
+import ArticleCard from "../components/ArticleCard.astro";
 import AlumniGrid from "../components/AlumniGrid.astro";
-import Icon from "../components/Icon.astro";
 import LabelRow from "../components/LabelRow.astro";
 import PageTitle from "../components/PageTitle.astro";
 import Picture from "../components/Picture.astro";
 import RailControls from "../components/RailControls.astro";
-import StoryRow from "../components/StoryRow.astro";
 import Layout from "../layouts/Layout.astro";
 import { href, otherLang, t, type Lang } from "../i18n";
 import { getAbout } from "../lib/content";
@@ -30,6 +29,8 @@ const groups: [string, Person[]][] = [
 ];
 // The statements step right and down: cols 3–6, then 7–10, a row each
 // (the columns don't overlap, so the row is set explicitly).
+// Of the expanding sections only the news (a series' articles) is shown.
+const news = page.sections.filter((sec) => sec.kind === "series" && sec.articles?.length);
 const statementCols = ["lg:col-start-3 lg:col-span-4", "lg:col-start-7 lg:col-span-4"];
 ---
 
@@ -110,13 +111,13 @@ const statementCols = ["lg:col-start-3 lg:col-span-4", "lg:col-start-7 lg:col-sp
       <ol class="flex flex-col gap-10 lg:gap-20">
         {page.principles.map((pr, i) => (
           <li class="grid grid-cols-[2.5rem_1fr] gap-x-5 lg:grid-cols-9 lg:gap-x-10">
-            <span class="display text-2xl lg:col-span-2 lg:text-[2.25rem]" aria-hidden="true">
+            <span class="display text-2xl leading-[0.95] lg:col-span-2 lg:text-[2.25rem]" aria-hidden="true">
               {String(i + 1).padStart(2, "0")}
             </span>
             <div class="lg:col-span-7 lg:grid lg:grid-cols-7 lg:gap-x-10">
-              <h3 class="display text-2xl leading-[0.95] lg:col-span-4 lg:text-[2.25rem]">{pr.title}</h3>
-              <!-- Title and body take 4 of the 7 columns -->
-              <div class="prose-sans mt-5 lg:col-span-4 lg:mt-10" set:html={renderRichText(pr.body)} />
+              <h3 class="display text-2xl leading-[0.95] lg:col-span-5 lg:text-[2.25rem]">{pr.title}</h3>
+              <!-- Title and body take 5 of the 7 columns -->
+              <div class="prose-sans mt-5 lg:col-span-5 lg:mt-10" set:html={renderRichText(pr.body)} />
             </div>
           </li>
         ))}
@@ -163,90 +164,16 @@ const statementCols = ["lg:col-start-3 lg:col-span-4", "lg:col-start-7 lg:col-sp
     </LabelRow>
   )}
 
-  {page.sections.length > 0 && (
-    <section class="px-5 pt-20 pb-20 lg:px-page lg:pt-30 lg:pb-30">
-      {page.sections.map((sec) => (
-        <details id={sec.kind === "positions" ? "careers" : sec._key} class="group scroll-mt-[var(--header-h-full)] border-ink [&+&]:border-t-0" data-accordion>
-          <summary class="display flex cursor-pointer list-none items-center justify-between text-[2.25rem] leading-[0.95] lg:text-7xl [&::-webkit-details-marker]:hidden">
-            {sec.title}
-            <Icon
-              name="plus"
-              class="size-3 shrink-0 transition-transform duration-300 ease-out group-open:rotate-45 group-[.is-closing]:rotate-0! lg:size-5"
-            />
-          </summary>
-          <div class="py-5" data-accordion-body>
-            {sec.body?.length ? (
-              <div class="prose-article max-w-2xl" set:html={renderRichText(sec.body)} />
-            ) : null}
-            {sec.articles?.length ? (
-              <div class:list={["lg:grid lg:grid-cols-2 lg:gap-x-5", sec.body?.length && "mt-5"]}>
-                {sec.articles.map((a) => (
-                  <StoryRow article={a} lang={lang} />
-                ))}
-              </div>
-            ) : null}
-            {sec.positions?.length ? (
-              <ul class:list={[sec.body?.length && "mt-5"]}>
-                {sec.positions.map((p) => (
-                  <li class="border-t border-ink">
-                    <a
-                      href={href(lang, "position", p.slug)}
-                      class="group flex items-center justify-between gap-5 py-5"
-                    >
-                      <span>
-                        <span class="display block text-2xl leading-[0.95] group-hover:underline lg:text-3xl">
-                          {p.title}
-                        </span>
-                        {p.meta && <span class="label mt-2 block text-xs">{p.meta}</span>}
-                      </span>
-                      <Icon name="arrow" class="size-4 shrink-0" />
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            {sec.kind === "positions" && (
-              <p class="border-t border-ink pt-5">
-                <a
-                  href={href(lang, "giveYourVoice")}
-                  class="label text-xs underline hover:no-underline"
-                >
-                  {s.learnMore}
-                </a>
-              </p>
-            )}
-          </div>
-        </details>
-      ))}
-    </section>
-  )}
+  <!-- News: the series' stories two-up, as in the homepage's Explorer
+       (careers and funding sections are no longer shown). -->
+  {news.map((sec) => (
+    <LabelRow label={sec.title} class="pt-20 pb-20 lg:pt-30 lg:pb-30">
+      <div class="grid gap-y-4 md:grid-cols-2 md:gap-x-10">
+        {sec.articles!.map((a) => (
+          <ArticleCard article={a} lang={lang} sizes="(min-width: 768px) 31vw, 100vw" />
+        ))}
+      </div>
+    </LabelRow>
+  ))}
 </Layout>
 
-<script>
-  import { collapse, expand } from "../lib/motion";
-
-  // Keep native <details> (works without JS, find-in-page opens it) but ease
-  // the body open and shut instead of jumping.
-  document.querySelectorAll<HTMLDetailsElement>("details[data-accordion]").forEach((details) => {
-    const body = details.querySelector<HTMLElement>("[data-accordion-body]")!;
-    details.querySelector("summary")!.addEventListener("click", (e) => {
-      e.preventDefault();
-      if (details.open && !details.classList.contains("is-closing")) {
-        details.classList.add("is-closing");
-        collapse(body, () => {
-          details.classList.remove("is-closing");
-          details.open = false;
-          body.hidden = false;
-        });
-      } else {
-        details.classList.remove("is-closing");
-        details.open = true;
-        expand(body);
-      }
-    });
-  });
-
-  // Footer links land on a section (#careers, the positions section): open it.
-  const target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
-  if (target instanceof HTMLDetailsElement) target.open = true;
-</script>

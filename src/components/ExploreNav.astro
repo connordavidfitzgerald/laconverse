@@ -33,7 +33,7 @@ const link = (slug: string) =>
 <nav class={className} aria-labelledby="explore-title">
   <h2 id="explore-title" class="label text-sm lg:text-base">{s.explore}</h2>
   <ul
-    class="mt-2.5 flex flex-wrap gap-x-3 font-display text-lg font-medium uppercase leading-[1.05] lg:mt-4 lg:flex-col lg:text-[1.5rem]"
+    class="mt-2.5 flex flex-col font-display text-[1.375rem] font-medium uppercase leading-[1.05] lg:mt-4 lg:text-[1.5rem]"
     data-filter-list
   >
     {[{ slug: "", title: s.all }, ...categories].map((c) => (

@@ -314,6 +314,8 @@ export interface GiveYourVoiceData {
 export interface ContactData {
   title?: string | null;
   subtitle?: string | null;
+  image?: Img | null;
+  intro?: string | null;
   links: { prompt?: string | null; cta?: Cta | null }[];
   seo?: Seo | null;
 }
