@@ -1,7 +1,8 @@
 ---
 /* Figma: Sujet — gabarit. Laid out like the search page: the search bar
-   (searching within the section), the section's chip and description, then
-   the sticky explorer with the section current beside two-up story cards. */
+   (searching within the section), then the sticky explorer with the section
+   current beside two-up story cards, the section's chip and description
+   across the top (under the list, without the chip, on a phone). */
 import ArticleGrid from "../components/ArticleGrid.astro";
 import ExploreNav from "../components/ExploreNav.astro";
 import SearchForm from "../components/SearchForm.astro";
@@ -35,17 +36,22 @@ const otherSlug = category.alternates?.[other];
   <div class="px-5 pt-5 pb-20 lg:px-page lg:pt-[55px] lg:pb-30">
     <h1 class="sr-only">{category.title}</h1>
     <SearchForm lang={lang} category={kind === "category" ? category.slug : null} />
-    {category.description && (
-      <SectionIntro lang={lang} category={category} chip={kind === "category"} />
-    )}
     <div class="pt-10 lg:page-grid lg:pt-20">
       <ExploreNav
         lang={lang}
         categories={categories}
         current={kind === "category" ? category.slug : null}
-        class="pb-10 lg:sticky lg:top-[calc(var(--header-h)+2.5rem)] lg:col-span-4 lg:self-start lg:pb-0"
+        class="pb-10 lg:sticky lg:top-[calc(var(--header-h)+2.5rem)] lg:col-span-4 lg:row-start-2 lg:self-start lg:pb-0"
       />
-      <div class="lg:col-span-8 lg:col-start-5">
+      {category.description && (
+        <SectionIntro
+          lang={lang}
+          category={category}
+          chip={kind === "category"}
+          class="lg:col-span-12 lg:row-start-1"
+        />
+      )}
+      <div class="lg:col-span-8 lg:col-start-5 lg:row-start-2">
         <ArticleGrid
           lang={lang}
           articles={category.articles}

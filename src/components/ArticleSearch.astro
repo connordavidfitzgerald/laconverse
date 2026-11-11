@@ -1,8 +1,9 @@
 ---
 /* The search page (Figma: Sujet — gabarit): the search form (default slot,
    with an input id="q") across the page, then the explorer list in cols 1–4
-   beside two-up story cards in 5–12 (the picked section's description sits
-   between the two), filtering the full index client-side.
+   beside two-up story cards in 5–12 (the picked section's description across
+   the top of that row; under the list on a phone), filtering the full index
+   client-side.
    The index is fetched on first use, so the server-rendered cards stand until
    then. */
 import ArticleGrid from "./ArticleGrid.astro";
@@ -50,16 +51,16 @@ const s = t(lang);
   data-exclude={exclude.length ? exclude.join(" ") : undefined}
 >
   <slot />
-  {/* The current section's description; update() swaps it by toggling
-      `hidden` on `[data-desc]`. */}
-  <section aria-live="polite">
-    {categories.map((c) => c.description && (
-      <SectionIntro lang={lang} category={c} data-desc={c.slug} hidden />
-    ))}
-  </section>
   <div class="pt-10 lg:page-grid lg:pt-20" data-explore>
-    <ExploreNav lang={lang} categories={categories} asFilter class="pb-10 lg:sticky lg:top-[calc(var(--header-h)+2.5rem)] lg:col-span-4 lg:self-start lg:pb-0" />
-    <div class="lg:col-span-8 lg:col-start-5">
+    <ExploreNav lang={lang} categories={categories} asFilter class="pb-10 lg:sticky lg:top-[calc(var(--header-h)+2.5rem)] lg:col-span-4 lg:row-start-2 lg:self-start lg:pb-0" />
+    {/* The current section's description; update() swaps it by toggling
+        `hidden` on `[data-desc]`. */}
+    <section aria-live="polite" class="lg:col-span-12 lg:row-start-1">
+      {categories.map((c) => c.description && (
+        <SectionIntro lang={lang} category={c} data-desc={c.slug} hidden />
+      ))}
+    </section>
+    <div class="lg:col-span-8 lg:col-start-5 lg:row-start-2">
       <ArticleGrid lang={lang} articles={articles} total={total} moreLabel={moreLabel} managed explore />
     </div>
   </div>
@@ -107,8 +108,7 @@ const s = t(lang);
         a.addEventListener("click", async (e) => {
           e.preventDefault();
           this.category = a.dataset.filter ?? "";
-          // After the update: the description above the row swaps in it, which
-          // moves the row.
+          // After the update: the description swapping in moves the cards.
           await this.update();
           scrollToExplorer(this, { onlyUp: true });
         }),

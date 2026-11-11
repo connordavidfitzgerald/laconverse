@@ -37,7 +37,7 @@ const page = href(lang, "videoIndex");
         filterBase={page}
         class="pb-10 lg:sticky lg:top-[calc(var(--header-h)+2.5rem)] lg:col-span-4 lg:self-start lg:pb-0"
       />
-      <ul class="grid grid-cols-2 gap-x-5 gap-y-4 md:grid-cols-3 lg:col-span-8 lg:col-start-5 lg:gap-x-10">
+      <ul class="grid grid-cols-2 gap-x-5 gap-y-4 max-md:[&_h3]:text-[1.25rem] md:grid-cols-3 lg:col-span-8 lg:col-start-5 lg:gap-x-10">
         {videos.map((v) => (
           <li data-kind={v.kind ?? ""}>
             <VideoCard video={v} lang={lang} />

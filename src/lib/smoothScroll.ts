@@ -30,8 +30,11 @@ export function scrollToExplorer(root: ParentNode, { onlyUp = false } = {}) {
     parseFloat(getComputedStyle(nav).top) ||
     parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--header-h")) ||
     0;
-  const start =
-    row.getBoundingClientRect().top + scrollY + parseFloat(getComputedStyle(row).paddingTop);
+  // Desktop (sticky list): the cards' top, below a section description that
+  // may head the row. Phone: the list itself, which leads the row.
+  const sticky = getComputedStyle(nav).position === "sticky";
+  const anchor = (sticky && row.lastElementChild) || nav;
+  const start = anchor.getBoundingClientRect().top + scrollY;
   const y = Math.max(0, start - top);
   if (onlyUp && scrollY <= y) return;
   scrollToY(y);
