@@ -79,18 +79,21 @@ const tile =
   class:list={["flex flex-col", !stacked && "lg:page-grid", className]}
 >
   <div class:list={["contents", !stacked && "lg:col-span-4 lg:flex lg:flex-col lg:justify-between"]}>
-    {stacked && raised !== null ? (
-      /* Stacked (article column): the amount raised sits on the title's
-         line, both bottom-aligned. */
-      <div class="flex flex-wrap items-end justify-between gap-x-5 gap-y-2.5">
+    {raised !== null ? (
+      /* Stacked (article column), and phones everywhere: the amount raised
+         sits on the title's line, both bottom-aligned. Desktop (not stacked)
+         moves it back above the bar. */
+      <div class:list={["flex items-end justify-between gap-y-2.5", stacked ? "flex-wrap gap-x-5" : "gap-x-3 lg:contents"]}>
       <h2
         class:list={[
-          "display max-w-[9em] text-[2.5rem] leading-[0.95] sm:text-[3.25rem]",
+          "display max-w-[9em] leading-[0.95]",
+          // Phones: small enough that the amount fits beside the title.
+          stacked ? "text-[2.5rem] sm:text-[3.25rem]" : "text-[clamp(1.5rem,8vw,3rem)]",
           !stacked && "lg:text-[clamp(3rem,5vw,4.5rem)]",
         ]}
       >
         {head}{" "}
-        <span class="whitespace-nowrap lg:block">
+        <span class:list={["whitespace-nowrap lg:block", !stacked && "block"]}>
           {last}
           <Icon
             name="heart"
@@ -98,7 +101,7 @@ const tile =
           />
         </span>
       </h2>
-        <DonateRaised lang={lang} raised={raised} goal={goal} stacked class="ml-auto" />
+        <DonateRaised lang={lang} raised={raised} goal={goal} stacked={stacked} class:list={["ml-auto shrink-0", !stacked && "lg:hidden"]} />
       </div>
     ) : (
     <h2
@@ -133,14 +136,14 @@ const tile =
 
   <div
     class:list={[
-      stacked && raised !== null ? "mt-5" : "mt-10",
+      raised !== null ? "mt-5" : "mt-10",
       !stacked && "lg:col-span-8 lg:col-start-5 lg:mt-0",
     ]}
   >
     <!-- Raised so far (Zeffy), then the goal, both on the right (stacked:
          beside the title instead); the bar only with a goal -->
     {raised !== null && !stacked && (
-      <DonateRaised lang={lang} raised={raised} goal={goal} />
+      <DonateRaised lang={lang} raised={raised} goal={goal} class="max-lg:hidden" />
     )}
     {raised !== null && goal && (
       <div

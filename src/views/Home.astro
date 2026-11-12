@@ -73,31 +73,21 @@ const blank = {
             ) : (
               <span />
             )}
-            {lead.authors[0] && (
-              <p class="label shrink-0 text-sm font-medium whitespace-nowrap lg:hidden">
-                <a
-                  href={href(lang, "author", lead.authors[0].slug)}
-                  class="relative z-10 link-line"
-                >
-                  {lead.authors[0].name}
-                </a>
-              </p>
-            )}
             <time
               datetime={lead.publishedAt}
-              class="label hidden shrink-0 text-sm font-medium whitespace-nowrap opacity-60 lg:block"
+              class="label shrink-0 text-sm font-medium whitespace-nowrap opacity-60"
             >
               {formatDate(lang, lead.publishedAt)}
             </time>
           </div>
-          <h1 class="display order-2 px-2.5 text-[2.375rem] leading-[0.95] font-black md:text-hero lg:order-none lg:px-0 lg:text-[4.5rem]">
+          <h1 class="display order-2 px-2.5 text-[clamp(2.375rem,1.749rem+2.547vw,4.5rem)] leading-[0.95] font-black lg:order-none lg:px-0">
             <a href={href(lang, "article", lead.slug)} class="after:absolute after:inset-0">
               {lead.title}
             </a>
           </h1>
           <div class="order-4 flex flex-col items-start gap-5 px-2.5 lg:order-none lg:px-0">
             {lead.dek && (
-              <p class="font-display text-[1.375rem] font-medium leading-[0.95] md:text-[1.625rem] lg:text-[1.8rem] lg:leading-[1]">
+              <p class="font-display text-[clamp(1.375rem,1.25rem+0.509vw,1.8rem)] font-medium leading-[0.95] lg:leading-[1]">
                 {lead.dek}
               </p>
             )}

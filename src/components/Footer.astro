@@ -69,7 +69,7 @@ const nav = [
 
     <!-- Contact -->
     <div class="col-span-3 flex flex-col gap-1 lg:col-span-6 lg:col-start-1 lg:gap-2 min-[90rem]:col-span-3 min-[90rem]:col-start-7">
-      <p class="label text-lg max-lg:leading-[0.95]">{s.contact}</p>
+      <p class="label text-lg max-lg:text-base max-lg:leading-[0.95]">{s.contact}</p>
       <a
         href={`mailto:${settings.email}`}
         class="link-line decoration-2 label inline-flex items-center gap-1 self-start text-2xl lg:text-3xl"
@@ -81,7 +81,7 @@ const nav = [
 
     <!-- Donate -->
     <div class="col-span-3 flex flex-col gap-1 lg:col-span-6 lg:col-start-7 lg:gap-2 min-[90rem]:col-span-2 min-[90rem]:col-start-10">
-      <p class="label text-lg max-lg:leading-[0.95]">{s.donate}</p>
+      <p class="label text-lg max-lg:text-base max-lg:leading-[0.95]">{s.donate}</p>
       <a href={donate} class="link-line decoration-2 label inline-flex items-center gap-1 self-start text-2xl lg:text-3xl">
         <span class="whitespace-nowrap">{s.supportUs}</span>
         <span aria-hidden="true" class="nudge-ne inline-block font-medium">↗</span>
@@ -90,7 +90,7 @@ const nav = [
 
     <!-- Newsletter -->
     <div class="col-span-3 lg:col-span-5">
-      <label class="label block text-lg max-lg:leading-[0.95]" for="newsletter-email">{s.newsletter}</label>
+      <label class="label block text-lg max-lg:text-base max-lg:leading-[0.95]" for="newsletter-email">{s.newsletter}</label>
       <AjaxForm
         action={settings.newsletterAction ?? "/api/contact"}
         external={!!settings.newsletterAction}
@@ -118,7 +118,7 @@ const nav = [
 
     <!-- Socials -->
     <div class="col-span-3 flex flex-col gap-1 lg:col-span-5 lg:col-start-7 lg:gap-2">
-      <p class="label text-lg">{s.followUs}</p>
+      <p class="label text-lg max-lg:text-base">{s.followUs}</p>
       <Socials socials={settings.socials} variant="text" />
     </div>
 
